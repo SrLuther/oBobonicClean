@@ -1,0 +1,23 @@
+# Arquivos de ambiente
+.env
+.env.txt
+
+# Cache do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Pastas do sistema
+.DS_Store
+Thumbs.db
+
+# Configurações do VS Code
+.vscode/
+
+# Logs
+*.log
+
+# Pastas e arquivos temporários
+tmp/
+temp/
