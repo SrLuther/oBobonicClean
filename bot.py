@@ -11,11 +11,7 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 PORT = int(os.getenv("PORT", 10000))
 
 if TOKEN is None:
-    raise ValueError("[ERRO] TOKEN do bot não encontrado no .env!")
-
-# --- IDs de canais ---
-STATUS_CHANNEL_ID = 1440918150957891656  # Canal para mensagem "pai tá on!"
-COG_LOG_CHANNEL_ID = 1441025115088359425  # Canal para logs de cogs
+    raise ValueError("[ERRO] TOKEN do bot não encontrado no .env! Verifique se o arquivo existe e está na mesma pasta do bot.py")
 
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix="!", intents=intents)
@@ -31,14 +27,13 @@ async def load_cogs():
             try:
                 await bot.load_extension(f"cogs.{filename[:-3]}")
                 print(f"[COG] Carregado: {filename}")
-                canal_log = bot.get_channel(COG_LOG_CHANNEL_ID)
+                # Envia log para canal específico
+                from config import LOG_CHANNEL_ID
+                canal_log = bot.get_channel(LOG_CHANNEL_ID)
                 if canal_log:
                     await canal_log.send(f"[COG] Carregado: {filename}")
             except Exception as e:
                 print(f"[ERRO] Falha ao carregar {filename}: {e}")
-                canal_log = bot.get_channel(COG_LOG_CHANNEL_ID)
-                if canal_log:
-                    await canal_log.send(f"[ERRO] Falha ao carregar {filename}: {e}")
 
 # --- Keep-alive para Render ---
 async def start_webserver():
@@ -61,17 +56,16 @@ async def on_ready():
     print(f"🔥 Bot logado como {bot.user} | ID: {bot.user.id}")
 
     # Mensagem de status
+    from config import STATUS_CHANNEL_ID
     canal_status = bot.get_channel(STATUS_CHANNEL_ID)
     if canal_status:
         await canal_status.send("😎 o pai tá on!")
 
 # --- Função principal ---
 async def main():
-    async with bot:
-        await load_cogs()
-        await start_webserver()
-        await bot.start(TOKEN)
+    await load_cogs()
+    await start_webserver()
+    await bot.start(TOKEN)
 
-# --- Executa o bot ---
 if __name__ == "__main__":
     asyncio.run(main())
