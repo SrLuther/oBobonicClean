@@ -1,65 +1,50 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord.ui import Button, View, Modal, InputText
 import random
 import string
 import asyncio
 
 # --- Configurações ---
-CANAL_ARQUIVO_ID = 1440913008795713689  # Canal onde tickets fechados/logs serão enviados
-EXPIRACAO_TICKET_HORAS = 48  # Horas para deletar tickets inativos
+TICKET_CHANNEL_ID = 1440909767974453328  # Sala de painel de tickets
+TICKET_ARCHIVE_CHANNEL_ID = 1440913008795713689  # Sala de logs / tickets arquivados
+MOD_ROLE_NAME = "Moderador"  # Nome da role que pode acessar o painel admin
+TICKET_EXPIRATION_HOURS = 48
 
 def gerar_ticket_id():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
 
-# --- Modal para fechar ticket pelo membro ---
+# --- Modal de fechamento ---
 class TicketCloseModal(Modal):
-    def __init__(self, ticket_canal):
+    def __init__(self, ticket_channel: discord.TextChannel):
         super().__init__(title="Fechamento de Ticket")
-        self.ticket_canal = ticket_canal
+        self.ticket_channel = ticket_channel
         self.add_item(InputText(label="Motivo do fechamento", style=discord.InputTextStyle.paragraph))
 
     async def callback(self, interaction: discord.Interaction):
         motivo = self.children[0].value
-        canal = self.ticket_canal
-        canal_log = interaction.guild.get_channel(CANAL_ARQUIVO_ID)
+        canal_log = interaction.guild.get_channel(TICKET_ARCHIVE_CHANNEL_ID)
         if canal_log:
-            await canal_log.send(f"Ticket {canal.name} fechado por {interaction.user.mention}\nMotivo: {motivo}")
-        await interaction.response.send_message(f"✅ Ticket fechado com sucesso!", ephemeral=True)
+            await canal_log.send(f"Ticket {self.ticket_channel.name} fechado por {interaction.user.mention}\nMotivo: {motivo}")
+        await interaction.response.send_message("✅ Ticket fechado com sucesso!", ephemeral=True)
         await asyncio.sleep(2)
-        await canal.delete()
-
-# --- Modal para ação administrativa ---
-class TicketAdminModal(Modal):
-    def __init__(self, acao: str, ticket_canal: discord.TextChannel):
-        super().__init__(title=f"{acao} Ticket")
-        self.acao = acao
-        self.ticket_canal = ticket_canal
-        self.add_item(InputText(label="Feedback do moderador", style=discord.InputTextStyle.paragraph))
-
-    async def callback(self, interaction: discord.Interaction):
-        feedback = self.children[0].value
-        canal_log = interaction.guild.get_channel(CANAL_ARQUIVO_ID)
-        if canal_log:
-            await canal_log.send(f"Ticket {self.ticket_canal.name} {self.acao.lower()} por {interaction.user.mention}\nFeedback: {feedback}")
-        await interaction.response.send_message(f"✅ Ticket {self.acao.lower()} com sucesso!", ephemeral=True)
-        if self.acao == "Arquivar":
-            await self.ticket_canal.edit(category=None)  # Remove de categoria ativa (opcional)
+        await self.ticket_channel.delete()
 
 class Tickets(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # --- Painel de abertura ---
-    @commands.command()
-    async def painelticket(self, ctx):
-        """Envia painel interativo para abrir ticket e apaga o comando do usuário"""
-        # Deleta a mensagem do usuário
-        try:
-            await ctx.message.delete()
-        except:
-            pass  # Ignora se não tiver permissão
+    # --- Painel interativo na sala de tickets ---
+    async def enviar_painel(self):
+        canal = self.bot.get_channel(TICKET_CHANNEL_ID)
+        if not canal:
+            return
 
+        # Deleta mensagens antigas
+        async for msg in canal.history(limit=None):
+            await msg.delete()
+
+        # Botões
         abrir_btn = Button(label="Abrir Ticket", style=discord.ButtonStyle.green)
         admin_btn = Button(label="Painel Admin", style=discord.ButtonStyle.blurple)
 
@@ -70,23 +55,29 @@ class Tickets(commands.Cog):
                 guild.default_role: discord.PermissionOverwrite(view_channel=False),
                 interaction.user: discord.PermissionOverwrite(view_channel=True, send_messages=True)
             }
-            canal = await guild.create_text_channel(
+            canal_ticket = await guild.create_text_channel(
                 name=f"ticket-{interaction.user.name}-{ticket_id}",
                 overwrites=overwrites
             )
 
+            # Botão de fechar ticket
             fechar_btn = Button(label="Fechar Ticket", style=discord.ButtonStyle.red)
             async def fechar_callback(fechar_interaction: discord.Interaction):
-                modal = TicketCloseModal(canal)
+                modal = TicketCloseModal(canal_ticket)
                 await fechar_interaction.response.send_modal(modal)
             fechar_btn.callback = fechar_callback
 
             view = View()
             view.add_item(fechar_btn)
-            await canal.send(f"{interaction.user.mention} seu ticket foi criado! Use o botão abaixo para fechar quando terminar.", view=view)
-            await interaction.response.send_message(f"Ticket criado em {canal.mention}", ephemeral=True)
+            await canal_ticket.send(f"{interaction.user.mention} seu ticket foi criado! Use o botão abaixo para fechar quando terminar.", view=view)
+            await interaction.response.send_message(f"Ticket criado em {canal_ticket.mention}", ephemeral=True)
 
         async def admin_callback(interaction: discord.Interaction):
+            role = discord.utils.get(interaction.user.roles, name=MOD_ROLE_NAME)
+            if not role:
+                await interaction.response.send_message("❌ Você não tem permissão para acessar o painel admin.", ephemeral=True)
+                return
+
             guild = interaction.guild
             tickets_ativos = [c for c in guild.text_channels if c.name.startswith("ticket-")]
             if not tickets_ativos:
@@ -99,12 +90,10 @@ class Tickets(commands.Cog):
                 arquivar_btn = Button(label=f"Arquivar {t.name}", style=discord.ButtonStyle.gray)
 
                 async def aceitar_callback(i, canal=t):
-                    modal = TicketAdminModal("Aceitar", canal)
-                    await i.response.send_modal(modal)
+                    await i.response.send_message(f"Ticket {canal.name} aceito por {i.user.mention}", ephemeral=True)
 
                 async def arquivar_callback(i, canal=t):
-                    modal = TicketAdminModal("Arquivar", canal)
-                    await i.response.send_modal(modal)
+                    await i.response.send_message(f"Ticket {canal.name} arquivado. Feedback opcional.", ephemeral=True)
 
                 aceitar_btn.callback = aceitar_callback
                 arquivar_btn.callback = arquivar_callback
@@ -119,7 +108,25 @@ class Tickets(commands.Cog):
         view = View()
         view.add_item(abrir_btn)
         view.add_item(admin_btn)
-        await ctx.send("🎫 Painel de Tickets - Clique no botão para abrir um ticket ou acessar o painel administrativo:", view=view)
+
+        await canal.send(
+            "🎫 Painel de Tickets - Clique no botão para abrir um ticket ou acessar o painel administrativo:",
+            view=view
+        )
+
+    # --- Comando manual para enviar painel ---
+    @commands.command()
+    async def painelticket(self, ctx):
+        await ctx.message.delete()
+        await self.enviar_painel()
+
+    # --- Exclui mensagens de membros na sala de tickets ---
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.channel.id == TICKET_CHANNEL_ID and not message.author.bot:
+            await message.delete()
 
 async def setup(bot):
-    await bot.add_cog(Tickets(bot))
+    cog = Tickets(bot)
+    await bot.add_cog(cog)
+    await cog.enviar_painel()  # Envia painel automaticamente ao iniciar
