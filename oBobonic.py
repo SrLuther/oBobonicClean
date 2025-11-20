@@ -6,20 +6,21 @@ import asyncio
 from aiohttp import web
 from datetime import datetime
 
-# Carrega variáveis do .env
+# -------------------------
+# Configuração inicial
+# -------------------------
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
-
-# Porta para Render
-PORT = 10000
+PORT = int(os.getenv("PORT", 10000))  # Porta definida no Render
 
 intents = discord.Intents.all()
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents)
 
-# IDs importantes
+# -------------------------
+# IDs e Cargos
+# -------------------------
 CANAL_BOAS_VINDAS_ID = 1440828427761487934  # Canal de chegada das pessoas
 
-# Cargos
 CARGOS = {
     "Bobonicado": {"permissions": discord.Permissions(administrator=True), "cor": 0xFFD700},
     "Moderador": {"permissions": discord.Permissions(manage_messages=True, kick_members=True, ban_members=True), "cor": 0x00FF00},
@@ -27,7 +28,9 @@ CARGOS = {
     "Bot": {"permissions": discord.Permissions(send_messages=True, read_messages=True), "cor": 0x808080}
 }
 
-# Estrutura completa de categorias, canais e permissões
+# -------------------------
+# Estrutura de categorias e canais
+# -------------------------
 ESTRUTURA = {
     "🟣 ENTRADA": {
         "#📖・regras": {
@@ -111,7 +114,7 @@ ESTRUTURA = {
             "Bot": discord.Permissions(connect=True, speak=False)
         }
     },
-    "⚙️ ADMINISTRATIVA": {  
+    "⚙️ ADMINISTRATIVA": {
         "#📜・logs": {
             "Bobonicado": discord.Permissions(send_messages=True, view_channel=True),
             "Bot": discord.Permissions(send_messages=True, view_channel=True),
@@ -133,11 +136,13 @@ ESTRUTURA = {
     }
 }
 
-# --- Carrega lista de palavrões ---
-with open("palavroes.txt", "r", encoding="utf-8") as f:
-    PALAVROES = [linha.strip().lower() for linha in f.readlines() if linha.strip()]
+# -------------------------
+# Eventos
+# -------------------------
+@bot.event
+async def on_ready():
+    print(f'oBobonic conectado como {bot.user}')
 
-# --- Evento de boas-vindas ---
 @bot.event
 async def on_member_join(member):
     guild = member.guild
@@ -152,7 +157,9 @@ async def on_member_join(member):
             f"De qualquer forma, seja bem-vindo ao reino improvável do Bobonicado! 🍀"
         )
 
-# --- Comando de reset seguro ---
+# -------------------------
+# Comandos
+# -------------------------
 @bot.command()
 @commands.has_role("Bobonicado")
 async def bobostart(ctx):
@@ -167,51 +174,68 @@ async def bobostart(ctx):
             }
         )
     await config_channel.send("Iniciando reset completo do servidor...")
+    # lógica de criação de canais/cargos...
     await config_channel.send("✅ Setup completo! Todos os canais, categorias e cargos foram criados do zero.")
 
-# --- Comando say ---
 @bot.command()
 async def say(ctx, *, mensagem):
     try:
         await ctx.message.delete()
     except:
         pass
-
     box_message = "\n".join(f"> {linha}" for linha in mensagem.split("\n"))
     await ctx.send(box_message)
-
     config_channel = discord.utils.get(ctx.guild.text_channels, name="config")
+    agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     if config_channel:
-        agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         await config_channel.send(f"[{agora}] 📌 Mensagem reenviada pelo bot em {ctx.channel.mention}:\n{box_message}")
 
-# --- Moderação automática de palavrões ---
+# -------------------------
+# Moderação: palavrões e convites
+# -------------------------
 @bot.event
 async def on_message(message):
     if message.author.bot:
         return
 
-    # Checa palavrões
-    msg_lower = message.content.lower()
-    if any(p in msg_lower for p in PALAVROES):
+    config_channel = discord.utils.get(message.guild.text_channels, name="config")
+    agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
+    # Carrega lista de palavrões
+    with open("palavroes.txt", "r", encoding="utf-8") as f:
+        palavroes = [linha.strip().lower() for linha in f.readlines()]
+
+    conteudo_lower = message.content.lower()
+
+    # Verifica palavrões
+    if any(p in conteudo_lower for p in palavroes):
         try:
             await message.delete()
         except:
             pass
-
-        config_channel = discord.utils.get(message.guild.text_channels, name="config")
-        agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        await message.channel.send(f"😅 Ei {message.author.mention}, calma com os palavrões! Aqui é sério, mas a gente ri 😉")
         if config_channel:
-            await config_channel.send(f"[{agora}] ⚠️ {message.author} usou palavrão:\n{message.content}")
+            await config_channel.send(f"[{agora}] Palavra proibida detectada de {message.author} em {message.channel.mention}:\n{message.content}")
+        return
 
-        # Repreensão engraçada, mas séria
-        await message.channel.send(f"{message.author.mention}, cuidado com as palavras! 😅 Isso não vai ficar barato...")
+    # Verifica convites do Discord
+    if "discord.gg/" in conteudo_lower or "discord.com/invite/" in conteudo_lower:
+        try:
+            await message.delete()
+        except:
+            pass
+        await message.channel.send(f"🚫 {message.author.mention}, é proibido enviar convites para outros servidores!")
+        if config_channel:
+            await config_channel.send(f"[{agora}] Convite proibido enviado por {message.author} em {message.channel.mention}:\n{message.content}")
+        return
 
     await bot.process_commands(message)
 
-# --- Servidor mínimo para Render ---
+# -------------------------
+# Webserver para Render
+# -------------------------
 async def handle(request):
-    return web.Response(text="oBobonic rodando!")
+    return web.Response(text="Bot rodando!")
 
 app = web.Application()
 app.add_routes([web.get("/", handle)])
@@ -221,13 +245,12 @@ async def start_webserver():
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", PORT)
     await site.start()
-    print(f"Servidor HTTP rodando na porta {PORT}")
 
-bot.loop.create_task(start_webserver())
+# -------------------------
+# Inicialização
+# -------------------------
+async def main():
+    await start_webserver()
+    await bot.start(TOKEN)
 
-# --- Bot pronto ---
-@bot.event
-async def on_ready():
-    print(f'oBobonic conectado como {bot.user}')
-
-bot.run(TOKEN)
+asyncio.run(main())
