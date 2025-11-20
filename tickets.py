@@ -1,136 +1,195 @@
 import discord
-from discord.ext import commands, tasks
-from discord.ui import Button, View, Modal, InputText
-import random
-import string
+from discord.ext import commands
+from discord import app_commands
 import asyncio
-import datetime
-from config import *
+from datetime import datetime, timedelta
+from config import (
+    TICKET_CATEGORY_ID,
+    TICKET_ARCHIVE_CHANNEL_ID,
+    STAFF_ROLE_ID
+)
 
-def gerar_ticket_id():
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=TICKET_ID_LENGTH))
-
-# --- Modal para fechar ticket ---
-class TicketCloseModal(Modal):
-    def __init__(self, ticket_canal, moderador=None):
-        super().__init__(title="Fechamento de Ticket")
-        self.ticket_canal = ticket_canal
-        self.moderador = moderador
-        self.add_item(InputText(label="Motivo do fechamento", style=discord.InputTextStyle.paragraph))
-
-    async def callback(self, interaction: discord.Interaction):
-        motivo = self.children[0].value
-        canal_log = interaction.guild.get_channel(CANAL_ARQUIVO_ID)
-        if canal_log:
-            if self.moderador:
-                await canal_log.send(f"Ticket {self.ticket_canal.name} fechado manualmente pelo moderador {self.moderador.mention}\nMotivo: {motivo}")
-            else:
-                await canal_log.send(f"Ticket {self.ticket_canal.name} fechado pelo usuário {interaction.user.mention}\nMotivo: {motivo}")
-        await interaction.response.send_message("✅ Ticket fechado com sucesso!", ephemeral=True)
-        await asyncio.sleep(2)
-        await self.ticket_canal.edit(category=None)
-        await self.ticket_canal.delete()
-
-class Tickets(commands.Cog):
+class TicketSystem(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.ticket_expiracao.start()
+        self.active_tickets = {}  # {channel_id: {"user": user_id, "opened_at": datetime, "claimed": moderator_id}}
 
-    # --- Painel de abertura simplificado ---
-    @commands.command()
-    async def startticket(self, ctx):
-        # Excluir a mensagem do usuário que chamou o comando
-        await ctx.message.delete()
+    # Painel simples
+    @app_commands.command(name="paineltickets", description="Envia o painel de tickets.")
+    async def paineltickets(self, interaction: discord.Interaction):
 
-        abrir_btn = Button(label="Abrir Ticket", style=discord.ButtonStyle.green)
-        mod_btn = Button(label="Painel Moderador", style=discord.ButtonStyle.blurple)
+        embed = discord.Embed(
+            title="🎫 Sistema de Tickets",
+            description=(
+                "• **Para abrir um ticket**, clique no botão abaixo.\n"
+                "• **Moderadores**: use o botão para ver tickets aguardando.\n\n"
+                "Tempo máximo de inatividade: **48 horas**."
+            ),
+            color=discord.Color.blurple()
+        )
 
-        async def abrir_callback(interaction: discord.Interaction):
-            ticket_id = gerar_ticket_id()
-            guild = interaction.guild
-            overwrites = {
-                guild.default_role: discord.PermissionOverwrite(view_channel=False),
-                interaction.user: discord.PermissionOverwrite(view_channel=True, send_messages=True)
-            }
-            canal = await guild.create_text_channel(
-                name=f"ticket-{interaction.user.name}-{ticket_id}",
-                overwrites=overwrites
+        view = TicketPanelView()
+
+        await interaction.response.send_message(embed=embed, view=view)
+
+    # Comando oculto para moderadores abrirem a lista
+    async def list_tickets(self, interaction: discord.Interaction):
+        open_tickets = [
+            f"<#{ch_id}> — Usuário: <@{info['user']}>"
+            for ch_id, info in self.active_tickets.items()
+            if info.get("claimed") is None
+        ]
+
+        if not open_tickets:
+            await interaction.response.send_message("Nenhum ticket aguardando atendimento.", ephemeral=True)
+            return
+
+        msg = "**Tickets aguardando moderação:**\n" + "\n".join(open_tickets)
+        await interaction.response.send_message(msg, ephemeral=True)
+
+    # Criar o ticket
+    async def create_ticket(self, interaction: discord.Interaction):
+
+        category = interaction.guild.get_channel(TICKET_CATEGORY_ID)
+        if category is None:
+            await interaction.response.send_message("Categoria de tickets não encontrada!", ephemeral=True)
+            return
+
+        overwrites = {
+            interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+            interaction.user: discord.PermissionOverwrite(read_messages=True, send_messages=True),
+            interaction.guild.get_role(STAFF_ROLE_ID): discord.PermissionOverwrite(read_messages=True, send_messages=True)
+        }
+
+        channel = await category.create_text_channel(
+            name=f"ticket-{interaction.user.name}",
+            overwrites=overwrites
+        )
+
+        self.active_tickets[channel.id] = {
+            "user": interaction.user.id,
+            "opened_at": datetime.now(),
+            "claimed": None
+        }
+
+        # Botões dentro do ticket
+        view = TicketRoomView(self, channel.id)
+
+        embed = discord.Embed(
+            title="🎫 Ticket Aberto",
+            description="Aguarde um moderador aceitar seu ticket.\n\n"
+                        "Moderadores: use o botão abaixo para aceitar.",
+            color=discord.Color.green()
+        )
+
+        await channel.send(embed=embed, view=view)
+
+        await interaction.response.send_message(
+            f"Seu ticket foi criado: {channel.mention}",
+            ephemeral=True
+        )
+
+        # Auto-fechamento por inatividade
+        asyncio.create_task(self.auto_close_ticket(channel.id))
+
+    # Moderador aceita
+    async def claim_ticket(self, interaction: discord.Interaction, channel_id: int):
+
+        if STAFF_ROLE_ID not in [r.id for r in interaction.user.roles]:
+            await interaction.response.send_message("Somente moderadores podem aceitar tickets.", ephemeral=True)
+            return
+
+        ticket = self.active_tickets.get(channel_id)
+        if ticket is None:
+            await interaction.response.send_message("Ticket não encontrado!", ephemeral=True)
+            return
+
+        if ticket["claimed"] is not None:
+            await interaction.response.send_message("Este ticket já foi aceito por outro moderador.", ephemeral=True)
+            return
+
+        ticket["claimed"] = interaction.user.id
+
+        channel = interaction.guild.get_channel(channel_id)
+        await channel.send(
+            f"🔔 **Ticket aceito por:** <@{interaction.user.id}>"
+        )
+
+        await interaction.response.send_message("Você aceitou este ticket.", ephemeral=True)
+
+    # Fechar manualmente
+    async def close_ticket(self, interaction: discord.Interaction, channel_id: int):
+
+        if STAFF_ROLE_ID not in [r.id for r in interaction.user.roles]:
+            await interaction.response.send_message("Somente moderadores podem fechar tickets.", ephemeral=True)
+            return
+
+        await self.finish_ticket(interaction.guild, channel_id)
+        await interaction.response.send_message("Ticket encerrado e arquivado.", ephemeral=True)
+
+    # Função que realmente fecha e arquiva
+    async def finish_ticket(self, guild, channel_id: int):
+
+        ticket = self.active_tickets.pop(channel_id, None)
+        if ticket is None:
+            return
+
+        channel = guild.get_channel(channel_id)
+        if channel is None:
+            return
+
+        archive = guild.get_channel(TICKET_ARCHIVE_CHANNEL_ID)
+        if archive:
+            await archive.send(
+                f"🗂️ Ticket encerrado: {channel.name}\n"
+                f"Usuário: <@{ticket['user']}>"
             )
 
-            # Botões internos da sala do ticket
-            aceitar_btn = Button(label="Aceitar Ticket", style=discord.ButtonStyle.green)
-            fechar_btn = Button(label="Fechar Ticket", style=discord.ButtonStyle.red)
+        await channel.delete()
 
-            async def aceitar_callback(i: discord.Interaction):
-                if any(role.id in MOD_ROLE_IDS for role in i.user.roles):
-                    await canal.send(f"🎫 Ticket aceito por {i.user.mention}")
-                    await i.response.send_message("✅ Você aceitou o ticket!", ephemeral=True)
-                else:
-                    await i.response.send_message("❌ Apenas moderadores podem aceitar.", ephemeral=True)
+    # Fechamento automático
+    async def auto_close_ticket(self, channel_id: int):
 
-            async def fechar_callback(i: discord.Interaction):
-                if any(role.id in MOD_ROLE_IDS for role in i.user.roles):
-                    modal = TicketCloseModal(canal, moderador=i.user)
-                    await i.response.send_modal(modal)
-                else:
-                    await i.response.send_message("❌ Apenas moderadores podem fechar manualmente.", ephemeral=True)
+        await asyncio.sleep(48 * 3600)
 
-            aceitar_btn.callback = aceitar_callback
-            fechar_btn.callback = fechar_callback
+        ticket = self.active_tickets.get(channel_id)
+        if ticket is None:
+            return
 
-            view = View()
-            view.add_item(aceitar_btn)
-            view.add_item(fechar_btn)
+        guild = self.bot.get_guild(list(self.bot.guilds)[0].id)
+        await self.finish_ticket(guild, channel_id)
 
-            await canal.send(f"{interaction.user.mention}, seu ticket foi criado! Um moderador irá atender em breve.", view=view)
-            await interaction.response.send_message(f"✅ Ticket criado: {canal.mention}", ephemeral=True)
 
-        async def mod_callback(interaction: discord.Interaction):
-            if not any(role.id in MOD_ROLE_IDS for role in interaction.user.roles):
-                await interaction.response.send_message("❌ Apenas moderadores podem acessar este painel.", ephemeral=True)
-                return
+# -------------------- UI COMPONENTS --------------------
 
-            guild = interaction.guild
-            tickets_ativos = [c for c in guild.text_channels if c.name.startswith("ticket-")]
-            if not tickets_ativos:
-                await interaction.response.send_message("Nenhum ticket ativo no momento.", ephemeral=True)
-                return
+class TicketPanelView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
 
-            msg = "📋 Tickets abertos:\n"
-            for t in tickets_ativos:
-                msg += f"- {t.name}\n"
-            await interaction.response.send_message(msg, ephemeral=True)
+    @discord.ui.button(label="Abrir Ticket", style=discord.ButtonStyle.green)
+    async def open_ticket(self, interaction, button):
+        await interaction.client.get_cog("TicketSystem").create_ticket(interaction)
 
-        abrir_btn.callback = abrir_callback
-        mod_btn.callback = mod_callback
+    @discord.ui.button(label="Tickets Aguardando", style=discord.ButtonStyle.blurple)
+    async def waiting(self, interaction, button):
+        await interaction.client.get_cog("TicketSystem").list_tickets(interaction)
 
-        view = View()
-        view.add_item(abrir_btn)
-        view.add_item(mod_btn)
 
-        await ctx.send("🎫 **Painel de Tickets**\nClique no botão para abrir um ticket ou acessar o painel de moderação:", view=view)
+class TicketRoomView(discord.ui.View):
+    def __init__(self, cog, channel_id):
+        super().__init__(timeout=None)
+        self.cog = cog
+        self.channel_id = channel_id
 
-    # --- Tarefa para fechar tickets inativos ---
-    @tasks.loop(minutes=60)
-    async def ticket_expiracao(self):
-        guilds = self.bot.guilds
-        agora = datetime.datetime.utcnow()
-        for guild in guilds:
-            for c in guild.text_channels:
-                if c.name.startswith("ticket-"):
-                    delta = agora - c.created_at
-                    if delta.total_seconds() > EXPIRACAO_TICKET_HORAS * 3600:
-                        try:
-                            canal_log = guild.get_channel(CANAL_ARQUIVO_ID)
-                            if canal_log:
-                                await canal_log.send(f"Ticket {c.name} fechado automaticamente por inatividade.")
-                            await c.delete()
-                        except Exception as e:
-                            print(f"[ERRO] Falha ao fechar ticket {c.name}: {e}")
+    @discord.ui.button(label="Aceitar Ticket", style=discord.ButtonStyle.green)
+    async def claim(self, interaction, button):
+        await self.cog.claim_ticket(interaction, self.channel_id)
 
-    @ticket_expiracao.before_loop
-    async def before_ticket_expiracao(self):
-        await self.bot.wait_until_ready()
+    @discord.ui.button(label="Fechar (Moderação)", style=discord.ButtonStyle.red)
+    async def close(self, interaction, button):
+        await self.cog.close_ticket(interaction, self.channel_id)
 
+
+# -------------------- SETUP --------------------
 async def setup(bot):
-    await bot.add_cog(Tickets(bot))
+    await bot.add_cog(TicketSystem(bot))
