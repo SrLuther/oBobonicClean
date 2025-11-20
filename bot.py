@@ -1,66 +1,49 @@
-# bot.py
-import os
-import asyncio
-from dotenv import load_dotenv
-from datetime import datetime
-from aiohttp import web
 import discord
 from discord.ext import commands
+import os
+from dotenv import load_dotenv
+import asyncio
+from aiohttp import web
 
+# Carrega .env
 load_dotenv()
-
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")  # pode estar vazio se não quiser IA
-PORT = int(os.getenv("PORT", "10000"))
+TOKEN = os.getenv("DISCORD_TOKEN")
 
 intents = discord.Intents.all()
-intents.message_content = True
+bot = commands.Bot(command_prefix="!", intents=intents)
 
-bot = commands.Bot(command_prefix="!", intents=intents, help_command=commands.DefaultHelpCommand())
+# Carregar todos os cogs automaticamente
+async def load_cogs():
+    for filename in os.listdir("./cogs"):
+        if filename.endswith(".py"):
+            try:
+                await bot.load_extension(f"cogs.{filename[:-3]}")
+                print(f"[COG] Carregado: {filename}")
+            except Exception as e:
+                print(f"[ERRO] Falha ao carregar {filename}: {e}")
 
-COGS = [
-    "cogs.moderation",
-    "cogs.ia",
-    "cogs.tickets",
-    "cogs.xp",
-    "cogs.admin",
-    "cogs.autoresponse"
-]
-
-# Load cogs
-@bot.event
-async def on_ready():
-    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Bot conectado como {bot.user} ({bot.user.id})")
-
+# Servidor Keep-Alive para Render
 async def start_webserver():
-    async def handle(request):
-        return web.Response(text="oBobonic rodando!")
+    async def handler(request):
+        return web.Response(text="Bot rodando normalmente.")
 
     app = web.Application()
-    app.add_routes([web.get("/", handle)])
+    app.router.add_get("/", handler)
+
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", PORT)
+
+    site = web.TCPSite(runner, host="0.0.0.0", port=int(os.getenv("PORT", 10000)))
     await site.start()
-    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Webserver rodando na porta {PORT}")
+
+@bot.event
+async def on_ready():
+    print(f"🔥 Bot logado como {bot.user} | ID: {bot.user.id}")
 
 async def main():
-    # load cogs
-    for cog in COGS:
-        try:
-            await bot.load_extension(cog)
-            print(f"Cog carregada: {cog}")
-        except Exception as e:
-            print(f"Erro ao carregar cog {cog}: {e}")
-
-    # start webserver (para Render detectar porta)
-    asyncio.create_task(start_webserver())
-
-    # start bot
-    await bot.start(DISCORD_TOKEN)
+    await load_cogs()
+    await start_webserver()
+    await bot.start(TOKEN)
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("Interrompido manualmente.")
+    asyncio.run(main())
