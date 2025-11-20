@@ -6,18 +6,15 @@ import asyncio
 from aiohttp import web
 
 # --- Carrega .env ---
-load_dotenv()
+load_dotenv()  # Carrega variáveis do .env
 TOKEN = os.getenv("DISCORD_TOKEN")
 PORT = int(os.getenv("PORT", 10000))
 
+if TOKEN is None:
+    raise ValueError("[ERRO] TOKEN do bot não encontrado no .env! Verifique se o arquivo existe e está na mesma pasta do bot.py")
+
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix="!", intents=intents)
-
-# --- Função para enviar log de cog para o Discord ---
-async def log_cog_carregado(cog_name):
-    canal_log = bot.get_channel(1441025115088359425)  # Canal de logs
-    if canal_log:
-        await canal_log.send(f"[COG LOG] Cog carregado: {cog_name}")
 
 # --- Função para carregar todos os cogs automaticamente ---
 async def load_cogs():
@@ -27,13 +24,18 @@ async def load_cogs():
 
     for filename in os.listdir("./cogs"):
         if filename.endswith(".py"):
-            cog_name = filename[:-3]
             try:
-                await bot.load_extension(f"cogs.{cog_name}")
+                await bot.load_extension(f"cogs.{filename[:-3]}")
                 print(f"[COG] Carregado: {filename}")
-                await log_cog_carregado(cog_name)  # Envia log para Discord
+                # Envia log de carregamento no Discord
+                canal_log = bot.get_channel(1441025115088359425)
+                if canal_log:
+                    await canal_log.send(f"✅ Cog carregado: `{filename}`")
             except Exception as e:
                 print(f"[ERRO] Falha ao carregar {filename}: {e}")
+                canal_log = bot.get_channel(1441025115088359425)
+                if canal_log:
+                    await canal_log.send(f"❌ Falha ao carregar `{filename}`: {e}")
 
 # --- Keep-alive para Render ---
 async def start_webserver():
