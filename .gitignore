@@ -1,6 +1,8 @@
 # Arquivos de ambiente
 .env
 .env.txt
+resp_ia.txt
+xp.json
 
 # Cache do Python
 __pycache__/
