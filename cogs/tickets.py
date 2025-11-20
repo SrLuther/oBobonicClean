@@ -8,7 +8,7 @@ import asyncio
 # --- Configurações ---
 TICKET_CHANNEL_ID = 1440909767974453328  # Sala de painel de tickets
 TICKET_ARCHIVE_CHANNEL_ID = 1440913008795713689  # Sala de logs / tickets arquivados
-MOD_ROLE_NAME = "Moderador"  # Nome da role que pode acessar o painel admin
+MOD_ROLE_NAME = "Moderador"
 TICKET_EXPIRATION_HOURS = 48
 
 def gerar_ticket_id():
@@ -34,7 +34,6 @@ class Tickets(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # --- Painel interativo na sala de tickets ---
     async def enviar_painel(self):
         canal = self.bot.get_channel(TICKET_CHANNEL_ID)
         if not canal:
@@ -60,7 +59,6 @@ class Tickets(commands.Cog):
                 overwrites=overwrites
             )
 
-            # Botão de fechar ticket
             fechar_btn = Button(label="Fechar Ticket", style=discord.ButtonStyle.red)
             async def fechar_callback(fechar_interaction: discord.Interaction):
                 modal = TicketCloseModal(canal_ticket)
@@ -114,7 +112,7 @@ class Tickets(commands.Cog):
             view=view
         )
 
-    # --- Comando manual para enviar painel ---
+    # --- Comando manual ---
     @commands.command()
     async def painelticket(self, ctx):
         await ctx.message.delete()
@@ -126,7 +124,10 @@ class Tickets(commands.Cog):
         if message.channel.id == TICKET_CHANNEL_ID and not message.author.bot:
             await message.delete()
 
+    # --- Envia painel ao iniciar ---
+    @commands.Cog.listener()
+    async def on_ready(self):
+        await self.enviar_painel()
+
 async def setup(bot):
-    cog = Tickets(bot)
-    await bot.add_cog(cog)
-    await cog.enviar_painel()  # Envia painel automaticamente ao iniciar
+    await bot.add_cog(Tickets(bot))
