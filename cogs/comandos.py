@@ -1,11 +1,16 @@
 import discord
 from discord.ext import commands
-from config import STAFF_ROLE_ID
+
+# ID do cargo moderador
+MOD_ROLE_ID = 1440828412599210135
+# ID do canal específico para enviar o painel de tickets
+TICKET_CHANNEL_ID = 1440909767974453328
 
 class Comandos(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    # -------------------- Ajuda --------------------
     @commands.command(name="ajuda")
     async def ajuda(self, ctx):
         embed = discord.Embed(
@@ -14,62 +19,98 @@ class Comandos(commands.Cog):
             color=discord.Color.green()
         )
 
-        # --- Tickets ---
-        embed.add_field(name="🎫 Comandos de Tickets", value=(
-            "`!ticket` — Moderador envia e fixa o painel de tickets no canal específico.\n"
-            "`!abrirticket` — Abre um ticket de suporte (através do botão no painel).\n"
-            "`!aceitarticket <ticket>` — Moderador aceita um ticket (através do botão no ticket).\n"
-            "`!fecharticket <ticket>` — Moderador fecha e arquiva um ticket (através do botão no ticket).\n\n"
-            "ℹ️ **Como funciona:**\n"
-            "• Apenas moderadores podem usar `!ticket`, e apenas no canal designado.\n"
-            "• Usuários clicam no botão 'Abrir Ticket' para criar seu ticket.\n"
-            "• Moderadores clicam em 'Aceitar Ticket' para começar a atender.\n"
-            "• O botão 'Fechar (Moderação)' encerra e arquiva o ticket.\n"
-            "• Tickets inativos por 48h são fechados automaticamente."
-        ), inline=False)
+        # 🎫 Tickets
+        embed.add_field(
+            name="🎫 Tickets",
+            value=(
+                "**Comandos:**\n"
+                "• `!ticket` — Moderador envia e fixa o painel de tickets (canal específico).\n"
+                "• `!abrirticket` — Abre um ticket de suporte (através do botão no painel).\n"
+                "• `!aceitarticket <ticket>` — Moderador aceita um ticket (através do botão no ticket).\n"
+                "• `!fecharticket <ticket>` — Moderador fecha e arquiva um ticket (através do botão no ticket).\n\n"
+                "**Como funciona:**\n"
+                "• Apenas moderadores podem usar `!ticket`, e somente no canal designado.\n"
+                "• Usuários clicam no botão 'Abrir Ticket' para criar seu ticket.\n"
+                "• Moderadores clicam em 'Aceitar Ticket' para começar a atender.\n"
+                "• O botão 'Fechar (Moderação)' encerra e arquiva o ticket.\n"
+                "• Tickets inativos por 48h são fechados automaticamente."
+            ),
+            inline=False
+        )
 
-        # --- Limpeza / Mensagens ---
-        embed.add_field(name="🧹 Comandos de Limpeza", value=(
-            "`!faxina` — Limpa o máximo de mensagens que o bot conseguir do canal.\n"
-            "`!limpar <x>` — Deleta mensagens cumulativas até atingir x caracteres.\n"
-            "⚠️ Ambos os comandos exigem permissão de **Gerenciar Mensagens**."
-        ), inline=False)
+        # 🧹 Limpeza / Mensagens
+        embed.add_field(
+            name="🧹 Limpeza / Mensagens",
+            value=(
+                "• `!faxina` — Limpa o máximo de mensagens do canal.\n"
+                "• `!limpar <x>` — Deleta mensagens cumulativas até atingir x caracteres.\n"
+                "⚠️ Ambos os comandos exigem permissão de **Gerenciar Mensagens**."
+            ),
+            inline=False
+        )
 
-        # --- Administração ---
-        embed.add_field(name="⚙️ Administração", value=(
-            "`!reload <cog>` — Recarrega uma extensão (admin/moderador).\n"
-            "`!load <cog>` — Carrega uma extensão.\n"
-            "`!unload <cog>` — Descarrega uma extensão.\n"
-        ), inline=False)
+        # ⚙️ Administração
+        embed.add_field(
+            name="⚙️ Administração",
+            value=(
+                "• `!reload <cog>` — Recarrega uma extensão (admin/moderador).\n"
+                "• `!load <cog>` — Carrega uma extensão.\n"
+                "• `!unload <cog>` — Descarrega uma extensão."
+            ),
+            inline=False
+        )
 
-        # --- Moderação ---
-        embed.add_field(name="🛡️ Moderação", value=(
-            "`!ban <usuário> [motivo]` — Bane um usuário.\n"
-            "`!kick <usuário> [motivo]` — Expulsa um usuário.\n"
-            "`!mute <usuário> [tempo]` — Silencia um usuário.\n"
-            "`!unmute <usuário>` — Remove o silêncio.\n"
-            "`!warn <usuário> [motivo]` — Adiciona advertência.\n"
-            "`!warnings <usuário>` — Mostra advertências de um usuário.\n"
-        ), inline=False)
+        # 🛡️ Moderação
+        embed.add_field(
+            name="🛡️ Moderação",
+            value=(
+                "• `!ban <usuário> [motivo]` — Bane um usuário.\n"
+                "• `!kick <usuário> [motivo]` — Expulsa um usuário.\n"
+                "• `!mute <usuário> [tempo]` — Silencia um usuário.\n"
+                "• `!unmute <usuário>` — Remove o silêncio.\n"
+                "• `!warn <usuário> [motivo]` — Adiciona advertência.\n"
+                "• `!warnings <usuário>` — Mostra advertências de um usuário."
+            ),
+            inline=False
+        )
 
-        # --- XP / Experiência ---
-        embed.add_field(name="⭐ XP", value=(
-            "`!xp <usuário>` — Mostra o XP atual de um usuário.\n"
-            "`!rank <usuário>` — Mostra a posição no ranking.\n"
-        ), inline=False)
+        # ⭐ XP / Ranking
+        embed.add_field(
+            name="⭐ XP / Ranking",
+            value=(
+                "• `!xp <usuário>` — Mostra o XP atual de um usuário.\n"
+                "• `!rank <usuário>` — Mostra a posição no ranking."
+            ),
+            inline=False
+        )
 
-        # --- Comando de ajuda ---
-        embed.add_field(name="📌 Utilitário", value="`!ajuda` — Mostra esta mensagem de ajuda.", inline=False)
+        # 📌 Utilitário
+        embed.add_field(
+            name="📌 Utilitário",
+            value="• `!ajuda` — Mostra esta mensagem de ajuda.",
+            inline=False
+        )
 
         await ctx.send(embed=embed)
 
+    # -------------------- Comando Ticket --------------------
     @commands.command(name="ticket")
-    @commands.has_role(STAFF_ROLE_ID)  # apenas moderadores
+    @commands.has_role(MOD_ROLE_ID)
     async def ticket(self, ctx):
-        allowed_channel_id = 1440909767974453328
-        if ctx.channel.id != allowed_channel_id:
-            await ctx.send(f"❌ Este comando só pode ser usado no canal <#{allowed_channel_id}>.", delete_after=10)
+        if ctx.channel.id != TICKET_CHANNEL_ID:
+            await ctx.send(f"❌ Este comando só pode ser usado no canal <#{TICKET_CHANNEL_ID}>.", delete_after=10)
             await ctx.message.delete()
+            return
+
+        cog = self.bot.get_cog("TicketSystem")
+        if cog is None:
+            await ctx.send("❌ Cog de Tickets não carregado. Contate o administrador.", delete_after=10)
+            return
+
+        try:
+            view = cog.__class__.TicketPanelView()
+        except Exception as e:
+            await ctx.send(f"❌ Erro ao criar o painel de tickets: {e}", delete_after=10)
             return
 
         embed = discord.Embed(
@@ -82,16 +123,15 @@ class Comandos(commands.Cog):
             ),
             color=discord.Color.blurple()
         )
-        # TicketPanelView precisa estar importado ou definido no mesmo arquivo do cog
-        view = self.bot.get_cog("TicketSystem").__class__.TicketPanelView()  # pega a view do cog de tickets
+
         message = await ctx.send(embed=embed, view=view)
         await message.pin()
         await ctx.message.delete()
 
+    # -------------------- Faxina --------------------
     @commands.command(name="faxina")
     @commands.has_permissions(manage_messages=True)
     async def faxina(self, ctx):
-        """Deleta o máximo de mensagens do canal"""
         try:
             deleted = await ctx.channel.purge()
             await ctx.send(f"🧹 Faxina feita! {len(deleted)} mensagens deletadas.", delete_after=5)
@@ -100,10 +140,10 @@ class Comandos(commands.Cog):
         except discord.HTTPException as e:
             await ctx.send(f"❌ Ocorreu um erro ao tentar deletar as mensagens: {e}")
 
+    # -------------------- Limpar --------------------
     @commands.command(name="limpar")
     @commands.has_permissions(manage_messages=True)
     async def limpar(self, ctx, quantidade: int):
-        """Deleta mensagens cumulativas até atingir a quantidade de caracteres especificada"""
         if quantidade <= 0:
             await ctx.send("❌ A quantidade de caracteres precisa ser maior que 0.", delete_after=5)
             return
@@ -128,6 +168,6 @@ class Comandos(commands.Cog):
         else:
             await ctx.send("⚠️ Não foram encontradas mensagens para deletar.", delete_after=5)
 
-# --- Setup da cog ---
+# -------------------- Setup da Cog --------------------
 async def setup(bot):
     await bot.add_cog(Comandos(bot))
