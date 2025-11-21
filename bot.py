@@ -3,52 +3,63 @@ from discord.ext import commands
 import os
 from dotenv import load_dotenv
 import asyncio
+from config import CANAL_STATUS_ID
 
 # --- Carrega .env ---
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
-
 if TOKEN is None:
-    raise ValueError("[ERRO] TOKEN do bot não encontrado no .env! Verifique se o arquivo existe e está na mesma pasta do bot.py")
+    raise ValueError("Token do bot não encontrado no .env")
 
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# --- Função para carregar todos os cogs automaticamente ---
+# --- Mapas de descrição para logs ---
+COG_DESCRICOES = {
+    "admin": "⚙️ Sistema administrativo carregado",
+    "ai": "🤖 Sistema de AI carregado",
+    "autoresponse": "💬 Sistema de respostas automáticas carregado",
+    "moderation": "🛡️ Sistema de moderação carregado",
+    "xp": "⭐ Sistema de XP carregado",
+    "tickets": "🎫 Sistema de tickets carregado",
+    "comandos": "🧰 Sistema de comandos carregado"
+}
+
+# --- Função para carregar todos os cogs ---
 async def load_cogs():
-    if not os.path.exists("./cogs"):
-        print("[AVISO] Pasta 'cogs' não encontrada.")
+    cogs_path = "./cogs"
+    if not os.path.exists(cogs_path):
+        print("[AVISO] Pasta 'cogs' não encontrada")
         return
 
-    for filename in os.listdir("./cogs"):
+    await bot.wait_until_ready()  # Garantir que o bot conectou
+    canal_status = bot.get_channel(CANAL_STATUS_ID)
+
+    for filename in os.listdir(cogs_path):
         if filename.endswith(".py"):
+            cog_name = filename[:-3]
             try:
-                await bot.load_extension(f"cogs.{filename[:-3]}")
+                await bot.load_extension(f"cogs.{cog_name}")
                 print(f"[COG] Carregado: {filename}")
+                if canal_status:
+                    descricao = COG_DESCRICOES.get(cog_name, f"📦 Cog {cog_name} carregado")
+                    await canal_status.send(descricao)
             except Exception as e:
                 print(f"[ERRO] Falha ao carregar {filename}: {e}")
-
+                if canal_status:
+                    await canal_status.send(f"❌ Falha ao carregar {filename}: {e}")
 
 # --- Evento on_ready ---
 @bot.event
 async def on_ready():
     print(f"🔥 Bot logado como {bot.user} | ID: {bot.user.id}")
-
-    # Log de status
-    from config import STATUS_CHANNEL_ID, LOG_CHANNEL_ID
-
-    canal_status = bot.get_channel(STATUS_CHANNEL_ID)
+    await load_cogs()
+    canal_status = bot.get_channel(CANAL_STATUS_ID)
     if canal_status:
-        await canal_status.send("😎 o pai tá on!")
-
-    canal_log = bot.get_channel(LOG_CHANNEL_ID)
-    if canal_log:
-        await canal_log.send("🧩 Todos os cogs carregados com sucesso!")
-
+        await canal_status.send("✅ Todos os cogs carregados!")
 
 # --- Função principal ---
 async def main():
-    await load_cogs()
     await bot.start(TOKEN)
 
 if __name__ == "__main__":
