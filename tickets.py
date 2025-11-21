@@ -15,6 +15,32 @@ class TicketSystem(commands.Cog):
         self.bot = bot
         self.active_tickets = {}
 
+    # -------------------- Comando prefixado --------------------
+    @commands.command(name="ticket")
+    @commands.has_role(STAFF_ROLE_ID)  # apenas moderadores
+    async def ticket(self, ctx):
+        allowed_channel_id = 1440909767974453328
+        if ctx.channel.id != allowed_channel_id:
+            await ctx.send(f"❌ Este comando só pode ser usado no canal <#{allowed_channel_id}>.", delete_after=10)
+            await ctx.message.delete()
+            return
+
+        embed = discord.Embed(
+            title="🎫 Sistema de Tickets",
+            description=(
+                "• Clique no botão abaixo para abrir um ticket.\n"
+                "• Moderadores podem aceitar e fechar tickets.\n"
+                "• Tempo máximo de inatividade: 48h.\n\n"
+                "Se precisar de ajuda, aguarde um moderador aceitar seu ticket."
+            ),
+            color=discord.Color.blurple()
+        )
+        view = TicketPanelView()
+        message = await ctx.send(embed=embed, view=view)
+        await message.pin()
+        await ctx.message.delete()
+
+    # -------------------- Comando slash --------------------
     @app_commands.command(name="paineltickets", description="Envia o painel de tickets.")
     async def paineltickets(self, interaction: discord.Interaction):
         embed = discord.Embed(
@@ -25,6 +51,7 @@ class TicketSystem(commands.Cog):
         view = TicketPanelView()
         await interaction.response.send_message(embed=embed, view=view)
 
+    # -------------------- Funções internas --------------------
     async def create_ticket(self, interaction: discord.Interaction):
         category = interaction.guild.get_channel(TICKET_CATEGORY_ID)
         if category is None:
@@ -130,5 +157,6 @@ class TicketRoomView(discord.ui.View):
     async def close(self, interaction, button):
         await self.cog.close_ticket(interaction, self.channel_id)
 
+# -------------------- Setup --------------------
 async def setup(bot):
     await bot.add_cog(TicketSystem(bot))

@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from config import STAFF_ROLE_ID
 
 class Comandos(commands.Cog):
     def __init__(self, bot):
@@ -15,9 +16,16 @@ class Comandos(commands.Cog):
 
         # --- Tickets ---
         embed.add_field(name="🎫 Comandos de Tickets", value=(
-            "`!abrirticket` — Abre um ticket de suporte.\n"
-            "`!aceitarticket <ticket>` — Moderador aceita um ticket.\n"
-            "`!fecharticket <ticket>` — Moderador fecha e arquiva um ticket.\n"
+            "`!ticket` — Moderador envia e fixa o painel de tickets no canal específico.\n"
+            "`!abrirticket` — Abre um ticket de suporte (através do botão no painel).\n"
+            "`!aceitarticket <ticket>` — Moderador aceita um ticket (através do botão no ticket).\n"
+            "`!fecharticket <ticket>` — Moderador fecha e arquiva um ticket (através do botão no ticket).\n\n"
+            "ℹ️ **Como funciona:**\n"
+            "• Apenas moderadores podem usar `!ticket`, e apenas no canal designado.\n"
+            "• Usuários clicam no botão 'Abrir Ticket' para criar seu ticket.\n"
+            "• Moderadores clicam em 'Aceitar Ticket' para começar a atender.\n"
+            "• O botão 'Fechar (Moderação)' encerra e arquiva o ticket.\n"
+            "• Tickets inativos por 48h são fechados automaticamente."
         ), inline=False)
 
         # --- Limpeza / Mensagens ---
@@ -54,6 +62,31 @@ class Comandos(commands.Cog):
         embed.add_field(name="📌 Utilitário", value="`!ajuda` — Mostra esta mensagem de ajuda.", inline=False)
 
         await ctx.send(embed=embed)
+
+    @commands.command(name="ticket")
+    @commands.has_role(STAFF_ROLE_ID)  # apenas moderadores
+    async def ticket(self, ctx):
+        allowed_channel_id = 1440909767974453328
+        if ctx.channel.id != allowed_channel_id:
+            await ctx.send(f"❌ Este comando só pode ser usado no canal <#{allowed_channel_id}>.", delete_after=10)
+            await ctx.message.delete()
+            return
+
+        embed = discord.Embed(
+            title="🎫 Sistema de Tickets",
+            description=(
+                "• Clique no botão abaixo para abrir um ticket.\n"
+                "• Moderadores podem aceitar e fechar tickets.\n"
+                "• Tempo máximo de inatividade: 48h.\n\n"
+                "Se precisar de ajuda, aguarde um moderador aceitar seu ticket."
+            ),
+            color=discord.Color.blurple()
+        )
+        # TicketPanelView precisa estar importado ou definido no mesmo arquivo do cog
+        view = self.bot.get_cog("TicketSystem").__class__.TicketPanelView()  # pega a view do cog de tickets
+        message = await ctx.send(embed=embed, view=view)
+        await message.pin()
+        await ctx.message.delete()
 
     @commands.command(name="faxina")
     @commands.has_permissions(manage_messages=True)
