@@ -3,25 +3,22 @@ from discord.ext import commands
 from discord import app_commands
 import asyncio
 from datetime import datetime
-from config import (
-    TICKET_CATEGORY_ID,
-    TICKET_ARCHIVE_CHANNEL_ID,
-    STAFF_ROLE_ID,
-    CANAL_STATUS_ID
-)
+from config import TICKET_CATEGORY_ID, TICKET_ARCHIVE_CHANNEL_ID, STAFF_ROLE_ID, CANAL_STATUS_ID
+
+# ID do canal específico para enviar o painel de tickets
+TICKET_CHANNEL_ID = 1440909767974453328
 
 class TicketSystem(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.active_tickets = {}
 
-    # -------------------- Comando prefixado --------------------
+    # -------------------- Comando prefixado apenas para moderadores --------------------
     @commands.command(name="ticket")
-    @commands.has_role(STAFF_ROLE_ID)  # apenas moderadores
+    @commands.has_role(STAFF_ROLE_ID)
     async def ticket(self, ctx):
-        allowed_channel_id = 1440909767974453328
-        if ctx.channel.id != allowed_channel_id:
-            await ctx.send(f"❌ Este comando só pode ser usado no canal <#{allowed_channel_id}>.", delete_after=10)
+        if ctx.channel.id != TICKET_CHANNEL_ID:
+            await ctx.send(f"❌ Este comando só pode ser usado no canal <#{TICKET_CHANNEL_ID}>.", delete_after=10)
             await ctx.message.delete()
             return
 
@@ -54,7 +51,7 @@ class TicketSystem(commands.Cog):
     # -------------------- Funções internas --------------------
     async def create_ticket(self, interaction: discord.Interaction):
         category = interaction.guild.get_channel(TICKET_CATEGORY_ID)
-        if category is None:
+        if not category:
             await interaction.response.send_message("Categoria de tickets não encontrada!", ephemeral=True)
             return
 
@@ -84,7 +81,7 @@ class TicketSystem(commands.Cog):
 
     async def claim_ticket(self, interaction: discord.Interaction, channel_id: int):
         ticket = self.active_tickets.get(channel_id)
-        if ticket is None:
+        if not ticket:
             await interaction.response.send_message("Ticket não encontrado!", ephemeral=True)
             return
         if ticket["claimed"] is not None:
@@ -102,7 +99,7 @@ class TicketSystem(commands.Cog):
 
     async def close_ticket(self, interaction: discord.Interaction, channel_id: int):
         ticket = self.active_tickets.get(channel_id)
-        if ticket is None:
+        if not ticket:
             await interaction.response.send_message("Ticket não encontrado!", ephemeral=True)
             return
 
@@ -111,7 +108,7 @@ class TicketSystem(commands.Cog):
 
     async def finish_ticket(self, guild, channel_id: int):
         ticket = self.active_tickets.pop(channel_id, None)
-        if ticket is None:
+        if not ticket:
             return
 
         channel = guild.get_channel(channel_id)
@@ -129,10 +126,9 @@ class TicketSystem(commands.Cog):
     async def auto_close_ticket(self, channel_id: int):
         await asyncio.sleep(48 * 3600)
         ticket = self.active_tickets.get(channel_id)
-        if ticket is None:
-            return
-        guild = self.bot.get_guild(list(self.bot.guilds)[0].id)
-        await self.finish_ticket(guild, channel_id)
+        if ticket:
+            guild = self.bot.get_guild(list(self.bot.guilds)[0].id)
+            await self.finish_ticket(guild, channel_id)
 
 # -------------------- UI --------------------
 class TicketPanelView(discord.ui.View):
