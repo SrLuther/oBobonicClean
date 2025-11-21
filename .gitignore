@@ -3,6 +3,7 @@
 .env.txt
 resp_ia.txt
 xp.json
+.venv/
 
 # Cache do Python
 __pycache__/
