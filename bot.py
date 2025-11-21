@@ -27,27 +27,22 @@ COG_DESCRICOES = {
 
 # --- Função para carregar todos os cogs ---
 async def load_cogs():
-    cogs_path = "./cogs"
-    if not os.path.exists(cogs_path):
-        print("[AVISO] Pasta 'cogs' não encontrada")
-        return
-
-    await bot.wait_until_ready()  # Garantir que o bot conectou
     canal_status = bot.get_channel(CANAL_STATUS_ID)
 
-    for filename in os.listdir(cogs_path):
-        if filename.endswith(".py"):
-            cog_name = filename[:-3]
-            try:
-                await bot.load_extension(f"cogs.{cog_name}")
-                print(f"[COG] Carregado: {filename}")
-                if canal_status:
-                    descricao = COG_DESCRICOES.get(cog_name, f"📦 Cog {cog_name} carregado")
-                    await canal_status.send(descricao)
-            except Exception as e:
-                print(f"[ERRO] Falha ao carregar {filename}: {e}")
-                if canal_status:
-                    await canal_status.send(f"❌ Falha ao carregar {filename}: {e}")
+    # Ordem de carregamento para garantir dependências
+    cogs_order = ["tickets", "comandos", "admin", "ai", "autoresponse", "moderation", "xp"]
+
+    for cog_name in cogs_order:
+        try:
+            await bot.load_extension(f"cogs.{cog_name}")
+            print(f"[COG] Carregado: {cog_name}.py")
+            if canal_status:
+                descricao = COG_DESCRICOES.get(cog_name, f"📦 Cog {cog_name} carregado")
+                await canal_status.send(descricao)
+        except Exception as e:
+            print(f"[ERRO] Falha ao carregar {cog_name}.py: {e}")
+            if canal_status:
+                await canal_status.send(f"❌ Falha ao carregar {cog_name}.py: {e}")
 
 # --- Evento on_ready ---
 @bot.event
