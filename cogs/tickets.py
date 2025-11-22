@@ -5,6 +5,7 @@ Sistema de tickets completo:
 - Gerenciamento feito por comandos de prefixo (!fechar, !arquivar, etc.).
 - Painel informativo detalhado.
 - Estabilidade aprimorada nas interações.
+- CORREÇÃO: Ajuste na string do 'topic' do canal para evitar SyntaxError de f-string.
 """
 
 import discord
@@ -252,11 +253,18 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
             overwrites[role] = PermissionOverwrite(view_channel=True, send_messages=True, manage_messages=True)
 
     try:
+        # CORREÇÃO: Usando .format() e limpando o 'reason' para o tópico do canal.
+        channel_topic = "ticket_id:{} owner:{} reason:{}".format(
+            ticket_id, 
+            author.id, 
+            reason.replace('\n', ' ') 
+        )
+
         channel = await guild.create_text_channel(
             name=name,
             category=category,
             overwrites=overwrites,
-            topic=f"ticket_id:{ticket_id} owner:{author.id} reason:{reason}"
+            topic=channel_topic
         )
     except discord.Forbidden:
         await interaction.followup.send("❌ Erro: O bot não tem permissão para criar canais.", ephemeral=True)
@@ -459,7 +467,7 @@ class TicketsCog(commands.Cog):
         self.bot = bot
         self.check_inatividade.start()
 
-    # --- Comando de Setup do Painel (Corrigido para ser informativo) ---
+    # --- Comando de Setup do Painel (Informativo) ---
     @commands.command(name="ticketpanel")
     @commands.has_permissions(manage_messages=True)
     async def cmd_ticket_panel(self, ctx):
