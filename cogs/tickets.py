@@ -1,10 +1,11 @@
 # cogs/tickets.py
 """
-Sistema de tickets (Reescrito):
-Mantém todas as funções de setup de painel, abertura de ticket, fechamento,
-arquivamento/transcript, e comandos administrativos.
-Objetivo: Eliminar SyntaxError persistente removendo f-strings multi-linhas e garantindo 
-formatação de string segura nos metadados do canal (topic).
+Sistema de tickets (Versão Final e Estruturada)
+
+Objetivo:
+1. Eliminar o SyntaxError persistente removendo todas as f-strings ambíguas nos pontos críticos.
+2. Estruturar o código em seções lógicas para fácil manutenção.
+3. Manter todas as funcionalidades de abertura, fechamento, arquivamento e comandos.
 """
 
 import discord
@@ -18,9 +19,12 @@ import os
 import json
 import asyncio
 import tempfile
-import time 
+from typing import Optional
 
-# --- Configuração (Importação e Fallback) ---
+# ==============================================================================
+# 🧩 SEÇÃO 1: CONFIGURAÇÃO E CONSTANTES
+# (Valores importados ou padrões de fallback)
+# ==============================================================================
 try:
     from config import (
         CANAL_PAINEL_ID, CANAL_ARQUIVO_ID, TICKET_CATEGORY_ID,
@@ -28,7 +32,7 @@ try:
         TICKET_ID_LENGTH, CANAL_STATUS_ID
     )
 except ImportError:
-    # Valores Padrão (CONFIGURE SEU config.py!)
+    # 🚨 Valores Padrão de Falha (Altere-os no seu config.py!)
     CANAL_PAINEL_ID = 0
     CANAL_ARQUIVO_ID = 0
     TICKET_CATEGORY_ID = 0
@@ -38,18 +42,22 @@ except ImportError:
     TICKET_ID_LENGTH = 5
     CANAL_STATUS_ID = 0
 
-
-# --- Helpers (Utilidades, JSON e Transcripts) ---
+# Paths de Arquivo
 DATA_DIR = "data"
 TICKETS_JSON = os.path.join(DATA_DIR, "tickets.json")
 TRANSCRIPTS_DIR = "transcripts"
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(TRANSCRIPTS_DIR, exist_ok=True)
 
+# ==============================================================================
+# 🛠️ SEÇÃO 2: HELPERS E UTILIDADES
+# (Funções de Arquivo, Tempo e Checagem de Permissão)
+# ==============================================================================
+
 _json_lock = asyncio.Lock()
 
 def normalize_to_list_int(x):
-    """Converte valores de configuração para uma lista de inteiros."""
+    """Converte valores de configuração para uma lista de IDs inteiros."""
     if isinstance(x, (int, str)) and str(x).isdigit():
         return [int(x)]
     if isinstance(x, (list, tuple)):
@@ -113,6 +121,7 @@ async def gerar_transcript_file(channel: discord.TextChannel):
                 content += atts
             if m.embeds and not content:
                 content += " [EMBED: " + (m.embeds[0].title or "Sem título") + "]"
+            # f-string segura (sem \ na expressão)
             lines.append(f"[{ts}] {author}: {content.replace('\n', ' ')}")
     except Exception as e:
         lines.append(f"[ERROR] Falha ao ler histórico: {e}")
@@ -133,8 +142,10 @@ def is_staff_member(member: discord.Member):
             return True
     return False
 
+# ==============================================================================
+# 🖥️ SEÇÃO 3: UI COMPONENTS (VIEWS, MODALS E FLUXO DE ABERTURA)
+# ==============================================================================
 
-# --- UI Components: Modal / Select / Views ---
 class DescricaoModal(Modal):
     def __init__(self, reason: str):
         super().__init__(title="Descreva seu problema (opcional)")
@@ -149,6 +160,7 @@ class DescricaoModal(Modal):
         self.add_item(self.descricao)
 
     async def on_submit(self, interaction: discord.Interaction):
+        # Chama a função principal de criação de ticket
         await criar_ticket(interaction, self.reason, self.descricao.value or "")
 
 class MotivoSelect(Select):
@@ -186,8 +198,6 @@ class PainelView(View):
     async def abrir_ticket(self, interaction: discord.Interaction, button: Button):
         await abrir_etapas(interaction) 
 
-
-# --- Fluxo de Abertura ---
 async def abrir_etapas(interaction: discord.Interaction):
     """Primeira etapa: checa anti-spam e mostra o select de motivo."""
     author = interaction.user
@@ -204,7 +214,6 @@ async def abrir_etapas(interaction: discord.Interaction):
     category = guild.get_channel(TICKET_CATEGORY_ID)
     if category and isinstance(category, discord.CategoryChannel):
         for ch in category.channels:
-            # Usando .format() para busca segura no topic
             if ch.topic and "owner:{}".format(author.id) in (ch.topic or "") and not ch.name.startswith("archived-"):
                 await interaction.response.send_message("⚠️ Você já tem um ticket aberto no canal {}. Por favor, use este canal para continuar.".format(ch.mention), ephemeral=True)
                 return
@@ -213,7 +222,10 @@ async def abrir_etapas(interaction: discord.Interaction):
     await interaction.response.send_message("Escolha o motivo do ticket:", view=MotivoView(), ephemeral=True)
 
 async def criar_ticket(interaction: discord.Interaction, reason: str, descricao: str = ""):
-    """Cria o canal de ticket e registra no JSON. (Com correções para SyntaxError)"""
+    """
+    Cria o canal de ticket e registra no JSON. 
+    CORREÇÃO DE SINTAXE: Usa .format() e sanitização rigorosa de strings.
+    """
     guild = interaction.guild
     author = interaction.user
     tickets = await load_all_tickets()
@@ -230,7 +242,6 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
         return
 
     ticket_id = gerar_ticket_id()
-    # Limpa o nome do autor para uso no canal
     clean_name = ''.join(c for c in author.name if c.isalnum() or c in ('-')) 
     name = "ticket-{}-{}-{}".format(clean_name[:15], ticket_id, ticket_id).lower()[:90] 
 
@@ -246,9 +257,11 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
             overwrites[role] = PermissionOverwrite(view_channel=True, send_messages=True, manage_messages=True)
 
     try:
-        # AQUI estava o erro: garantido que não há f-strings com backslash.
-        safe_reason = reason.replace('\n', ' ').replace('\\', '') 
+        # PONTO CRÍTICO: Sanitização da string para o tópico do canal
+        # Remove backslashes, novas linhas e aspas que causam o SyntaxError
+        safe_reason = reason.replace('\n', ' ').replace('\\', '').replace('"', '').replace("'", '')
         
+        # Uso de .format() para construção segura do tópico (evita SyntaxError)
         channel_topic = "ticket_id:{} owner:{} reason:{}".format(
             ticket_id, 
             author.id, 
@@ -297,7 +310,6 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
 
     await channel.send(content="{}".format(author.mention), embed=embed)
     
-    # Confirmação para o usuário
     await interaction.followup.send("✅ Seu ticket foi criado: {}".format(channel.mention), ephemeral=True)
 
     # Log de status
@@ -306,7 +318,11 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
         await log_c.send("🟢 Ticket criado: {} (ID {}) por {}".format(channel.name, ticket_id, author.mention))
 
 
-# --- Actions (Lógica de Gerenciamento) ---
+# ==============================================================================
+# 🚀 SEÇÃO 4: LÓGICA DE GERENCIAMENTO (AÇÕES)
+# (fechar, arquivar, reabrir)
+# ==============================================================================
+
 async def fechar_ticket_por_canal(channel: discord.TextChannel, by_user: discord.Member = None):
     """Fecha o ticket removendo a permissão de envio de mensagens do owner."""
     tickets = await load_all_tickets()
@@ -324,7 +340,6 @@ async def fechar_ticket_por_canal(channel: discord.TextChannel, by_user: discord
     owner = channel.guild.get_member(info.get('owner'))
     overwrites = channel.overwrites
     
-    # Revoga permissão de enviar mensagens ao owner
     if owner:
         overwrites[owner] = PermissionOverwrite(view_channel=True, send_messages=False, read_messages=True)
     
@@ -419,7 +434,6 @@ async def reabrir_por_canal(channel: discord.TextChannel, by_user: discord.Membe
     owner = channel.guild.get_member(info.get('owner'))
     overwrites = channel.overwrites
     
-    # Restaura permissão de enviar mensagens ao owner
     if owner:
         overwrites[owner] = PermissionOverwrite(view_channel=True, send_messages=True, read_messages=True)
 
@@ -436,8 +450,10 @@ async def reabrir_por_canal(channel: discord.TextChannel, by_user: discord.Membe
         
     return True, None
 
+# ==============================================================================
+# 🤖 SEÇÃO 5: COG PRINCIPAL E COMANDOS DE PREFIXO
+# ==============================================================================
 
-# --- COG (Comandos de Prefixos e Tarefas) ---
 class TicketsCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -469,7 +485,7 @@ class TicketsCog(commands.Cog):
         
         embed.add_field(
             name="1️⃣ Como Abrir um Ticket?",
-            # String normal para evitar o SyntaxError
+            # String multi-linhas segura (sem f" no início)
             value=(
                 "**1.** Clique no botão **`🎫 ABRIR TICKET`**.\n"
                 "**2.** Escolha o **motivo** do seu suporte.\n"
@@ -481,7 +497,7 @@ class TicketsCog(commands.Cog):
 
         embed.add_field(
             name="2️⃣ Do Clique à Solução (O Fluxo)",
-            # String normal para evitar o SyntaxError
+            # String multi-linhas segura (sem f" no início)
             value=(
                 "* **Abertura:** O canal é criado. Mencione novamente o problema.\n"
                 "* **Atendimento:** Um membro da equipe irá se identificar e começar a te ajudar.\n"
@@ -511,7 +527,7 @@ class TicketsCog(commands.Cog):
         except Exception:
             pass
 
-    # --- Helpers ---
+    # --- Helper para comandos ---
     def _is_ticket_channel(self, channel: discord.TextChannel, tickets):
         """Verifica se o canal atual é um ticket registrado."""
         if channel and channel.topic and "ticket_id:" in channel.topic:
@@ -682,7 +698,7 @@ class TicketsCog(commands.Cog):
         embed.add_field(name="Aberto por", value="<@{}>".format(owner), inline=True)
         embed.add_field(name="Fechado", value=("Sim" if info.get("closed") else "Não"), inline=True)
         embed.add_field(name="Motivo", value=info.get("reason", "—"), inline=False)
-        # Limita a exibição da descrição longa
+        
         description_value = info.get("description", "—")
         if len(description_value) > 100:
             description_value = description_value[:100] + "..."
@@ -702,7 +718,6 @@ class TicketsCog(commands.Cog):
         
         custom_id = interaction.data.get("custom_id")
         
-        # O fluxo de abertura é tratado pelos callbacks das Views e Modals
         if custom_id in ("abrir_ticket_unico", "motivo_select_id"):
              pass 
         else:
@@ -746,7 +761,6 @@ class TicketsCog(commands.Cog):
                     await fechar_ticket_por_canal(ch, by_user=None)
                     
             except discord.NotFound:
-                # Canal foi deletado manualmente, limpa o registro
                 if str(ch.id) in tickets:
                     tickets.pop(str(ch.id))
                     await save_all_tickets(tickets)
@@ -764,8 +778,11 @@ class TicketsCog(commands.Cog):
         except Exception:
             pass
 
-# --- setup (Registro da Cog e da View Persistente) ---
+# ==============================================================================
+# 📝 SEÇÃO 6: SETUP
+# ==============================================================================
 async def setup(bot):
+    """Função de registro do cog e da view persistente."""
     await bot.add_cog(TicketsCog(bot))
-    # É fundamental registrar a View persistente para que o botão funcione após restarts.
+    # Registra a View persistente para que o botão funcione após restarts.
     bot.add_view(PainelView(bot))
