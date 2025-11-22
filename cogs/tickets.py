@@ -5,7 +5,7 @@ Sistema de tickets completo:
 - Gerenciamento feito por comandos de prefixo (!fechar, !arquivar, etc.).
 - Painel informativo detalhado.
 - Estabilidade aprimorada nas interações.
-- CORREÇÃO: Ajuste na string do 'topic' do canal para evitar SyntaxError de f-string.
+- CORREÇÃO FINAL: Ajuste rigoroso na string do 'topic' do canal e log de erro para resolver o SyntaxError.
 """
 
 import discord
@@ -253,11 +253,14 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
             overwrites[role] = PermissionOverwrite(view_channel=True, send_messages=True, manage_messages=True)
 
     try:
-        # CORREÇÃO: Usando .format() e limpando o 'reason' para o tópico do canal.
+        # CORREÇÃO: Usando .format() e limpando o 'reason' e removendo backslashes
+        # que poderiam causar o SyntaxError.
+        safe_reason = reason.replace('\n', ' ').replace('\\', '') 
+        
         channel_topic = "ticket_id:{} owner:{} reason:{}".format(
             ticket_id, 
             author.id, 
-            reason.replace('\n', ' ') 
+            safe_reason
         )
 
         channel = await guild.create_text_channel(
@@ -270,7 +273,9 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
         await interaction.followup.send("❌ Erro: O bot não tem permissão para criar canais.", ephemeral=True)
         return
     except Exception as e:
-        await interaction.followup.send(f"❌ Erro desconhecido ao criar canal do ticket: {e}", ephemeral=True)
+        # CORREÇÃO: Usando str.format() para a mensagem de erro para evitar o SyntaxError
+        error_msg = "❌ Erro desconhecido ao criar canal do ticket: {}".format(e)
+        await interaction.followup.send(error_msg, ephemeral=True)
         return
 
     # Registro no JSON
