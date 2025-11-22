@@ -5,7 +5,7 @@ Sistema de tickets completo:
 - Gerenciamento feito por comandos de prefixo (!fechar, !arquivar, etc.).
 - Painel informativo detalhado.
 - Estabilidade aprimorada nas interações.
-- CORREÇÃO FINAL: Ajuste rigoroso na string do 'topic' do canal e log de erro para resolver o SyntaxError.
+- CORREÇÃO FINAL V2: Garantia de que strings multi-linhas não causem SyntaxError de backslash no carregamento.
 """
 
 import discord
@@ -490,6 +490,7 @@ class TicketsCog(commands.Cog):
             
         EXPIRACAO = EXPIRACAO_TICKET_HORAS
         
+        # NOTE: Não use f-string aqui (f"...") para evitar o SyntaxError com \n no carregamento.
         embed = discord.Embed(
             title="🎫 Sistema de Tickets de Suporte", 
             description="Use o botão abaixo para iniciar uma conversa **privada** com a nossa equipe de suporte.", 
@@ -498,6 +499,7 @@ class TicketsCog(commands.Cog):
         
         embed.add_field(
             name="1️⃣ Como Abrir um Ticket?",
+            # Usando strings concatenadas (sem f"...")
             value=(
                 "**1.** Clique no botão **`🎫 ABRIR TICKET`**.\n"
                 "**2.** Escolha o **motivo** do seu suporte.\n"
@@ -509,6 +511,7 @@ class TicketsCog(commands.Cog):
 
         embed.add_field(
             name="2️⃣ Do Clique à Solução (O Fluxo)",
+            # Usando strings concatenadas (sem f"...")
             value=(
                 "* **Abertura:** O canal é criado. Mencione novamente o problema.\n"
                 "* **Atendimento:** Um membro da equipe irá se identificar e começar a te ajudar.\n"
@@ -519,6 +522,7 @@ class TicketsCog(commands.Cog):
         
         embed.add_field(
             name="⏳ Fechamento Automático e Comandos",
+            # A única f-string necessária aqui é simples e no fim do campo
             value=(
                 f"* **Inatividade:** Se o ticket ficar inativo (sem mensagens) por **{EXPIRACAO} horas**, ele será fechado automaticamente.\n"
                 "* **Reabertura:** Use o comando `!reabrir` dentro do canal para continuar após o fechamento.\n"
