@@ -1,16 +1,16 @@
 # cogs/tickets.py
 """
-Sistema de tickets (Versão Final e Estruturada)
+Sistema de tickets (Versão Final: Suporte a Falha Manual do Canal de Arquivamento)
 
-Objetivo:
-1. Eliminar o SyntaxError persistente removendo todas as f-strings ambíguas nos pontos críticos.
-2. Estruturar o código em seções lógicas para fácil manutenção.
-3. Manter todas as funcionalidades de abertura, fechamento, arquivamento e comandos.
+Funcionalidades:
+1. Se o Canal de Arquivamento falhar, notifica o canal de status e permite correção via !set_archive_id.
+2. O fluxo de criação de tickets permanece o mesmo: Botão -> Modal -> Sala de Controle.
+3. Compatível com as configurações fornecidas (config.py).
 """
 
 import discord
 from discord.ext import commands, tasks
-from discord.ui import View, Button, Select, Modal, TextInput
+from discord.ui import View, Button, Modal, TextInput
 from discord import PermissionOverwrite
 import random
 import string
@@ -22,25 +22,24 @@ import tempfile
 from typing import Optional
 
 # ==============================================================================
-# 🧩 SEÇÃO 1: CONFIGURAÇÃO E CONSTANTES
-# (Valores importados ou padrões de fallback)
+# 🧩 SEÇÃO 1: CONFIGURAÇÃO E CONSTANTES (Importa tudo do config.py)
 # ==============================================================================
 try:
     from config import (
-        CANAL_PAINEL_ID, CANAL_ARQUIVO_ID, TICKET_CATEGORY_ID,
-        MOD_ROLE_IDS, STAFF_ROLE_ID, EXPIRACAO_TICKET_HORAS,
-        TICKET_ID_LENGTH, CANAL_STATUS_ID
+        CANAL_PAINEL_ID, CANAL_ARQUIVO_ID, TICKET_CATEGORY_ID, CANAL_STATUS_ID,
+        MOD_ROLE_IDS, STAFF_ROLE_ID, EXPIRACAO_TICKET_HORAS, TICKET_ID_LENGTH
     )
 except ImportError:
-    # 🚨 Valores Padrão de Falha (Altere-os no seu config.py!)
+    # 🚨 Valores Padrão de Falha (Fallbacks)
+    print("⚠️ config.py não encontrado ou incompleto. Usando valores padrão.")
     CANAL_PAINEL_ID = 0
-    CANAL_ARQUIVO_ID = 0
+    CANAL_ARQUIVO_ID = 0 # DEVE SER DEFINIDO MANUALMENTE PELO !set_archive_id
     TICKET_CATEGORY_ID = 0
+    CANAL_STATUS_ID = 0
     MOD_ROLE_IDS = []
     STAFF_ROLE_ID = []
-    EXPIRACAO_TICKET_HORAS = 24
+    EXPIRACAO_TICKET_HORAS = 48
     TICKET_ID_LENGTH = 5
-    CANAL_STATUS_ID = 0
 
 # Paths de Arquivo
 DATA_DIR = "data"
@@ -51,7 +50,6 @@ os.makedirs(TRANSCRIPTS_DIR, exist_ok=True)
 
 # ==============================================================================
 # 🛠️ SEÇÃO 2: HELPERS E UTILIDADES
-# (Funções de Arquivo, Tempo e Checagem de Permissão)
 # ==============================================================================
 
 _json_lock = asyncio.Lock()
@@ -64,7 +62,7 @@ def normalize_to_list_int(x):
         return [int(item) for item in x if str(item).isdigit()]
     return []
 
-# Compila IDs de cargos de Staff (sem duplicatas)
+# Combina cargos de Staff
 STAFF_ROLES = list(set(normalize_to_list_int(STAFF_ROLE_ID) + normalize_to_list_int(MOD_ROLE_IDS)))
 
 def gerar_ticket_id():
@@ -121,8 +119,10 @@ async def gerar_transcript_file(channel: discord.TextChannel):
                 content += atts
             if m.embeds and not content:
                 content += " [EMBED: " + (m.embeds[0].title or "Sem título") + "]"
-            # f-string segura (sem \ na expressão)
+            
+            # Linha corrigida para evitar SyntaxError de backslash
             lines.append("[{}] {}: {}".format(ts, author, content.replace('\n', ' ')))
+
     except Exception as e:
         lines.append(f"[ERROR] Falha ao ler histórico: {e}")
 
@@ -143,50 +143,121 @@ def is_staff_member(member: discord.Member):
     return False
 
 # ==============================================================================
-# 🖥️ SEÇÃO 3: UI COMPONENTS (VIEWS, MODALS E FLUXO DE ABERTURA)
+# 🖥️ SEÇÃO 3: UI COMPONENTS (VIEWS E MODALS)
 # ==============================================================================
 
-class DescricaoModal(Modal):
-    def __init__(self, reason: str):
-        super().__init__(title="Descreva seu problema (opcional)")
-        self.reason = reason
-        self.descricao = TextInput(
-            label="Descrição (máx 1000 caracteres)", 
+class ConfirmArchiveView(View):
+    """View para confirmação antes de deletar o canal."""
+    def __init__(self, user, channel):
+        super().__init__(timeout=60)
+        self.user_id = user.id
+        self.channel = channel
+        
+    @discord.ui.button(label="CONFIRMAR ARQUIVAMENTO", style=discord.ButtonStyle.red)
+    async def confirm(self, interaction: discord.Interaction, button: Button):
+        if not (interaction.user.id == self.user_id or is_staff_member(interaction.user)):
+             await interaction.response.send_message("❌ Apenas quem iniciou o comando ou a equipe pode confirmar.", ephemeral=True)
+             return
+
+        await interaction.response.edit_message(content="✅ Confirmação recebida. Arquivando ticket... O canal será deletado em instantes.", view=None)
+        
+        ok, err = await arquivar_ticket_por_canal(self.channel, by_user=interaction.user)
+        
+        if not ok and err != "Ticket não registrado. O canal foi deletado.":
+            log = self.channel.guild.get_channel(CANAL_STATUS_ID)
+            if log:
+                await log.send(f"❌ Erro crítico ao arquivar: {err}")
+            await self.channel.send(f"❌ Erro final ao arquivar: {err}")
+            
+    @discord.ui.button(label="CANCELAR", style=discord.ButtonStyle.grey)
+    async def cancel(self, interaction: discord.Interaction, button: Button):
+        await interaction.response.edit_message(content="Arquivamento cancelado.", view=None)
+
+class TicketControlView(View):
+    """View com botões de ACEITAR e ENCERRAR enviada dentro do canal do ticket."""
+    def __init__(self, bot):
+        super().__init__(timeout=None)
+        self.bot = bot
+
+    @discord.ui.button(label="ACEITAR", style=discord.ButtonStyle.blurple, custom_id="ticket_aceitar")
+    async def aceitar_ticket(self, interaction: discord.Interaction, button: Button):
+        if not is_staff_member(interaction.user):
+            await interaction.response.send_message("❌ Apenas membros da equipe podem aceitar tickets.", ephemeral=True)
+            return
+        
+        await interaction.response.defer()
+
+        tickets = await load_all_tickets()
+        channel_id_str = str(interaction.channel.id)
+        info = tickets.get(channel_id_str)
+        
+        if not info or info.get("closed"):
+            await interaction.followup.send("❌ Este ticket está fechado ou não registrado.", ephemeral=True)
+            return
+
+        if info.get("claimed_by"):
+            await interaction.followup.send(f"⚠️ Este ticket já foi aceito por <@{info['claimed_by']}>.", ephemeral=True)
+            return
+
+        # Update JSON
+        info["claimed_by"] = interaction.user.id
+        info["claimed_at"] = utcnow().isoformat()
+        await save_all_tickets(tickets)
+
+        # Send Confirmation (Brasilia Time)
+        brasilia_tz = datetime.timezone(datetime.timedelta(hours=-3))
+        now_brasilia = datetime.datetime.now(brasilia_tz).strftime("%d/%m/%Y às %H:%M:%S")
+        
+        await interaction.followup.send(
+            f"✅ Ticket **aceito** por {interaction.user.mention}."
+            f"\n*Atendimento iniciado em: {now_brasilia} (Horário de Brasília).*"
+        )
+        
+    @discord.ui.button(label="ENCERRAR", style=discord.ButtonStyle.red, custom_id="ticket_encerrar")
+    async def encerrar_ticket(self, interaction: discord.Interaction, button: Button):
+        await interaction.response.defer(ephemeral=True)
+
+        tickets = await load_all_tickets()
+        info = tickets.get(str(interaction.channel.id))
+        
+        if not info:
+             await interaction.followup.send("❌ Este canal não está registrado como um ticket ativo.", ephemeral=True)
+             return
+             
+        # Envia View de confirmação
+        await interaction.followup.send(
+            "⚠️ Você tem certeza que deseja **ENCERRAR** e arquivar este ticket? Isso irá gerar o histórico e deletar o canal.",
+            view=ConfirmArchiveView(interaction.user, interaction.channel),
+            ephemeral=True
+        )
+
+class ReasonModal(Modal):
+    """Modal para coletar o motivo e descrição do ticket."""
+    def __init__(self):
+        super().__init__(title="Abrir Ticket de Suporte")
+        self.reason = TextInput(
+            label="Motivo principal do suporte",
+            style=discord.TextStyle.short,
+            required=True,
+            max_length=256,
+            placeholder="Ex: Problema com o pagamento / Dúvida técnica"
+        )
+        self.description = TextInput(
+            label="Descrição detalhada (opcional)", 
             style=discord.TextStyle.long, 
             required=False, 
             max_length=1000,
-            placeholder="Forneça detalhes que ajudem nossa equipe a te auxiliar."
+            placeholder="Descreva seu problema para a equipe."
         )
-        self.add_item(self.descricao)
+        self.add_item(self.reason)
+        self.add_item(self.description)
 
     async def on_submit(self, interaction: discord.Interaction):
-        # Chama a função principal de criação de ticket
-        await criar_ticket(interaction, self.reason, self.descricao.value or "")
-
-class MotivoSelect(Select):
-    def __init__(self):
-        options = [
-            discord.SelectOption(label="Suporte Técnico", description="Ajuda técnica, bugs, dúvidas gerais", emoji="🛠️"),
-            discord.SelectOption(label="Compras/Pagamentos", description="Pedidos, valores, status de pagamento", emoji="💰"),
-            discord.SelectOption(label="Parcerias/Comercial", description="Propostas ou assuntos de negócios", emoji="🤝"),
-            discord.SelectOption(label="Denúncia/Report", description="Reportar infrações de regras ou usuários", emoji="🚨"),
-            discord.SelectOption(label="Outro Assunto", description="Assunto não listado acima", emoji="❓")
-        ]
-        super().__init__(placeholder="Escolha o motivo do seu ticket...", min_values=1, max_values=1, options=options, custom_id="motivo_select_id")
-
-    async def callback(self, interaction: discord.Interaction):
-        chosen = self.values[0]
-        modal = DescricaoModal(reason=chosen)
-        await interaction.response.send_modal(modal)
-
-class MotivoView(View):
-    def __init__(self):
-        super().__init__(timeout=300) 
-        self.add_item(MotivoSelect())
+        # Deferir imediatamente (Corrige o "Algo deu errado" / Timeout)
+        await interaction.response.defer(ephemeral=True, thinking=True)
         
-    async def on_timeout(self):
-        for item in self.children:
-            item.disabled = True
+        # Chama a função principal de criação de ticket
+        await criar_ticket(interaction, self.reason.value, self.description.value or "")
 
 class PainelView(View):
     """View persistente com UM ÚNICO BOTÃO de ABRIR TICKET."""
@@ -199,17 +270,17 @@ class PainelView(View):
         await abrir_etapas(interaction) 
 
 async def abrir_etapas(interaction: discord.Interaction):
-    """Primeira etapa: checa anti-spam e mostra o select de motivo."""
+    """Checa anti-spam e mostra o Modal de Motivo."""
     author = interaction.user
     tickets = await load_all_tickets()
     
-    # 1. Checa se o usuário já tem um ticket ativo no JSON
+    # Checagem anti-spam
     for v in tickets.values():
         if v.get("owner") == author.id and not v.get("closed", False):
             await interaction.response.send_message("⚠️ Você já tem um ticket aberto registrado. Feche-o antes de abrir outro.", ephemeral=True)
             return
 
-    # 2. Checa se o usuário já tem um canal de ticket aberto na Categoria
+    # Checa canais ativos na Categoria
     guild = interaction.guild
     category = guild.get_channel(TICKET_CATEGORY_ID)
     if category and isinstance(category, discord.CategoryChannel):
@@ -218,27 +289,23 @@ async def abrir_etapas(interaction: discord.Interaction):
                 await interaction.response.send_message("⚠️ Você já tem um ticket aberto no canal {}. Por favor, use este canal para continuar.".format(ch.mention), ephemeral=True)
                 return
 
-    # 3. Mostra o Select de Motivo
-    await interaction.response.send_message("Escolha o motivo do ticket:", view=MotivoView(), ephemeral=True)
+    # Envia Modal
+    modal = ReasonModal()
+    await interaction.response.send_modal(modal)
 
 async def criar_ticket(interaction: discord.Interaction, reason: str, descricao: str = ""):
-    """
-    Cria o canal de ticket e registra no JSON. 
-    CORREÇÃO DE SINTAXE: Usa .format() e sanitização rigorosa de strings.
-    """
+    """Cria o canal de ticket, registra e envia o painel de controle."""
     guild = interaction.guild
     author = interaction.user
     tickets = await load_all_tickets()
 
-    # Checagem de corrida
-    for v in tickets.values():
-        if v.get("owner") == author.id and not v.get("closed", False):
-            await interaction.followup.send("⚠️ Você já tem um ticket aberto.", ephemeral=True)
-            return
-
     category = guild.get_channel(TICKET_CATEGORY_ID)
     if not isinstance(category, discord.CategoryChannel):
         await interaction.followup.send("❌ Categoria de tickets não encontrada ou inválida. Contate a moderação.", ephemeral=True)
+        # Loga o erro de configuração da Categoria
+        log_c = guild.get_channel(CANAL_STATUS_ID)
+        if log_c:
+             await log_c.send(f"⚠️ **ATENÇÃO STAFF:** O ID de Categoria configurado (`{TICKET_CATEGORY_ID}`) para tickets é inválido ou não existe.", allowed_mentions=discord.AllowedMentions.none())
         return
 
     ticket_id = gerar_ticket_id()
@@ -257,11 +324,7 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
             overwrites[role] = PermissionOverwrite(view_channel=True, send_messages=True, manage_messages=True)
 
     try:
-        # PONTO CRÍTICO: Sanitização da string para o tópico do canal
-        # Remove backslashes, novas linhas e aspas que causam o SyntaxError
         safe_reason = reason.replace('\n', ' ').replace('\\', '').replace('"', '').replace("'", '')
-        
-        # Uso de .format() para construção segura do tópico (evita SyntaxError)
         channel_topic = "ticket_id:{} owner:{} reason:{}".format(
             ticket_id, 
             author.id, 
@@ -295,20 +358,22 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
     }
     await save_all_tickets(tickets)
 
-    # Mensagem de Boas-vindas
+    # Mensagem de Boas-vindas com painel de controle
     embed = discord.Embed(
         title="🎫 Ticket {}: {}".format(ticket_id, reason), 
         description=(
             "**Usuário:** {}\n"
+            "**Motivo:** {}\n"
             "**Descrição:** {}\n\n"
-            "Aguarde. Um membro da equipe irá atender em breve. "
-        ).format(author.mention, descricao or '—'), 
+            "⚠️ **Aguardando Atendimento:** A equipe irá clicar em **ACEITAR** para iniciar. Você pode usar este canal para fornecer mais detalhes."
+        ).format(author.mention, reason, descricao or '—'), 
         color=discord.Color.green(),
         timestamp=datetime.datetime.utcnow()
     )
     embed.set_footer(text="ID do Ticket: {} | Abertura: {}".format(ticket_id, now)) 
-
-    await channel.send(content="{}".format(author.mention), embed=embed)
+    
+    control_view = TicketControlView(interaction.client) 
+    await channel.send(content="{}".format(author.mention), embed=embed, view=control_view)
     
     await interaction.followup.send("✅ Seu ticket foi criado: {}".format(channel.mention), ephemeral=True)
 
@@ -320,11 +385,10 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
 
 # ==============================================================================
 # 🚀 SEÇÃO 4: LÓGICA DE GERENCIAMENTO (AÇÕES)
-# (fechar, arquivar, reabrir)
 # ==============================================================================
 
 async def fechar_ticket_por_canal(channel: discord.TextChannel, by_user: discord.Member = None):
-    """Fecha o ticket removendo a permissão de envio de mensagens do owner."""
+    """Fecha o ticket removendo permissão de envio (Usado em !fechar e inatividade)."""
     tickets = await load_all_tickets()
     channel_id_str = str(channel.id)
     info = tickets.get(channel_id_str)
@@ -334,9 +398,8 @@ async def fechar_ticket_por_canal(channel: discord.TextChannel, by_user: discord
 
     info["closed"] = True
     info["closed_at"] = utcnow().isoformat()
-    tickets[channel_id_str] = info
     await save_all_tickets(tickets)
-
+    
     owner = channel.guild.get_member(info.get('owner'))
     overwrites = channel.overwrites
     
@@ -357,7 +420,7 @@ async def fechar_ticket_por_canal(channel: discord.TextChannel, by_user: discord
     return True, None
 
 async def arquivar_ticket_por_canal(channel: discord.TextChannel, by_user: discord.Member = None):
-    """Arquiva (deleta) o ticket, gerando transcript."""
+    """Arquiva (deleta) o ticket, gerando transcript. Permite falha no arquivamento se o canal for inválido."""
     tickets = await load_all_tickets()
     channel_id_str = str(channel.id)
     info = tickets.pop(channel_id_str, None)
@@ -369,34 +432,60 @@ async def arquivar_ticket_por_canal(channel: discord.TextChannel, by_user: disco
              pass
         return False, "Ticket não registrado. O canal foi deletado."
 
+    # 1. Generate Transcript File
     path = await gerar_transcript_file(channel)
-    arquivo = channel.guild.get_channel(CANAL_ARQUIVO_ID)
     
-    # Envia o transcript para o canal de arquivos
+    # 2. Setup Archive Destination
+    archive_id = CANAL_ARQUIVO_ID 
+    arquivo = channel.guild.get_channel(archive_id)
+    
+    archive_failed = False
+    
+    # 3. Build Filename 
+    ticket_id = info.get("ticket_id", "UNKNOWN")
+    owner_member = channel.guild.get_member(info.get('owner'))
+    owner_name_safe = owner_member.name if owner_member else "UnknownUser"
+    owner_name_safe = ''.join(c for c in owner_name_safe if c.isalnum() or c in ('-'))[:20]
+    filename = f"{ticket_id}-{owner_name_safe}-transcript.txt" 
+
+    # 4. Send Transcript (Somente se o canal for válido)
     if arquivo and isinstance(arquivo, discord.TextChannel):
-        owner_member = channel.guild.get_member(info.get('owner'))
-        owner_mention = owner_member.mention if owner_member else "<@{}>".format(info.get('owner'))
+        owner_mention = owner_member.mention if owner_member else f"<@{info.get('owner')}>"
 
         embed = discord.Embed(
-            title="📁 Ticket Arquivado", 
-            description="Ticket: **{}**\n**Aberto por:** {}".format(channel.name, owner_mention), 
+            title=f"📁 Ticket Arquivado: {ticket_id}", 
+            description=f"Canal: **{channel.name}**\n**Aberto por:** {owner_mention}", 
             color=discord.Color.greyple(), 
             timestamp=utcnow()
         )
         if by_user:
             embed.add_field(name="Arquivado por", value=by_user.mention, inline=False)
-        embed.add_field(name="ID", value=info.get("ticket_id", "—"), inline=True)
         embed.add_field(name="Motivo", value=info.get("reason", "—"), inline=True)
         
         try:
             await arquivo.send(embed=embed)
-            await arquivo.send(file=discord.File(path, filename="{}-transcript.txt".format(channel.name)))
-        except Exception:
+            await arquivo.send(file=discord.File(path, filename=filename))
+        except Exception as e:
+            # Falha no envio (ex: permissões)
+            archive_failed = True
+            log = channel.guild.get_channel(CANAL_STATUS_ID)
+            if log:
+                await log.send(f"❌ Erro ao enviar transcript para o canal de arquivamento (ID `{archive_id}`). Falha: {e}")
             await channel.send("⚠️ Erro ao enviar transcript para o canal de arquivamento. Deletando canal.", delete_after=10)
-    
+    else:
+        # Canal de arquivamento não encontrado ou não é TextChannel
+        archive_failed = True
+        log = channel.guild.get_channel(CANAL_STATUS_ID)
+        if log and isinstance(log, discord.TextChannel):
+            await log.send(
+                f"🚨 **ALERTA DE CONFIGURAÇÃO:** Falha ao arquivar ticket `{info.get('ticket_id')}`! "
+                f"O canal de arquivamento configurado (ID `{archive_id}`) não foi encontrado. "
+                f"O transcript NÃO foi salvo. Por favor, use `!set_archive_id <NOVO_ID>` para corrigir."
+            )
+            
     await save_all_tickets(tickets) 
 
-    # Deleta o canal
+    # 5. Deleta o canal (Continua o processo de exclusão)
     try:
         await channel.delete(reason="Arquivado por {}".format(by_user.name if by_user else 'Sistema'))
     except Exception:
@@ -405,6 +494,7 @@ async def arquivar_ticket_por_canal(channel: discord.TextChannel, by_user: disco
              await log.send("❌ ATENÇÃO: Bot falhou ao deletar o canal {} por falta de permissão. Registro removido do JSON.".format(channel.name))
         return False, "O bot não tem permissão para deletar o canal."
         
+    # 6. Log e Limpeza
     log = channel.guild.get_channel(CANAL_STATUS_ID)
     if log and isinstance(log, discord.TextChannel):
         who = by_user.mention if by_user else "Sistema"
@@ -415,10 +505,12 @@ async def arquivar_ticket_por_canal(channel: discord.TextChannel, by_user: disco
     except Exception:
         pass
         
+    if archive_failed:
+        return False, "Ticket arquivado (deletado), mas falha ao salvar o transcript no canal de arquivo."
     return True, None
 
 async def reabrir_por_canal(channel: discord.TextChannel, by_user: discord.Member = None):
-    """Reabre o ticket, restaurando a permissão de envio de mensagens do owner."""
+    # ... (lógica de reabrir - inalterada)
     tickets = await load_all_tickets()
     channel_id_str = str(channel.id)
     info = tickets.get(channel_id_str)
@@ -463,7 +555,7 @@ class TicketsCog(commands.Cog):
     @commands.command(name="ticketpanel")
     @commands.has_permissions(manage_messages=True)
     async def cmd_ticket_panel(self, ctx):
-        """Envia o painel de abertura de tickets no canal configurado com instruções."""
+        # ... (lógica de setup do painel - inalterada)
         TARGET_PANEL_ID = CANAL_PAINEL_ID
         
         if not TARGET_PANEL_ID:
@@ -485,34 +577,28 @@ class TicketsCog(commands.Cog):
         
         embed.add_field(
             name="1️⃣ Como Abrir um Ticket?",
-            # String multi-linhas segura (sem f" no início)
             value=(
                 "**1.** Clique no botão **`🎫 ABRIR TICKET`**.\n"
-                "**2.** Escolha o **motivo** do seu suporte.\n"
-                "**3.** Descreva seu problema (opcional).\n"
-                "**4.** Um canal de texto privado será criado para você e a equipe."
+                "**2.** Preencha o formulário com o **motivo** e a **descrição**.\n"
+                "**3.** Um canal de texto privado será criado para você e a equipe."
             ),
             inline=False
         )
 
         embed.add_field(
-            name="2️⃣ Do Clique à Solução (O Fluxo)",
-            # String multi-linhas segura (sem f" no início)
+            name="2️⃣ Fluxo de Atendimento",
             value=(
-                "* **Abertura:** O canal é criado. Mencione novamente o problema.\n"
-                "* **Atendimento:** Um membro da equipe irá se identificar e começar a te ajudar.\n"
-                "* **Resolução:** Assim que o problema for resolvido, use **`!fechar`** (ou a equipe fechará) para finalizar a conversa."
+                "* **Abertura:** O canal é criado. Um moderador irá clicar em **ACEITAR**.\n"
+                "* **Resolução:** Use o botão **ENCERRAR** (ou a equipe fechará) para finalizar e arquivar a conversa."
             ),
             inline=False
         )
         
         embed.add_field(
-            name="⏳ Fechamento Automático e Comandos",
-            # Uso de f-string simples no final para incluir variável
+            name="⏳ Fechamento Automático",
             value=(
-                f"* **Inatividade:** Se o ticket ficar inativo (sem mensagens) por **{EXPIRACAO} horas**, ele será fechado automaticamente.\n"
-                "* **Reabertura:** Use o comando `!reabrir` dentro do canal para continuar após o fechamento.\n"
-                "* **Transcrição:** Use `!transcript` para gerar o histórico da conversa."
+                f"* **Inatividade:** Se o ticket ficar inativo por **{EXPIRACAO} horas**, ele será fechado automaticamente (sem arquivar).\n"
+                "* **Comandos:** Use comandos de emergência como `!reabrir` e `!transcript`."
             ),
             inline=False
         )
@@ -539,7 +625,7 @@ class TicketsCog(commands.Cog):
     # --- Comandos de Gerenciamento ---
     @commands.command(name="fechar")
     async def cmd_fechar(self, ctx):
-        """Fecha o ticket no canal atual."""
+        """Fecha o ticket no canal atual (Apenas remove permissão de envio)."""
         tickets = await load_all_tickets()
         is_ticket, info = self._is_ticket_channel(ctx.channel, tickets)
 
@@ -577,12 +663,10 @@ class TicketsCog(commands.Cog):
         except Exception:
             pass
             
-        await ctx.send("📁 Arquivando ticket e gerando transcript... O canal será deletado em 5 segundos.")
-        await asyncio.sleep(5)
-        
-        ok, err = await arquivar_ticket_por_canal(ctx.channel, by_user=ctx.author)
-        if not ok:
-            await ctx.channel.send("❌ Erro ao arquivar: {}".format(err))
+        await ctx.send(
+            "⚠️ Você tem certeza que deseja **ENCERRAR** e arquivar este ticket? O canal será deletado.",
+            view=ConfirmArchiveView(ctx.author, ctx.channel)
+        )
 
 
     @commands.command(name="transcript")
@@ -604,7 +688,13 @@ class TicketsCog(commands.Cog):
         path = await gerar_transcript_file(ctx.channel)
         
         try:
-            await ctx.channel.send("📝 Transcript gerado:", file=discord.File(path, filename="{}-transcript.txt".format(ctx.channel.name)))
+            # Usa o nome de arquivo customizado para o anexo
+            ticket_id = info.get("ticket_id", "UNKNOWN")
+            owner_member = ctx.guild.get_member(info.get('owner'))
+            owner_name_safe = ''.join(c for c in owner_member.name if c.isalnum() or c in ('-'))[:20] if owner_member else "UnknownUser"
+            filename = f"{ticket_id}-{owner_name_safe}-transcript.txt"
+
+            await ctx.channel.send("📝 Transcript gerado:", file=discord.File(path, filename=filename))
             try:
                 await ctx.message.delete()
             except:
@@ -641,73 +731,30 @@ class TicketsCog(commands.Cog):
         ok, err = await reabrir_por_canal(ctx.channel, by_user=ctx.author)
         if not ok:
             await ctx.channel.send("❌ Erro ao reabrir: {}".format(err))
+            
+    @commands.command(name="set_archive_id")
+    @commands.has_permissions(administrator=True) # Apenas Administradores podem alterar IDs críticos
+    async def cmd_set_archive_id(self, ctx, new_id: Optional[int]):
+        """Define o novo ID do canal de arquivamento em tempo de execução."""
+        global CANAL_ARQUIVO_ID
         
-
-    @commands.command(name="ticket-admin")
-    @commands.has_permissions(manage_messages=True)
-    async def cmd_ticket_admin(self, ctx):
-        """Lista todos os tickets abertos por DM."""
-        tickets = await load_all_tickets()
-        lines = []
-        for ch_id, info in tickets.items():
-            lines.append("- {} — Canal: <#{}> — Owner: <@{}> — Motivo: {}".format(
-                info.get('ticket_id'), ch_id, info.get('owner'), info.get('reason')))
-        
-        text = "\n".join(lines) or "Nenhum ticket aberto."
-        
-        if len(text) > 1800:
-             text = text[:1700] + "\n... (Lista muito longa. Verifique o JSON.)"
-             
-        try:
-            await ctx.author.send("📋 **Tickets Abertos ({})**: {}".format(len(tickets), text))
-            await ctx.send("✅ Listei os tickets por DM.", delete_after=8)
-        except discord.Forbidden:
-            await ctx.send("❌ Não consegui enviar DM. Verifique se o seu DM está aberto.", delete_after=8)
-        except Exception:
-             await ctx.send("❌ Erro ao enviar a lista por DM.", delete_after=8)
-
-
-    @commands.command(name="ticket-info")
-    @commands.has_permissions(manage_messages=True)
-    async def cmd_ticket_info(self, ctx, channel: discord.TextChannel = None):
-        """Mostra informações detalhadas do ticket no canal atual ou especificado."""
-        if channel is None:
-            if ctx.channel.topic and "ticket_id:" in ctx.channel.topic:
-                channel = ctx.channel
-            else:
-                await ctx.send("❌ Informe o canal do ticket, ex: `!ticket-info #ticket-user-TXXXX` (ou use o comando dentro do canal).", delete_after=10)
-                return
-
-        tickets = await load_all_tickets()
-        info = tickets.get(str(channel.id))
-        
-        if not info:
-            await ctx.send("❌ Canal informado não é um ticket registrado.", delete_after=8)
+        if not new_id:
+            await ctx.send(f"❌ Uso: `!set_archive_id <ID_DO_CANAL>`. O ID atual é `{CANAL_ARQUIVO_ID}`.", delete_after=10)
             return
 
-        owner = info.get("owner")
-        claimed = info.get("claimed_by")
-        opened = info.get("opened_at")
-        
-        opened_dt = datetime.datetime.fromisoformat(opened) if opened else None
-        diff = utcnow() - opened_dt if opened_dt else datetime.timedelta(0)
-        hours = int(diff.total_seconds() // 3600)
-        
-        embed = discord.Embed(title="ℹ️ Info — {}".format(channel.name), color=discord.Color.blurple())
-        embed.add_field(name="ID", value=info.get("ticket_id", "—"), inline=True)
-        embed.add_field(name="Aberto por", value="<@{}>".format(owner), inline=True)
-        embed.add_field(name="Fechado", value=("Sim" if info.get("closed") else "Não"), inline=True)
-        embed.add_field(name="Motivo", value=info.get("reason", "—"), inline=False)
-        
-        description_value = info.get("description", "—")
-        if len(description_value) > 100:
-            description_value = description_value[:100] + "..."
+        channel = ctx.guild.get_channel(new_id)
+        if not isinstance(channel, discord.TextChannel):
+            await ctx.send("❌ O ID fornecido não é um canal de texto válido no servidor.", delete_after=10)
+            return
             
-        embed.add_field(name="Descrição", value=description_value, inline=False)
-        embed.add_field(name="Horas abertas", value="{}h".format(hours), inline=True)
-        embed.add_field(name="Atendido por", value=(f"<@{claimed}>" if claimed else "—"), inline=True)
-        
-        await ctx.send(embed=embed)
+        # Altera o ID global (runtime)
+        CANAL_ARQUIVO_ID = new_id
+
+        await ctx.send(f"✅ O ID do canal de arquivamento foi atualizado com sucesso para **{channel.mention}** (`{new_id}`).", delete_after=15)
+        try:
+            await ctx.message.delete()
+        except Exception:
+            pass
 
     # --- Listener de Interações ---
     @commands.Cog.listener()
@@ -718,7 +765,7 @@ class TicketsCog(commands.Cog):
         
         custom_id = interaction.data.get("custom_id")
         
-        if custom_id in ("abrir_ticket_unico", "motivo_select_id"):
+        if custom_id in ("abrir_ticket_unico", "ticket_aceitar", "ticket_encerrar"):
              pass 
         else:
              return
@@ -726,6 +773,7 @@ class TicketsCog(commands.Cog):
     # --- Tarefa de Verificação de Inatividade ---
     @tasks.loop(hours=1)
     async def check_inatividade(self):
+        # ... (lógica de inatividade - inalterada)
         if not self.bot.is_ready() or not self.bot.guilds:
             return
         
@@ -758,7 +806,7 @@ class TicketsCog(commands.Cog):
                 # Verifica inatividade
                 if last_time < limite:
                     await ch.send("⏰ Ticket fechado automaticamente por inatividade (última mensagem há mais de {} horas).".format(EXPIRACAO_TICKET_HORAS))
-                    await fechar_ticket_por_canal(ch, by_user=None)
+                    await fechar_ticket_por_canal(ch, by_user=None) 
                     
             except discord.NotFound:
                 if str(ch.id) in tickets:
@@ -783,6 +831,8 @@ class TicketsCog(commands.Cog):
 # ==============================================================================
 async def setup(bot):
     """Função de registro do cog e da view persistente."""
-    await bot.add_cog(TicketsCog(bot))
-    # Registra a View persistente para que o botão funcione após restarts.
+    cog = TicketsCog(bot)
+    await bot.add_cog(cog)
+    
     bot.add_view(PainelView(bot))
+    bot.add_view(TicketControlView(bot))
