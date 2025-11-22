@@ -5,7 +5,7 @@ Sistema de tickets completo:
 - Gerenciamento feito por comandos de prefixo (!fechar, !arquivar, etc.).
 - Painel informativo detalhado.
 - Estabilidade aprimorada nas interações.
-- CORREÇÃO DEFINITIVA: Remoção de todas as f-strings ambíguas nos pontos críticos (topic, logs) para evitar o SyntaxError.
+- CORREÇÃO DEFINITIVA: Remoção de todas as f-strings ambíguas nos pontos críticos (topic, logs) para evitar o SyntaxError na linha 124.
 """
 
 import discord
@@ -212,6 +212,7 @@ async def abrir_etapas(interaction: discord.Interaction):
     guild = interaction.guild
     category = guild.get_channel(TICKET_CATEGORY_ID)
     if category and isinstance(category, discord.CategoryChannel):
+        # Usando .format() aqui para segurança
         for ch in category.channels:
             if ch.topic and "owner:{}".format(author.id) in (ch.topic or "") and not ch.name.startswith("archived-"):
                 await interaction.response.send_message("⚠️ Você já tem um ticket aberto no canal {}. Por favor, use este canal para continuar.".format(ch.mention), ephemeral=True)
@@ -258,6 +259,7 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
         # Remove \n e o backslash literal \
         safe_reason = reason.replace('\n', ' ').replace('\\', '') 
         
+        # Linha ~127: Aqui estava o erro, corrigido com .format()
         channel_topic = "ticket_id:{} owner:{} reason:{}".format(
             ticket_id, 
             author.id, 
@@ -491,7 +493,7 @@ class TicketsCog(commands.Cog):
             
         EXPIRACAO = EXPIRACAO_TICKET_HORAS
         
-        # NOTE: Não use f-string aqui (f"...") para evitar o SyntaxError com \n no carregamento.
+        # Strings seguras para evitar o SyntaxError na fase de carregamento
         embed = discord.Embed(
             title="🎫 Sistema de Tickets de Suporte", 
             description="Use o botão abaixo para iniciar uma conversa **privada** com a nossa equipe de suporte.", 
