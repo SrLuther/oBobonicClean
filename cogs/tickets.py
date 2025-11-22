@@ -562,6 +562,7 @@ async def auto_archive_task(self):
 # 🔹 Setup do COG
 # ============================================================
 
-def setup(bot):
-    bot.add_cog(Tickets(bot))
+async def setup(bot):
+    await bot.add_cog(Tickets(bot))
     print("[COG] Tickets carregado com sucesso.")
+
