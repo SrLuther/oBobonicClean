@@ -63,7 +63,6 @@ async def load_cogs():
         try:
             await bot.load_extension(f"cogs.{cog_name}")
             
-            # Formata a mensagem de sucesso com data e hora DETALHADA
             log_time = get_detailed_log_time()
             descricao = COG_DESCRICOES.get(cog_name, f"📦 Cog {cog_name} carregado")
             
@@ -72,7 +71,6 @@ async def load_cogs():
                 await canal_logs.send(f"`{log_time}` {descricao}")
                 
         except Exception as e:
-            # Formata a mensagem de erro com data e hora DETALHADA
             log_time = get_detailed_log_time()
             
             print(f"[ERRO] Falha ao carregar {cog_name}.py: {e}")
@@ -89,16 +87,18 @@ async def on_ready():
     
     await load_cogs()
     
-    # Prepara a data e hora para a mensagem FINAL (formato dd/mm/aaaa hh:mm)
+    # Prepara a data e hora para a mensagem FINAL
     status_time = get_status_time_format()
     
-    canal_status = bot.get_channel(CANAL_STATUS_ID)
+    # Busca o canal de LOGS para a mensagem final de status
+    canal_logs = bot.get_channel(CANAL_LOGS_ID)
     
-    if canal_status:
-        # ⬅️ CORREÇÃO FINAL: Formato exato solicitado.
-        await canal_status.send(f"✅ Todos os cogs carregados em **{status_time}**")
+    if canal_logs:
+        # Envia a mensagem final de status para o canal de LOGS
+        await canal_logs.send(f"✅ Todos os cogs carregados em **{status_time}**")
     else:
-        logging.warning(f"Canal de status (ID: {CANAL_STATUS_ID}) não encontrado para enviar confirmação final.")
+        # Se nem o canal de logs existir, registra um aviso interno
+        logging.warning(f"Canal de logs (ID: {CANAL_LOGS_ID}) não encontrado para enviar confirmação final.")
 
 # --- Função principal ---
 async def main():
