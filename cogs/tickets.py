@@ -1,5 +1,6 @@
-"""cogs/tickets.py
-Versão completa e profissional do sistema de tickets.
+# cogs/tickets.py
+"""
+Sistema completo de tickets:
 - Persistência JSON em data/tickets.json
 - Transcripts gerados e enviados ao canal de arquivo (CANAL_ARQUIVO_ID)
 - Painel (botão único) + comando !ticket (moderadores com manage_messages)
@@ -49,7 +50,6 @@ _json_lock = asyncio.Lock()
 # ---------------------------
 # Helpers
 # ---------------------------
-
 def normalize_to_list(x):
     if x is None:
         return []
@@ -62,14 +62,12 @@ def normalize_to_list(x):
 
 STAFF_ROLES = normalize_to_list(STAFF_ROLE_ID) or normalize_to_list(MOD_ROLE_IDS)
 
-
 def gerar_ticket_id():
-    return "T-" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=TICKET_ID_LENGTH or 5))
-
+    length = TICKET_ID_LENGTH if isinstance(TICKET_ID_LENGTH, int) and TICKET_ID_LENGTH > 0 else 5
+    return "T-" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
 def utcnow():
     return datetime.datetime.utcnow()
-
 
 async def _read_json_safe(path):
     if not os.path.exists(path):
@@ -80,7 +78,6 @@ async def _read_json_safe(path):
     except Exception:
         return {}
 
-
 async def _write_json_safe(path, data):
     try:
         with open(path, "w", encoding="utf-8") as f:
@@ -88,17 +85,14 @@ async def _write_json_safe(path, data):
     except Exception as e:
         print(f"[tickets] erro ao escrever json: {e}")
 
-
 async def load_all_tickets():
     async with _json_lock:
         data = await _read_json_safe(TICKETS_JSON)
         return data.get("tickets", {})
 
-
 async def save_all_tickets(tickets):
     async with _json_lock:
         await _write_json_safe(TICKETS_JSON, {"tickets": tickets})
-
 
 # Transcript helper: write to temp file and return path
 async def gerar_transcript_file(channel: discord.TextChannel):
@@ -112,14 +106,12 @@ async def gerar_transcript_file(channel: discord.TextChannel):
     except Exception as e:
         lines.append(f"[ERROR] Falha ao ler histórico: {e}")
 
-    text = "
-".join(lines)
+    text = "\n".join(lines)
     fd, path = tempfile.mkstemp(prefix=f"transcript-{channel.name}-", suffix=".txt", dir=TRANSCRIPTS_DIR)
     os.close(fd)
     with open(path, "w", encoding="utf-8") as f:
         f.write(text)
     return path
-
 
 def is_staff_member(member: discord.Member):
     if member.guild_permissions.manage_messages:
@@ -129,7 +121,6 @@ def is_staff_member(member: discord.Member):
         if r and r in member.roles:
             return True
     return False
-
 
 # ---------------------------
 # UI Components: Modal / Select / Views
@@ -143,7 +134,6 @@ class DescricaoModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         await criar_ticket(interaction, self.reason, self.descricao.value or "")
-
 
 class MotivoSelect(Select):
     def __init__(self):
@@ -161,23 +151,19 @@ class MotivoSelect(Select):
         modal = DescricaoModal(reason=chosen)
         await interaction.response.send_modal(modal)
 
-
 class MotivoView(View):
     def __init__(self):
         super().__init__(timeout=300)
         self.add_item(MotivoSelect())
 
-
 class PainelView(View):
     def __init__(self):
         super().__init__(timeout=None)
-        # botão principal
         self.add_item(Button(label="🎫 Abrir Ticket", style=discord.ButtonStyle.green, custom_id="abrir_ticket"))
 
     @discord.ui.button(label="🎫 Abrir Ticket", style=discord.ButtonStyle.green, custom_id="abrir_ticket_fallback")
     async def abrir_fallback(self, interaction: discord.Interaction, button: Button):
         await abrir_etapas(interaction)
-
 
 class TicketButtons(View):
     def __init__(self, channel_id: int, closed: bool = False):
@@ -189,7 +175,6 @@ class TicketButtons(View):
             self.add_item(Button(label="🔒 Fechar", style=discord.ButtonStyle.red, custom_id=f"fechar_{channel_id}"))
             self.add_item(Button(label="📁 Arquivar", style=discord.ButtonStyle.grey, custom_id=f"arquivar_{channel_id}"))
             self.add_item(Button(label="📝 Transcript", style=discord.ButtonStyle.blurple, custom_id=f"transcript_{channel_id}"))
-
 
 # ---------------------------
 # Fluxo: abrir etapas / criar ticket
@@ -213,7 +198,6 @@ async def abrir_etapas(interaction: discord.Interaction):
                 return
 
     await interaction.response.send_message("Escolha o motivo do ticket:", view=MotivoView(), ephemeral=True)
-
 
 async def criar_ticket(interaction: discord.Interaction, reason: str, descricao: str = ""):
     guild = interaction.guild
@@ -268,12 +252,8 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
     embed = discord.Embed(
         title=f"🎫 Ticket {ticket_id}",
         description=(
-            f"{author.mention}
-**Motivo:** {reason}
-" +
-            f"**Descrição:** {descricao or '—'}
-
-" +
+            f"{author.mention}\n**Motivo:** {reason}\n"
+            f"**Descrição:** {descricao or '—'}\n\n"
             "Aguarde que um moderador irá atender em breve."
         ),
         color=discord.Color.green(),
@@ -292,7 +272,6 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
     if log_c:
         await log_c.send(f"🟢 Ticket criado: {channel.name} (ID {ticket_id}) por {author.mention}")
 
-
 # ---------------------------
 # Actions: fechar, arquivar, transcript, reabrir
 # ---------------------------
@@ -306,13 +285,16 @@ async def fechar_ticket_por_canal(channel: discord.TextChannel, by_user: discord
     tickets[str(channel.id)] = info
     await save_all_tickets(tickets)
 
-    await channel.send("🔒 Ticket fechado. Você pode gerar transcript ou reabrir.", view=TicketButtons(channel.id, closed=True))
+    try:
+        await channel.send("🔒 Ticket fechado. Você pode gerar transcript ou reabrir.", view=TicketButtons(channel.id, closed=True))
+    except Exception:
+        pass
+
     log = channel.guild.get_channel(CANAL_STATUS_ID)
     if log:
         who = by_user.mention if by_user else "Sistema"
         await log.send(f"🔒 Ticket {channel.name} fechado por {who}")
     return True, None
-
 
 async def arquivar_ticket_por_canal(channel: discord.TextChannel, by_user: discord.Member = None):
     tickets = await load_all_tickets()
@@ -325,8 +307,7 @@ async def arquivar_ticket_por_canal(channel: discord.TextChannel, by_user: disco
     if not arquivo:
         return False, "Canal de arquivamento não configurado."
 
-    embed = discord.Embed(title="📁 Ticket Arquivado", description=f"Ticket: {channel.name}
-Aberto por: <@{info.get('owner')}>", color=discord.Color.greyple(), timestamp=datetime.datetime.utcnow())
+    embed = discord.Embed(title="📁 Ticket Arquivado", description=f"Ticket: {channel.name}\nAberto por: <@{info.get('owner')}>", color=discord.Color.greyple(), timestamp=datetime.datetime.utcnow())
     if by_user:
         embed.add_field(name="Arquivado por", value=by_user.mention, inline=False)
     embed.add_field(name="ID", value=info.get("ticket_id", "—"), inline=True)
@@ -336,12 +317,10 @@ Aberto por: <@{info.get('owner')}>", color=discord.Color.greyple(), timestamp=da
         await arquivo.send(file=discord.File(path))
     except Exception:
         try:
-            # fallback: enviar embed sem arquivo
             await arquivo.send(embed=embed)
         except Exception:
             pass
 
-    # remove registro e deleta canal
     tickets.pop(str(channel.id), None)
     await save_all_tickets(tickets)
     try:
@@ -355,7 +334,6 @@ Aberto por: <@{info.get('owner')}>", color=discord.Color.greyple(), timestamp=da
         await log.send(f"📁 Ticket {channel.name} arquivado por {who}")
     return True, None
 
-
 async def gerar_transcript_e_enviar(channel: discord.TextChannel, actor: discord.Member = None):
     path = await gerar_transcript_file(channel)
     try:
@@ -367,7 +345,6 @@ async def gerar_transcript_e_enviar(channel: discord.TextChannel, actor: discord
                 await log.send("📝 Transcript gerado:", file=discord.File(path))
             except Exception:
                 pass
-
 
 async def reabrir_por_canal(channel: discord.TextChannel, by_user: discord.Member = None):
     tickets = await load_all_tickets()
@@ -387,7 +364,6 @@ async def reabrir_por_canal(channel: discord.TextChannel, by_user: discord.Membe
         who = by_user.mention if by_user else "Sistema"
         await log.send(f"🔓 Ticket {channel.name} reaberto por {who}")
     return True, None
-
 
 # ---------------------------
 # COG
@@ -415,11 +391,9 @@ class TicketsCog(commands.Cog):
         lines = []
         for ch_id, info in tickets.items():
             lines.append(f"- {info.get('ticket_id')} — canal:{ch_id} — owner:{info.get('owner')} — reason:{info.get('reason')}")
-        text = "
-".join(lines) or "Nenhum ticket aberto."
+        text = "\n".join(lines) or "Nenhum ticket aberto."
         try:
-            await ctx.author.send(f"📋 Tickets abertos:
-{text}")
+            await ctx.author.send(f"📋 Tickets abertos:\n{text}")
             await ctx.send("✅ Listei os tickets por DM.", delete_after=8)
         except Exception:
             await ctx.send("❌ Não consegui enviar DM. Verifique se o seu DM está aberto.", delete_after=8)
@@ -560,7 +534,8 @@ class TicketsCog(commands.Cog):
         except Exception:
             pass
 
-
+# setup
 async def setup(bot):
     await bot.add_cog(TicketsCog(bot))
+    # persist views so panel buttons survive restart
     bot.add_view(PainelView())
