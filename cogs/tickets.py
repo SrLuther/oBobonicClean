@@ -5,7 +5,7 @@ Sistema de tickets completo:
 - Gerenciamento feito por comandos de prefixo (!fechar, !arquivar, etc.).
 - Painel informativo detalhado.
 - Estabilidade aprimorada nas interações.
-- CORREÇÃO FINAL V2: Garantia de que strings multi-linhas não causem SyntaxError de backslash no carregamento.
+- CORREÇÃO DEFINITIVA: Remoção de todas as f-strings ambíguas nos pontos críticos (topic, logs) para evitar o SyntaxError.
 """
 
 import discord
@@ -213,8 +213,8 @@ async def abrir_etapas(interaction: discord.Interaction):
     category = guild.get_channel(TICKET_CATEGORY_ID)
     if category and isinstance(category, discord.CategoryChannel):
         for ch in category.channels:
-            if ch.topic and f"owner:{author.id}" in (ch.topic or "") and not ch.name.startswith("archived-"):
-                await interaction.response.send_message(f"⚠️ Você já tem um ticket aberto no canal {ch.mention}. Por favor, use este canal para continuar.", ephemeral=True)
+            if ch.topic and "owner:{}".format(author.id) in (ch.topic or "") and not ch.name.startswith("archived-"):
+                await interaction.response.send_message("⚠️ Você já tem um ticket aberto no canal {}. Por favor, use este canal para continuar.".format(ch.mention), ephemeral=True)
                 return
 
     # 3. Mostra o Select de Motivo
@@ -239,7 +239,8 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
 
     ticket_id = gerar_ticket_id()
     clean_name = ''.join(c for c in author.name if c.isalnum() or c in ('-')) 
-    name = f"ticket-{clean_name[:15]}-{ticket_id}".lower()[:90]
+    # Usando .format() em vez de f-string para o nome
+    name = "ticket-{}-{}-{}".format(clean_name[:15], ticket_id, ticket_id).lower()[:90] 
 
     # Configuração de Permissões
     overwrites = {
@@ -253,8 +254,8 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
             overwrites[role] = PermissionOverwrite(view_channel=True, send_messages=True, manage_messages=True)
 
     try:
-        # CORREÇÃO: Usando .format() e limpando o 'reason' e removendo backslashes
-        # que poderiam causar o SyntaxError.
+        # CORREÇÃO DEFINITIVA: Remoção completa de backslashes e f-strings no tópico.
+        # Remove \n e o backslash literal \
         safe_reason = reason.replace('\n', ' ').replace('\\', '') 
         
         channel_topic = "ticket_id:{} owner:{} reason:{}".format(
@@ -273,7 +274,7 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
         await interaction.followup.send("❌ Erro: O bot não tem permissão para criar canais.", ephemeral=True)
         return
     except Exception as e:
-        # CORREÇÃO: Usando str.format() para a mensagem de erro para evitar o SyntaxError
+        # Garantindo que o log de erro também não use f-string
         error_msg = "❌ Erro desconhecido ao criar canal do ticket: {}".format(e)
         await interaction.followup.send(error_msg, ephemeral=True)
         return
@@ -293,26 +294,26 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
 
     # Mensagem de Boas-vindas no Ticket
     embed = discord.Embed(
-        title=f"🎫 Ticket {ticket_id}: {reason}",
+        title="🎫 Ticket {}: {}".format(ticket_id, reason), # Usando .format()
         description=(
-            f"**Usuário:** {author.mention}\n"
-            f"**Descrição:** {descricao or '—'}\n\n"
-            f"Aguarde. Um membro da equipe irá atender em breve. "
-        ),
+            "**Usuário:** {}\n"
+            "**Descrição:** {}\n\n"
+            "Aguarde. Um membro da equipe irá atender em breve. "
+        ).format(author.mention, descricao or '—'), # Usando .format()
         color=discord.Color.green(),
         timestamp=datetime.datetime.utcnow()
     )
-    embed.set_footer(text=f"ID do Ticket: {ticket_id} | Abertura: {now}")
+    embed.set_footer(text="ID do Ticket: {} | Abertura: {}".format(ticket_id, now)) # Usando .format()
 
-    await channel.send(content=f"{author.mention}", embed=embed)
+    await channel.send(content="{}".format(author.mention), embed=embed)
     
     # Confirmação para o usuário
-    await interaction.followup.send(f"✅ Seu ticket foi criado: {channel.mention}", ephemeral=True)
+    await interaction.followup.send("✅ Seu ticket foi criado: {}".format(channel.mention), ephemeral=True)
 
     # Log de status
     log_c = guild.get_channel(CANAL_STATUS_ID)
     if log_c and isinstance(log_c, discord.TextChannel):
-        await log_c.send(f"🟢 Ticket criado: {channel.name} (ID {ticket_id}) por {author.mention}")
+        await log_c.send("🟢 Ticket criado: {} (ID {}) por {}".format(channel.name, ticket_id, author.mention))
 
 # ---------------------------
 # Actions (Lógica de Gerenciamento)
@@ -354,7 +355,7 @@ async def fechar_ticket_por_canal(channel: discord.TextChannel, by_user: discord
     log = channel.guild.get_channel(CANAL_STATUS_ID)
     if log and isinstance(log, discord.TextChannel):
         who = by_user.mention if by_user else "Sistema"
-        await log.send(f"🔒 Ticket {channel.name} fechado por {who}")
+        await log.send("🔒 Ticket {} fechado por {}".format(channel.name, who))
     
     return True, None
 
@@ -366,7 +367,7 @@ async def arquivar_ticket_por_canal(channel: discord.TextChannel, by_user: disco
     if not info:
         # Se o registro não existe, tenta deletar o canal para limpar
         try:
-             await channel.delete(reason=f"Arquivado por {by_user.name if by_user else 'Sistema'} (Registro não encontrado).")
+             await channel.delete(reason="Arquivado por {} (Registro não encontrado).".format(by_user.name if by_user else 'Sistema'))
         except:
              pass
         return False, "Ticket não registrado. O canal foi deletado."
@@ -377,11 +378,11 @@ async def arquivar_ticket_por_canal(channel: discord.TextChannel, by_user: disco
     # Envia o transcript para o canal de arquivos
     if arquivo and isinstance(arquivo, discord.TextChannel):
         owner_member = channel.guild.get_member(info.get('owner'))
-        owner_mention = owner_member.mention if owner_member else f"<@{info.get('owner')}>"
+        owner_mention = owner_member.mention if owner_member else "<@{}>".format(info.get('owner'))
 
         embed = discord.Embed(
             title="📁 Ticket Arquivado", 
-            description=f"Ticket: **{channel.name}**\n**Aberto por:** {owner_mention}", 
+            description="Ticket: **{}**\n**Aberto por:** {}".format(channel.name, owner_mention), 
             color=discord.Color.greyple(), 
             timestamp=utcnow()
         )
@@ -392,7 +393,7 @@ async def arquivar_ticket_por_canal(channel: discord.TextChannel, by_user: disco
         
         try:
             await arquivo.send(embed=embed)
-            await arquivo.send(file=discord.File(path, filename=f"{channel.name}-transcript.txt"))
+            await arquivo.send(file=discord.File(path, filename="{}-transcript.txt".format(channel.name)))
         except discord.Forbidden:
             await channel.send("❌ Não consegui enviar o transcript para o canal de arquivamento (Permissão Negada). Deletando canal.", delete_after=10)
         except Exception:
@@ -402,11 +403,11 @@ async def arquivar_ticket_por_canal(channel: discord.TextChannel, by_user: disco
 
     # Deleta o canal
     try:
-        await channel.delete(reason=f"Arquivado por {by_user.name if by_user else 'Sistema'}")
+        await channel.delete(reason="Arquivado por {}".format(by_user.name if by_user else 'Sistema'))
     except discord.Forbidden:
         log = channel.guild.get_channel(CANAL_STATUS_ID)
         if log:
-             await log.send(f"❌ ATENÇÃO: Bot falhou ao deletar o canal {channel.name} por falta de permissão. Registro removido do JSON.")
+             await log.send("❌ ATENÇÃO: Bot falhou ao deletar o canal {} por falta de permissão. Registro removido do JSON.".format(channel.name))
         return False, "O bot não tem permissão para deletar o canal."
     except Exception:
         pass
@@ -414,7 +415,7 @@ async def arquivar_ticket_por_canal(channel: discord.TextChannel, by_user: disco
     log = channel.guild.get_channel(CANAL_STATUS_ID)
     if log and isinstance(log, discord.TextChannel):
         who = by_user.mention if by_user else "Sistema"
-        await log.send(f"📁 Ticket {channel.name} arquivado por {who}")
+        await log.send("📁 Ticket {} arquivado por {}".format(channel.name, who))
     
     try:
         os.remove(path)
@@ -460,7 +461,7 @@ async def reabrir_por_canal(channel: discord.TextChannel, by_user: discord.Membe
     log = channel.guild.get_channel(CANAL_STATUS_ID)
     if log and isinstance(log, discord.TextChannel):
         who = by_user.mention if by_user else "Sistema"
-        await log.send(f"🔓 Ticket {channel.name} reaberto por {who}")
+        await log.send("🔓 Ticket {} reaberto por {}".format(channel.name, who))
         
     return True, None
 
@@ -531,7 +532,7 @@ class TicketsCog(commands.Cog):
             inline=False
         )
         
-        embed.set_footer(text=f"Aguarde o atendimento. O tempo de resposta pode variar.")
+        embed.set_footer(text="Aguarde o atendimento. O tempo de resposta pode variar.")
 
         # Envia o novo embed informativo com a view
         await canal.send(embed=embed, view=PainelView(self.bot)) 
@@ -576,7 +577,7 @@ class TicketsCog(commands.Cog):
             
         ok, err = await fechar_ticket_por_canal(ctx.channel, by_user=ctx.author)
         if not ok:
-            await ctx.channel.send(f"❌ Erro ao fechar: {err}")
+            await ctx.channel.send("❌ Erro ao fechar: {}".format(err))
 
     @commands.command(name="arquivar")
     @commands.has_permissions(manage_messages=True)
@@ -599,7 +600,7 @@ class TicketsCog(commands.Cog):
         
         ok, err = await arquivar_ticket_por_canal(ctx.channel, by_user=ctx.author)
         if not ok:
-            await ctx.channel.send(f"❌ Erro ao arquivar: {err}")
+            await ctx.channel.send("❌ Erro ao arquivar: {}".format(err))
 
 
     @commands.command(name="transcript")
@@ -621,7 +622,7 @@ class TicketsCog(commands.Cog):
         path = await gerar_transcript_file(ctx.channel)
         
         try:
-            await ctx.channel.send("📝 Transcript gerado:", file=discord.File(path, filename=f"{ctx.channel.name}-transcript.txt"))
+            await ctx.channel.send("📝 Transcript gerado:", file=discord.File(path, filename="{}-transcript.txt".format(ctx.channel.name)))
             try:
                 await ctx.message.delete()
             except:
@@ -657,7 +658,7 @@ class TicketsCog(commands.Cog):
             
         ok, err = await reabrir_por_canal(ctx.channel, by_user=ctx.author)
         if not ok:
-            await ctx.channel.send(f"❌ Erro ao reabrir: {err}")
+            await ctx.channel.send("❌ Erro ao reabrir: {}".format(err))
         
 
     @commands.command(name="ticket-admin")
@@ -667,7 +668,8 @@ class TicketsCog(commands.Cog):
         tickets = await load_all_tickets()
         lines = []
         for ch_id, info in tickets.items():
-            lines.append(f"- {info.get('ticket_id')} — Canal: <#{ch_id}> — Owner: <@{info.get('owner')}> — Motivo: {info.get('reason')}")
+            lines.append("- {} — Canal: <#{}> — Owner: <@{}> — Motivo: {}".format(
+                info.get('ticket_id'), ch_id, info.get('owner'), info.get('reason')))
         
         text = "\n".join(lines) or "Nenhum ticket aberto."
         
@@ -675,7 +677,7 @@ class TicketsCog(commands.Cog):
              text = text[:1700] + "\n... (Lista muito longa. Verifique o JSON.)"
              
         try:
-            await ctx.author.send(f"📋 **Tickets Abertos ({len(tickets)}):**\n{text}")
+            await ctx.author.send("📋 **Tickets Abertos ({})**: {}".format(len(tickets), text))
             await ctx.send("✅ Listei os tickets por DM.", delete_after=8)
         except discord.Forbidden:
             await ctx.send("❌ Não consegui enviar DM. Verifique se o seu DM está aberto.", delete_after=8)
@@ -709,13 +711,13 @@ class TicketsCog(commands.Cog):
         diff = utcnow() - opened_dt if opened_dt else datetime.timedelta(0)
         hours = int(diff.total_seconds() // 3600)
         
-        embed = discord.Embed(title=f"ℹ️ Info — {channel.name}", color=discord.Color.blurple())
+        embed = discord.Embed(title="ℹ️ Info — {}".format(channel.name), color=discord.Color.blurple())
         embed.add_field(name="ID", value=info.get("ticket_id", "—"), inline=True)
-        embed.add_field(name="Aberto por", value=f"<@{owner}>", inline=True)
+        embed.add_field(name="Aberto por", value="<@{}>".format(owner), inline=True)
         embed.add_field(name="Fechado", value=("Sim" if info.get("closed") else "Não"), inline=True)
         embed.add_field(name="Motivo", value=info.get("reason", "—"), inline=False)
         embed.add_field(name="Descrição", value=info.get("description", "—")[:100] + "..." if len(info.get("description", "")) > 100 else info.get("description", "—"), inline=False)
-        embed.add_field(name="Horas abertas", value=f"{hours}h", inline=True)
+        embed.add_field(name="Horas abertas", value="{}h".format(hours), inline=True)
         embed.add_field(name="Atendido por", value=(f"<@{claimed}>" if claimed else "—"), inline=True)
         
         await ctx.send(embed=embed)
@@ -770,7 +772,7 @@ class TicketsCog(commands.Cog):
                 
                 # Verifica inatividade
                 if last_time < limite:
-                    await ch.send(f"⏰ Ticket fechado automaticamente por inatividade (última mensagem há mais de {EXPIRACAO_TICKET_HORAS} horas).")
+                    await ch.send("⏰ Ticket fechado automaticamente por inatividade (última mensagem há mais de {} horas).".format(EXPIRACAO_TICKET_HORAS))
                     await fechar_ticket_por_canal(ch, by_user=None)
                     
             except discord.NotFound:
@@ -779,7 +781,7 @@ class TicketsCog(commands.Cog):
                     tickets.pop(str(ch.id))
                     await save_all_tickets(tickets)
             except Exception as e:
-                print(f"[tickets] Erro ao checar inatividade no canal {ch.name}: {e}")
+                print("[tickets] Erro ao checar inatividade no canal {}: {}".format(ch.name, e))
                 continue
 
     @check_inatividade.before_loop
