@@ -122,7 +122,7 @@ async def gerar_transcript_file(channel: discord.TextChannel):
             if m.embeds and not content:
                 content += " [EMBED: " + (m.embeds[0].title or "Sem título") + "]"
             # f-string segura (sem \ na expressão)
-            lines.append(f"[{ts}] {author}: {content.replace('\n', ' ')}")
+            lines.append("[{}] {}: {}".format(ts, author, content.replace('\n', ' ')))
     except Exception as e:
         lines.append(f"[ERROR] Falha ao ler histórico: {e}")
 
