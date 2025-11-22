@@ -4,7 +4,7 @@
 CANAL_PAINEL_ID = 1440909767974453328           # Painel de tickets
 CANAL_ARQUIVO_ID = 1441236730517655634          # Canal para tickets arquivados
 CANAL_STATUS_ID = 1440828555201216582           # Canal de logs do bot (status, carregamento, comandos)
-TICKET_CATEGORY_ID = 1440909767974453328        # Categoria onde tickets serão criados
+TICKET_CATEGORY_ID = 1441644856429772962        # Categoria onde tickets serão criados
 TICKET_ARCHIVE_CHANNEL_ID = 1441236730517655634  # Canal de arquivamento de tickets
 
 # --- Roles / Cargos ---
