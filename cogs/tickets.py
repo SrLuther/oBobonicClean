@@ -94,7 +94,7 @@ async def save_all_tickets(tickets):
     async with _json_lock:
         await _write_json_safe(TICKETS_JSON, {"tickets": tickets})
 
-# Transcript helper: write to temp file and return path
+# Transcript helper
 async def gerar_transcript_file(channel: discord.TextChannel):
     lines = []
     try:
@@ -123,13 +123,16 @@ def is_staff_member(member: discord.Member):
     return False
 
 # ---------------------------
-# UI Components: Modal / Select / Views
+# UI Components
 # ---------------------------
 class DescricaoModal(Modal):
     def __init__(self, reason: str):
         super().__init__(title="Descreva seu problema (opcional)")
         self.reason = reason
-        self.descricao = TextInput(label="Descrição (máx 1000 caracteres)", style=discord.TextStyle.long, required=False, max_length=1000)
+        self.descricao = TextInput(label="Descrição (máx 1000 caracteres)",
+                                   style=discord.TextStyle.long,
+                                   required=False,
+                                   max_length=1000)
         self.add_item(self.descricao)
 
     async def on_submit(self, interaction: discord.Interaction):
@@ -144,7 +147,10 @@ class MotivoSelect(Select):
             discord.SelectOption(label="Denúncia", description="Reportar alguém"),
             discord.SelectOption(label="Outro", description="Outro assunto")
         ]
-        super().__init__(placeholder="Escolha o motivo do seu ticket...", min_values=1, max_values=1, options=options, custom_id="motivo_select")
+        super().__init__(placeholder="Escolha o motivo do seu ticket...",
+                         min_values=1, max_values=1,
+                         options=options,
+                         custom_id="motivo_select")
 
     async def callback(self, interaction: discord.Interaction):
         chosen = self.values[0]
@@ -159,10 +165,13 @@ class MotivoView(View):
 class PainelView(View):
     def __init__(self):
         super().__init__(timeout=None)
-        self.add_item(Button(label="🎫 Abrir Ticket", style=discord.ButtonStyle.green, custom_id="abrir_ticket"))
 
-    @discord.ui.button(label="🎫 Abrir Ticket", style=discord.ButtonStyle.green, custom_id="abrir_ticket_fallback")
-    async def abrir_fallback(self, interaction: discord.Interaction, button: Button):
+    @discord.ui.button(label="🎫 Abrir Ticket", style=discord.ButtonStyle.green, custom_id="abrir_ticket")
+    async def abrir_1(self, interaction: discord.Interaction, button: Button):
+        await abrir_etapas(interaction)
+
+    @discord.ui.button(label="Abrir Ticket (2)", style=discord.ButtonStyle.green, custom_id="abrir_ticket_fallback")
+    async def abrir_2(self, interaction: discord.Interaction, button: Button):
         await abrir_etapas(interaction)
 
 class TicketButtons(View):
@@ -170,40 +179,54 @@ class TicketButtons(View):
         super().__init__(timeout=None)
         self.channel_id = channel_id
         if closed:
-            self.add_item(Button(label="🔓 Reabrir Ticket", style=discord.ButtonStyle.green, custom_id=f"reabrir_{channel_id}"))
+            self.add_item(Button(label="🔓 Reabrir Ticket",
+                                 style=discord.ButtonStyle.green,
+                                 custom_id=f"reabrir_{channel_id}"))
         else:
-            self.add_item(Button(label="🔒 Fechar", style=discord.ButtonStyle.red, custom_id=f"fechar_{channel_id}"))
-            self.add_item(Button(label="📁 Arquivar", style=discord.ButtonStyle.grey, custom_id=f"arquivar_{channel_id}"))
-            self.add_item(Button(label="📝 Transcript", style=discord.ButtonStyle.blurple, custom_id=f"transcript_{channel_id}"))
+            self.add_item(Button(label="🔒 Fechar",
+                                 style=discord.ButtonStyle.red,
+                                 custom_id=f"fechar_{channel_id}"))
+            self.add_item(Button(label="📁 Arquivar",
+                                 style=discord.ButtonStyle.grey,
+                                 custom_id=f"arquivar_{channel_id}"))
+            self.add_item(Button(label="📝 Transcript",
+                                 style=discord.ButtonStyle.blurple,
+                                 custom_id=f"transcript_{channel_id}"))
 
 # ---------------------------
-# Fluxo: abrir etapas / criar ticket
+# Fluxo: abrir etapas
 # ---------------------------
 async def abrir_etapas(interaction: discord.Interaction):
     author = interaction.user
     tickets = await load_all_tickets()
-    # anti-spam: verifica registro ativo
+
+    # anti-spam
     for k, v in tickets.items():
         if v.get("owner") == author.id and not v.get("closed", False):
-            await interaction.response.send_message("⚠️ Você já tem um ticket aberto. Feche-o antes de abrir outro.", ephemeral=True)
+            await interaction.response.send_message(
+                "⚠️ Você já tem um ticket aberto.", ephemeral=True)
             return
 
-    # checa canais existentes na categoria por topic
     guild = interaction.guild
     category = guild.get_channel(TICKET_CATEGORY_ID) if TICKET_CATEGORY_ID else None
+
     if category:
         for ch in category.channels:
             if ch.topic and f"owner:{author.id}" in (ch.topic or "") and not ch.name.startswith("archived-"):
-                await interaction.response.send_message("⚠️ Você já tem um ticket aberto (canal existente).", ephemeral=True)
+                await interaction.response.send_message(
+                    "⚠️ Você já tem um ticket aberto.", ephemeral=True)
                 return
 
-    await interaction.response.send_message("Escolha o motivo do ticket:", view=MotivoView(), ephemeral=True)
+    await interaction.response.send_message("Escolha o motivo:", view=MotivoView(), ephemeral=True)
 
+# ---------------------------
+# Criar ticket
+# ---------------------------
 async def criar_ticket(interaction: discord.Interaction, reason: str, descricao: str = ""):
     guild = interaction.guild
     author = interaction.user
     tickets = await load_all_tickets()
-    # defensivo: re-checar anti-spam
+
     for k, v in tickets.items():
         if v.get("owner") == author.id and not v.get("closed", False):
             await interaction.followup.send("⚠️ Você já tem um ticket aberto.", ephemeral=True)
@@ -211,7 +234,7 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
 
     category = guild.get_channel(TICKET_CATEGORY_ID)
     if not category:
-        await interaction.followup.send("❌ Categoria de tickets não encontrada. Contate a moderação.", ephemeral=True)
+        await interaction.followup.send("❌ Categoria não encontrada.", ephemeral=True)
         return
 
     ticket_id = gerar_ticket_id()
@@ -221,6 +244,7 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
         guild.default_role: PermissionOverwrite(view_channel=False),
         author: PermissionOverwrite(view_channel=True, send_messages=True, read_messages=True)
     }
+
     for rid in STAFF_ROLES:
         role = guild.get_role(rid)
         if role:
@@ -234,7 +258,7 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
             topic=f"ticket_id:{ticket_id} owner:{author.id} reason:{reason}"
         )
     except Exception as e:
-        await interaction.followup.send(f"❌ Erro ao criar canal do ticket: {e}", ephemeral=True)
+        await interaction.followup.send(f"❌ Erro ao criar ticket: {e}", ephemeral=True)
         return
 
     now = utcnow().isoformat()
@@ -251,291 +275,293 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
 
     embed = discord.Embed(
         title=f"🎫 Ticket {ticket_id}",
-        description=(
-            f"{author.mention}\n**Motivo:** {reason}\n"
-            f"**Descrição:** {descricao or '—'}\n\n"
-            "Aguarde que um moderador irá atender em breve."
-        ),
+        description=f"{author.mention}\n**Motivo:** {reason}\n**Descrição:** {descricao or '—'}",
         color=discord.Color.green(),
         timestamp=datetime.datetime.utcnow()
     )
-    embed.set_footer(text=f"Abertura: {now}")
 
-    await channel.send(content=f"{author.mention}", embed=embed, view=TicketButtons(channel.id, closed=False))
+    await channel.send(content=f"{author.mention}", embed=embed,
+                       view=TicketButtons(channel.id, closed=False))
+
     try:
-        await interaction.followup.send(f"✅ Seu ticket foi criado: {channel.mention}", ephemeral=True)
+        await interaction.followup.send(f"✅ Ticket criado: {channel.mention}", ephemeral=True)
     except Exception:
-        await interaction.response.send_message(f"✅ Seu ticket foi criado: {channel.mention}", ephemeral=True)
+        await interaction.response.send_message(f"✅ Ticket criado: {channel.mention}", ephemeral=True)
 
-    # log
-    log_c = guild.get_channel(CANAL_STATUS_ID)
-    if log_c:
-        await log_c.send(f"🟢 Ticket criado: {channel.name} (ID {ticket_id}) por {author.mention}")
-
+    log = guild.get_channel(CANAL_STATUS_ID)
+    if log:
+        await log.send(f"🟢 Ticket criado: {channel.name} ({ticket_id}) por {author.mention}")
 # ---------------------------
-# Actions: fechar, arquivar, transcript, reabrir
+# Fechar ticket
 # ---------------------------
-async def fechar_ticket_por_canal(channel: discord.TextChannel, by_user: discord.Member = None):
+async def fechar_ticket(interaction: discord.Interaction, channel: discord.TextChannel):
     tickets = await load_all_tickets()
-    info = tickets.get(str(channel.id))
-    if not info:
-        return False, "Ticket não registrado."
-    info["closed"] = True
-    info["closed_at"] = utcnow().isoformat()
-    tickets[str(channel.id)] = info
+    ch_id = str(channel.id)
+
+    if ch_id not in tickets:
+        await interaction.response.send_message("❌ Este ticket não existe no sistema.", ephemeral=True)
+        return
+
+    data = tickets[ch_id]
+    if data.get("closed"):
+        await interaction.response.send_message("⚠️ Este ticket já está fechado.", ephemeral=True)
+        return
+
+    # apenas staff ou o dono
+    if interaction.user.id != data.get("owner") and not is_staff_member(interaction.user):
+        await interaction.response.send_message("❌ Você não pode fechar este ticket.", ephemeral=True)
+        return
+
+    data["closed"] = True
+    data["closed_at"] = utcnow().isoformat()
     await save_all_tickets(tickets)
 
-    try:
-        await channel.send("🔒 Ticket fechado. Você pode gerar transcript ou reabrir.", view=TicketButtons(channel.id, closed=True))
-    except Exception:
-        pass
+    await interaction.response.send_message("🔒 Ticket fechado.")
 
-    log = channel.guild.get_channel(CANAL_STATUS_ID)
-    if log:
-        who = by_user.mention if by_user else "Sistema"
-        await log.send(f"🔒 Ticket {channel.name} fechado por {who}")
-    return True, None
+    # Atualiza botões
+    await channel.send("🔒 Ticket fechado.", view=TicketButtons(channel.id, closed=True))
 
-async def arquivar_ticket_por_canal(channel: discord.TextChannel, by_user: discord.Member = None):
+# ---------------------------
+# Reabrir ticket
+# ---------------------------
+async def reabrir_ticket(interaction: discord.Interaction, channel: discord.TextChannel):
     tickets = await load_all_tickets()
-    info = tickets.get(str(channel.id))
-    if not info:
-        return False, "Ticket não registrado."
+    ch_id = str(channel.id)
 
-    path = await gerar_transcript_file(channel)
-    arquivo = channel.guild.get_channel(CANAL_ARQUIVO_ID) if CANAL_ARQUIVO_ID else None
-    if not arquivo:
-        return False, "Canal de arquivamento não configurado."
+    if ch_id not in tickets:
+        await interaction.response.send_message("❌ Ticket desconhecido.", ephemeral=True)
+        return
 
-    embed = discord.Embed(title="📁 Ticket Arquivado", description=f"Ticket: {channel.name}\nAberto por: <@{info.get('owner')}>", color=discord.Color.greyple(), timestamp=datetime.datetime.utcnow())
-    if by_user:
-        embed.add_field(name="Arquivado por", value=by_user.mention, inline=False)
-    embed.add_field(name="ID", value=info.get("ticket_id", "—"), inline=True)
+    data = tickets[ch_id]
+    if not data.get("closed"):
+        await interaction.response.send_message("⚠️ Este ticket já está aberto.", ephemeral=True)
+        return
 
+    # Apenas staff pode reabrir
+    if not is_staff_member(interaction.user):
+        await interaction.response.send_message("❌ Apenas a staff pode reabrir tickets.", ephemeral=True)
+        return
+
+    data["closed"] = False
+    data["reopened_at"] = utcnow().isoformat()
+    await save_all_tickets(tickets)
+
+    await interaction.response.send_message("🔓 Ticket reaberto.")
+    await channel.send("🔓 Ticket reaberto!", view=TicketButtons(channel.id, closed=False))
+
+# ---------------------------
+# Arquivar Ticket
+# ---------------------------
+async def arquivar_ticket(interaction: discord.Interaction, channel: discord.TextChannel):
+    tickets = await load_all_tickets()
+    ch_id = str(channel.id)
+
+    if ch_id not in tickets:
+        await interaction.response.send_message("❌ Ticket não existe no sistema.", ephemeral=True)
+        return
+
+    data = tickets[ch_id]
+
+    # apenas staff
+    if not is_staff_member(interaction.user):
+        await interaction.response.send_message("❌ Apenas staff pode arquivar tickets.", ephemeral=True)
+        return
+
+    guild = interaction.guild
+    archive_channel = guild.get_channel(TICKET_ARCHIVE_CHANNEL_ID)
+
+    if not archive_channel:
+        await interaction.response.send_message("❌ Canal de arquivo não encontrado.", ephemeral=True)
+        return
+
+    # Gera transcript
+    transcript_path = await gerar_transcript_file(channel)
+
+    # Envia transcrição para o canal de arquivo
     try:
-        await arquivo.send(embed=embed)
-        await arquivo.send(file=discord.File(path))
-    except Exception:
+        await archive_channel.send(
+            f"📁 Transcript do ticket **{data.get('ticket_id')}** — {channel.name}",
+            file=discord.File(transcript_path)
+        )
+    except Exception as e:
+        print(f"[tickets] Erro ao enviar transcript para canal: {e}")
+
+    # move o canal
+    try:
+        await channel.edit(name=f"archived-{channel.name}", category=archive_channel.category)
+    except Exception as e:
+        print(f"[tickets] Falha ao mover ticket arquivado: {e}")
+
+    data["archived"] = True
+    data["archived_at"] = utcnow().isoformat()
+    await save_all_tickets(tickets)
+
+    await interaction.response.send_message("📁 Ticket arquivado e transcript enviado ao canal.")
+    await channel.send("📁 Ticket arquivado.")
+
+# ---------------------------
+# Transcript sob demanda
+# ---------------------------
+async def enviar_transcript_manual(interaction: discord.Interaction, channel: discord.TextChannel):
+    transcript_path = await gerar_transcript_file(channel)
+    await interaction.response.send_message(
+        "📝 Transcript gerado:",
+        file=discord.File(transcript_path),
+        ephemeral=True
+    )
+
+# ---------------------------
+# Inatividade — Fechar após 48h
+# ---------------------------
+async def fechar_inativo(channel: discord.TextChannel, data: dict):
+    now = utcnow()
+    last = data.get("last_message")
+
+    if last:
         try:
-            await arquivo.send(embed=embed)
+            last_dt = datetime.datetime.fromisoformat(last)
+        except Exception:
+            last_dt = utcnow()
+    else:
+        last_dt = utcnow()
+
+    diff = now - last_dt
+    if diff.total_seconds() > EXPIRACAO_TICKET_HORAS * 3600:
+        try:
+            await channel.send("⏳ Ticket fechado automaticamente por inatividade.")
         except Exception:
             pass
 
-    tickets.pop(str(channel.id), None)
-    await save_all_tickets(tickets)
-    try:
-        await channel.delete()
-    except Exception:
-        pass
+        data["closed"] = True
+        data["closed_at"] = utcnow().isoformat()
 
-    log = channel.guild.get_channel(CANAL_STATUS_ID)
-    if log:
-        who = by_user.mention if by_user else "Sistema"
-        await log.send(f"📁 Ticket {channel.name} arquivado por {who}")
-    return True, None
+        tickets = await load_all_tickets()
+        tickets[str(channel.id)] = data
+        await save_all_tickets(tickets)
 
-async def gerar_transcript_e_enviar(channel: discord.TextChannel, actor: discord.Member = None):
-    path = await gerar_transcript_file(channel)
-    try:
-        await channel.send("📝 Transcript gerado:", file=discord.File(path))
-    except Exception:
-        log = channel.guild.get_channel(CANAL_STATUS_ID)
-        if log:
-            try:
-                await log.send("📝 Transcript gerado:", file=discord.File(path))
-            except Exception:
-                pass
+        return True
+    return False
 
-async def reabrir_por_canal(channel: discord.TextChannel, by_user: discord.Member = None):
+# ---------------------------
+# Atualizar última mensagem
+# ---------------------------
+async def atualizar_atividade(message: discord.Message):
+    if message.author.bot:
+        return
+
     tickets = await load_all_tickets()
-    info = tickets.get(str(channel.id))
-    if not info:
-        return False, "Ticket não registrado."
-    info["closed"] = False
-    info.pop("closed_at", None)
-    tickets[str(channel.id)] = info
+    ch_id = str(message.channel.id)
+
+    if ch_id not in tickets:
+        return
+
+    data = tickets[ch_id]
+    if data.get("closed"):
+        return
+
+    data["last_message"] = utcnow().isoformat()
     await save_all_tickets(tickets)
-    try:
-        await channel.send("🔓 Ticket reaberto.", view=TicketButtons(channel.id, closed=False))
-    except Exception:
-        pass
-    log = channel.guild.get_channel(CANAL_STATUS_ID)
-    if log:
-        who = by_user.mention if by_user else "Sistema"
-        await log.send(f"🔓 Ticket {channel.name} reaberto por {who}")
-    return True, None
 
 # ---------------------------
-# COG
+# Cog
 # ---------------------------
-class TicketsCog(commands.Cog):
+class Tickets(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.check_inatividade.start()
+        self.check_inativos.start()
 
-    @commands.command(name="ticket")
-    @commands.has_permissions(manage_messages=True)
-    async def cmd_ticket_panel(self, ctx):
-        canal = ctx.guild.get_channel(CANAL_PAINEL_ID)
-        if not canal:
-            await ctx.send("❌ Canal de painel não encontrado. Verifique o config.", delete_after=8)
-            return
-        embed = discord.Embed(title="🎫 Sistema de Tickets", description="Clique para abrir um ticket com a equipe.", color=discord.Color.blue())
-        await canal.send(embed=embed, view=PainelView())
-        await ctx.send("✅ Painel enviado.", delete_after=7)
+    def cog_unload(self):
+        self.check_inativos.cancel()
 
-    @commands.command(name="ticket-admin")
-    @commands.has_permissions(manage_messages=True)
-    async def cmd_ticket_admin(self, ctx):
+    # Verifica inatividade
+    @tasks.loop(minutes=10)
+    async def check_inativos(self):
         tickets = await load_all_tickets()
-        lines = []
-        for ch_id, info in tickets.items():
-            lines.append(f"- {info.get('ticket_id')} — canal:{ch_id} — owner:{info.get('owner')} — reason:{info.get('reason')}")
-        text = "\n".join(lines) or "Nenhum ticket aberto."
-        try:
-            await ctx.author.send(f"📋 Tickets abertos:\n{text}")
-            await ctx.send("✅ Listei os tickets por DM.", delete_after=8)
-        except Exception:
-            await ctx.send("❌ Não consegui enviar DM. Verifique se o seu DM está aberto.", delete_after=8)
+        guild = self.bot.get_guild(next(iter(self.bot.guilds)).id)
 
-    @commands.command(name="ticket-info")
-    @commands.has_permissions(manage_messages=True)
-    async def cmd_ticket_info(self, ctx, channel: discord.TextChannel = None):
-        if channel is None:
-            await ctx.send("❌ Informe o canal do ticket, ex: `!ticket-info #ticket-user-TXXXX`", delete_after=8)
-            return
-        tickets = await load_all_tickets()
-        info = tickets.get(str(channel.id))
-        if not info:
-            await ctx.send("❌ Canal informado não é um ticket registrado.", delete_after=8)
-            return
-        owner = info.get("owner")
-        claimed = info.get("claimed_by")
-        opened = info.get("opened_at")
-        opened_dt = datetime.datetime.fromisoformat(opened) if opened else None
-        diff = datetime.datetime.utcnow() - opened_dt if opened_dt else None
-        hours = int(diff.total_seconds() // 3600) if diff else 0
-        embed = discord.Embed(title=f"ℹ️ Info — {channel.name}", color=discord.Color.blurple())
-        embed.add_field(name="ID", value=info.get("ticket_id", "—"), inline=True)
-        embed.add_field(name="Aberto por", value=f"<@{owner}>", inline=True)
-        embed.add_field(name="Atendido por", value=(f"<@{claimed}>" if claimed else "—"), inline=True)
-        embed.add_field(name="Horas abertas", value=str(hours), inline=True)
-        embed.add_field(name="Motivo", value=info.get("reason", "—"), inline=True)
-        embed.add_field(name="Fechado", value=str(info.get("closed", False)), inline=True)
-        await ctx.send(embed=embed)
-
-    @commands.Cog.listener()
-    async def on_interaction(self, interaction: discord.Interaction):
-        if not interaction.type == discord.InteractionType.component:
-            return
-        data = interaction.data or {}
-        custom_id = data.get("custom_id")
-        if not custom_id:
-            return
-        parts = custom_id.split("_", 1)
-        if len(parts) != 2:
-            return
-        action, rest = parts[0], parts[1]
-        try:
-            channel_id = int(rest)
-        except Exception:
-            return
-        guild = interaction.guild
-        channel = guild.get_channel(channel_id)
-        actor = interaction.user
-
-        tickets = await load_all_tickets()
-        info = tickets.get(str(channel_id))
-        owner = info.get("owner") if info else None
-
-        def _is_staff(m):
-            return is_staff_member(m)
-
-        if action == "fechar":
-            if not (actor.id == owner or _is_staff(actor)):
-                await interaction.response.send_message("❌ Apenas o autor ou um moderador pode fechar este ticket.", ephemeral=True)
-                return
-            ok, err = await fechar_ticket_por_canal(channel, by_user=actor)
-            if ok:
-                await interaction.response.send_message("🔒 Ticket fechado.", ephemeral=True)
-            else:
-                await interaction.response.send_message(f"❌ {err}", ephemeral=True)
-            return
-
-        if action == "arquivar":
-            if not _is_staff(actor):
-                await interaction.response.send_message("❌ Apenas moderadores podem arquivar tickets.", ephemeral=True)
-                return
-            ok, err = await arquivar_ticket_por_canal(channel, by_user=actor)
-            if ok:
-                await interaction.response.send_message("📁 Ticket arquivado.", ephemeral=True)
-            else:
-                await interaction.response.send_message(f"❌ {err}", ephemeral=True)
-            return
-
-        if action == "transcript":
-            if not (_is_staff(actor) or actor.id == owner):
-                await interaction.response.send_message("❌ Apenas staff ou autor podem gerar transcript.", ephemeral=True)
-                return
-            path = await gerar_transcript_file(channel)
-            try:
-                await interaction.response.send_message("📝 Transcript gerado:", file=discord.File(path), ephemeral=True)
-            except Exception:
-                await interaction.response.send_message("❌ Erro ao enviar transcript.", ephemeral=True)
-            return
-
-        if action == "reabrir":
-            if not (_is_staff(actor) or actor.id == owner):
-                await interaction.response.send_message("❌ Apenas owner ou staff pode reabrir.", ephemeral=True)
-                return
-            ok, err = await reabrir_por_canal(channel, by_user=actor)
-            if ok:
-                await interaction.response.send_message("🔓 Ticket reaberto.", ephemeral=True)
-            else:
-                await interaction.response.send_message(f"❌ {err}", ephemeral=True)
-            return
-
-    @tasks.loop(hours=1)
-    async def check_inatividade(self):
-        if not self.bot.guilds:
-            return
-        guild = self.bot.guilds[0]
-        category = guild.get_channel(TICKET_CATEGORY_ID)
-        log = guild.get_channel(CANAL_STATUS_ID)
-        if not category:
-            return
-        limite = datetime.datetime.utcnow() - datetime.timedelta(hours=EXPIRACAO_TICKET_HORAS)
-        tickets = await load_all_tickets()
-        for ch in list(category.channels):
-            info = tickets.get(str(ch.id))
-            if not info or info.get("closed"):
-                continue
-            try:
-                last = None
-                async for m in ch.history(limit=1, oldest_first=False):
-                    last = m
-                    break
-                last_time = last.created_at if last else ch.created_at
-                if last_time < limite:
-                    await ch.send("⏰ Ticket fechado automaticamente por inatividade.")
-                    await fechar_ticket_por_canal(ch, by_user=None)
-                    if log:
-                        await log.send(f"⏰ Ticket {ch.name} fechado por inatividade.")
-            except Exception:
+        for ch_id, data in list(tickets.items()):
+            ch = guild.get_channel(int(ch_id))
+            if not ch:
                 continue
 
-    @check_inatividade.before_loop
+            if not data.get("closed"):
+                try:
+                    await fechar_inativo(ch, data)
+                except Exception as e:
+                    print(f"[tickets] erro inativo: {e}")
+
+    @check_inativos.before_loop
     async def before_check(self):
         await self.bot.wait_until_ready()
 
-    def cog_unload(self):
-        try:
-            self.check_inatividade.cancel()
-        except Exception:
-            pass
+    # Painel
+    @commands.command(name="ticket-panel")
+    @commands.has_permissions(administrator=True)
+    async def ticket_panel(self, ctx):
+        canal = ctx.guild.get_channel(CANAL_PAINEL_ID)
+        if not canal:
+            return await ctx.send("❌ Canal de painel não encontrado.")
 
-# setup
-async def setup(bot):
-    await bot.add_cog(TicketsCog(bot))
-    # persist views so panel buttons survive restart
-    bot.add_view(PainelView())
+        embed = discord.Embed(
+            title="🎟️ Sistema de Tickets",
+            description="Clique abaixo para abrir um ticket.",
+            color=discord.Color.blue()
+        )
+        await canal.send(embed=embed, view=PainelView())
+        await ctx.send("Painel enviado!", delete_after=5)
+
+    # Info
+    @commands.command(name="ticket-info")
+    async def ticket_info(self, ctx, channel: discord.TextChannel = None):
+        channel = channel or ctx.channel
+        tickets = await load_all_tickets()
+
+        ch_id = str(channel.id)
+        if ch_id not in tickets:
+            return await ctx.send("❌ Este canal não é um ticket.")
+
+        data = tickets[ch_id]
+
+        embed = discord.Embed(
+            title=f"Informações do Ticket {data.get('ticket_id')}",
+            color=discord.Color.gold()
+        )
+        for k, v in data.items():
+            embed.add_field(name=k, value=str(v), inline=False)
+
+        await ctx.send(embed=embed)
+# ============================================================
+# 🔹 Função de arquivamento automático por inatividade
+# ============================================================
+
+async def auto_archive_task(self):
+    await self.bot.wait_until_ready()
+    while not self.bot.is_closed():
+        try:
+            for ticket_id, data in list(self.active_tickets.items()):
+                channel_id = data["channel_id"]
+                last_activity = data.get("last_activity", time.time())
+
+                # Se passou o tempo limite → arquiva
+                if time.time() - last_activity > 48 * 3600:
+                    channel = self.bot.get_channel(channel_id)
+                    if channel:
+                        try:
+                            await channel.send("⏳ **Ticket arquivado automaticamente por inatividade.**")
+                        except:
+                            pass
+                    await self.archive_ticket(None, ticket_id)
+
+            await asyncio.sleep(3600)  # Checa a cada 1 hora
+
+        except Exception as e:
+            print(f"[ERRO AUTO-ARCHIVE] {e}")
+            await asyncio.sleep(60)
+
+# ============================================================
+# 🔹 Setup do COG
+# ============================================================
+
+def setup(bot):
+    bot.add_cog(Tickets(bot))
+    print("[COG] Tickets carregado com sucesso.")
