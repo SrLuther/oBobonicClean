@@ -6,7 +6,7 @@ GUILD_ID = 1440802112601854159           # ID REAL DA SUA GUILDA/SERVIDOR!
 # --- Canais ---
 CANAL_PAINEL_ID = 1440909767974453328           # Painel de tickets
 CANAL_ARQUIVO_ID = 1441236730517655634          # Canal para tickets arquivados
-CANAL_STATUS_ID = 1440828427761487934           # Canal de boas vindas (Membros, Lista e Status Final)
+CANAL_STATUS_ID = 1440828427761487934           # Canal de boas vindas (APENAS Membros, Lista)
 TICKET_CATEGORY_ID = 1441644856429772962        # Categoria onde tickets serão criados
 TICKET_ARCHIVE_CHANNEL_ID = 1441236730517655634  # Canal de arquivamento de tickets
 CANAL_LOGS_ID = 1440828555201216582             # Canal dedicado para Logs de Carregamento e Alertas!
