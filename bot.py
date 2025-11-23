@@ -57,6 +57,9 @@ async def load_cogs(bot: commands.Bot):
     
     canal_logs = bot.get_channel(CANAL_LOGS_ID)
     
+    # 💡 NOVO DIAGNÓSTICO: Verifica se o canal de logs foi encontrado.
+    print(f"DEBUG_LOG: Canal de Logs encontrado? {'Sim' if canal_logs else 'Não'}")
+    
     print("\n--- Iniciando Carregamento de Cogs ---")
     
     for cog_name in COGS:
@@ -70,6 +73,7 @@ async def load_cogs(bot: commands.Bot):
                 try:
                     await canal_logs.send(f"✅ Cog **`{cog_name}.py`** carregado com sucesso.")
                 except discord.Forbidden:
+                    # ⚠️ Aviso: Este print indica falta de permissão.
                     print(f"⚠️ Aviso: Não consegui notificar o canal de logs. Permissões insuficientes.")
             
         except discord.ext.commands.ExtensionNotFound:
