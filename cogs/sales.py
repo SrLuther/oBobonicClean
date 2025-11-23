@@ -8,6 +8,7 @@ import os
 import aiohttp
 from bs4 import BeautifulSoup
 from typing import List, Dict, Any
+import asyncio # Adicionado para garantir a execução assíncrona
 
 # Define o nome do arquivo para persistência de dados
 DATA_FILE = "data/sales_history.json"
@@ -118,7 +119,6 @@ class MultiPlatformSales(commands.Cog):
 
 
     # --- TAREFA AGENDADA ---
-    # O loop agenda a execução do raspar_e_enviar_promocoes
     @tasks.loop(hours=24) # Exemplo: roda a cada 24 horas
     async def checar_promocoes(self):
         await self.raspar_e_enviar_promocoes(enviar_novas=True)
@@ -147,7 +147,3 @@ async def setup(bot, **kwargs):
         await bot.add_cog(MultiPlatformSales(bot, canal_promo_id=kwargs['canal_promo_id']))
     else:
         print("❌ ERRO: 'canal_promo_id' não foi fornecido para o cog sales.py.")
-        
-# Este arquivo precisa do import asyncio para a simulação, se a lógica real estiver usando async/await
-# Certifique-se de que todas as suas funções de scraping usam async/await
-import asyncio

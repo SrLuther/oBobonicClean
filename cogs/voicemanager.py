@@ -4,6 +4,7 @@ from discord.ext import commands
 
 class VoiceManager(commands.Cog):
     
+    # ✅ Construtor recebe o ID do canal lobby
     def __init__(self, bot, lobby_channel_id: int):
         self.bot = bot
         self.lobby_id = lobby_channel_id
@@ -59,7 +60,7 @@ class VoiceManager(commands.Cog):
                     except Exception as e:
                         print(f"❌ [VoiceManager] Erro ao deletar o canal: {e}")
 
-# Função de setup para o cog (Recebe o ID como keyword argument)
+# ✅ CORREÇÃO 2: A função setup deve aceitar **kwargs (keyword arguments)
 async def setup(bot, **kwargs):
     if 'lobby_channel_id' in kwargs:
         await bot.add_cog(VoiceManager(bot, lobby_channel_id=kwargs['lobby_channel_id']))
