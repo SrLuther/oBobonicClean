@@ -4,11 +4,12 @@ from discord.ext import commands
 import os
 from dotenv import load_dotenv
 from typing import Optional
+import time 
 
 # 1. Carregar Variáveis de Ambiente e Configuração
 load_dotenv()
 
-# 🛑 NOVO: Função para ler IDs diretamente do ambiente (Railway/Local)
+# Função para ler IDs diretamente do ambiente (Railway/Local)
 def get_env_id(key):
     # Tenta pegar a variável e converter para int. Se falhar, retorna 0.
     value = os.getenv(key)
@@ -43,7 +44,7 @@ COGS = [
     'tickets', 
     'admin', 
     # 'ai',             <-- CONTINUA DESATIVADO
-    # 'autoresponse',   <-- NOVO DESATIVADO PARA ISOLAR O CRASH
+    # 'autoresponse',   <-- CONTINUA DESATIVADO
     'moderation', 
     'xp', 
     'comandos',
@@ -67,6 +68,10 @@ async def load_cogs(bot: commands.Bot):
     
     print("\n--- Iniciando Carregamento de Cogs ---")
     
+    # Obtém o timestamp UNIX atual para uso no Discord
+    unix_timestamp = int(time.time())
+    timestamp_formatado = f"<t:{unix_timestamp}:F>" # Formato Longo (Dia da semana, Data e Hora)
+    
     for cog_name in COGS:
         module_name = f"cogs.{cog_name}"
         try:
@@ -76,7 +81,9 @@ async def load_cogs(bot: commands.Bot):
             # Notificação de sucesso no Discord
             if canal_logs:
                 try:
-                    await canal_logs.send(f"✅ Cog **`{cog_name}.py`** carregado com sucesso.")
+                    # Adiciona o timestamp formatado
+                    log_message = f"[{timestamp_formatado}] ✅ Cog **`{cog_name}.py`** carregado com sucesso."
+                    await canal_logs.send(log_message)
                 except discord.Forbidden:
                     # Este print indica falta de permissão.
                     print(f"⚠️ Aviso: Não consegui notificar o canal de logs. Permissões insuficientes.")
@@ -85,14 +92,18 @@ async def load_cogs(bot: commands.Bot):
             error_message = f"Cog '{cog_name}' não encontrado."
             print(f"[ERRO] {error_message}")
             if canal_logs:
-                await canal_logs.send(f"❌ Falha ao carregar cog: {error_message}")
+                # Adiciona o timestamp formatado
+                log_message = f"[{timestamp_formatado}] ❌ Falha ao carregar cog: {error_message}"
+                await canal_logs.send(log_message)
                 
         except Exception as e:
             error_message = f"Cog '{cog_name}' levantou um erro: {type(e).__name__}: {e}"
             print(f"[ERRO] Falha ao carregar {cog_name}.py: {error_message}")
             if canal_logs:
                 try:
-                    await canal_logs.send(f"❌ Falha crítica ao carregar o cog `{cog_name}`. Detalhes: `{error_message}`")
+                    # Adiciona o timestamp formatado
+                    log_message = f"[{timestamp_formatado}] ❌ Falha crítica ao carregar o cog `{cog_name}`. Detalhes: `{error_message}`"
+                    await canal_logs.send(log_message)
                 except Exception:
                     pass
 
@@ -105,25 +116,33 @@ async def on_ready():
     await load_cogs(bot)
 
     # 2. Sincronização de Comandos de Barra
-    try:
-        if GUILD_ID:
-            guild_obj = discord.Object(id=GUILD_ID)
-            await bot.tree.sync(guild=guild_obj)
-        else:
-            await bot.tree.sync()
+    # 🛑 ESTE BLOCO FOI DESATIVADO TEMPORARIAMENTE PARA TESTE DE ESTABILIDADE
+    print("⚠️ Sincronização de comandos desativada para teste de estabilidade.")
+    # try:
+    #     if GUILD_ID:
+    #         guild_obj = discord.Object(id=GUILD_ID)
+    #         await bot.tree.sync(guild=guild_obj)
+    #     else:
+    #         await bot.tree.sync()
             
-        print("✅ Comandos de barra (slash) sincronizados com sucesso.")
+    #     print("✅ Comandos de barra (slash) sincronizados com sucesso.")
         
-    except Exception as e:
-        error_message = f"Falha ao sincronizar comandos de barra: {type(e).__name__}: {e}"
-        print(f"❌ ERRO de Sincronização: {error_message}")
+    # except Exception as e:
+    #     error_message = f"Falha ao sincronizar comandos de barra: {type(e).__name__}: {e}"
+    #     print(f"❌ ERRO de Sincronização: {error_message}")
         
-        canal_logs = bot.get_channel(CANAL_LOGS_ID)
-        if canal_logs:
-            try:
-                await canal_logs.send(f"❌ Falha crítica na sincronização de comandos. Verifique o `GUILD_ID`. Detalhes: `{error_message}`")
-            except Exception:
-                pass
+    #     # Obtém o timestamp UNIX atual para uso no Discord
+    #     unix_timestamp = int(time.time())
+    #     timestamp_formatado = f"<t:{unix_timestamp}:F>"
+        
+    #     canal_logs = bot.get_channel(CANAL_LOGS_ID)
+    #     if canal_logs:
+    #         try:
+    #             # Adiciona o timestamp formatado
+    #             log_message = f"[{timestamp_formatado}] ❌ Falha crítica na sincronização de comandos. Verifique o `GUILD_ID`. Detalhes: `{error_message}`"
+    #             await canal_logs.send(log_message)
+    #         except Exception:
+    #             pass
 
 # 6. Execução do Bot
 if __name__ == '__main__':
