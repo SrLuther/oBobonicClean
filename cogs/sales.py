@@ -131,7 +131,7 @@ class MultiPlatformSales(commands.Cog):
 # SETUP DO COG
 # ==============================================================================
 
-# ✅ CORREÇÃO: A função setup deve aceitar **kwargs para evitar o TypeError
+# ✅ CORREÇÃO CRÍTICA: Aceita **kwargs para evitar TypeError
 async def setup(bot, **kwargs): 
     if 'canal_promo_id' in kwargs:
         await bot.add_cog(MultiPlatformSales(bot, canal_promo_id=kwargs['canal_promo_id']))

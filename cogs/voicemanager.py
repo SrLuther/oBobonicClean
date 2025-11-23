@@ -57,7 +57,7 @@ class VoiceManager(commands.Cog):
                     except Exception as e:
                         print(f"❌ [VoiceManager] Erro ao deletar o canal: {e}")
 
-# ✅ CORREÇÃO: A função setup deve aceitar **kwargs para evitar o TypeError
+# ✅ CORREÇÃO CRÍTICA: Aceita **kwargs para evitar TypeError
 async def setup(bot, **kwargs):
     if 'lobby_channel_id' in kwargs:
         await bot.add_cog(VoiceManager(bot, lobby_channel_id=kwargs['lobby_channel_id']))
