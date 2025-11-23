@@ -85,10 +85,9 @@ print(f"DEBUG: LOBBY_CHANNEL_ID lido: {LOBBY_CHANNEL_ID} (Tipo: {type(LOBBY_CHAN
 print("-" * 50)
 
 # 5. Função de Carregamento de Cogs 
-async def load_cogs(bot: commands.Bot):
+async def load_cogs(bot: commands.Bot) -> bool:
     """Carrega todos os cogs com tratamento de erros robusto e logs no Discord."""
     
-    # O canal_logs é obtido aqui para enviar logs individuais
     canal_logs = bot.get_channel(CANAL_LOGS_ID)
     unix_timestamp = int(time.time())
     timestamp_formatado = f"<t:{unix_timestamp}:F>" 
@@ -101,7 +100,6 @@ async def load_cogs(bot: commands.Bot):
         module_name = f"cogs.{cog_name}"
         kwargs = {}
         
-        # Passando IDs específicos para Cogs
         if cog_name == 'sales':
             kwargs['canal_promo_id'] = CANAL_PROMO_ID
         elif cog_name == 'voicemanager': 
@@ -111,7 +109,6 @@ async def load_cogs(bot: commands.Bot):
             await bot.load_extension(module_name, **kwargs)
             print(f"[COG] Carregado: {cog_name}.py")
             
-            # ✅ ENVIAR MENSAGEM DE SUCESSO DE VOLTA AO DISCORD
             if canal_logs:
                 await canal_logs.send(
                     f"[{timestamp_formatado}] ✅ Cog **`{cog_name}.py`** carregado com sucesso."
@@ -122,7 +119,6 @@ async def load_cogs(bot: commands.Bot):
             print(f"[ERRO] Falha ao carregar {cog_name}.py: {error_message}")
             all_cogs_loaded = False 
             
-            # ❌ ENVIAR MENSAGEM DE FALHA DE VOLTA AO DISCORD
             if canal_logs:
                 await canal_logs.send(
                     f"[{timestamp_formatado}] ❌ Falha crítica ao carregar `{cog_name}`. Verifique o **log anexo** para detalhes."
@@ -132,7 +128,6 @@ async def load_cogs(bot: commands.Bot):
     print("\n" + "="*60)
     print("🎩✨  Bobonicado conferiu o inventário arcano…")
     
-    # Envio da mensagem final (após o loop)
     if canal_logs:
         status_emoji = "🚀" if all_cogs_loaded else "⚠️"
         await canal_logs.send(
@@ -144,6 +139,8 @@ async def load_cogs(bot: commands.Bot):
     print("Se o impossível carregou, provavelmente foi coisa dele. 😎")
     print(f"Carregamento de cogs finalizado. Status: {'SUCESSO' if all_cogs_loaded else 'FALHA'}")
     print("="*60 + "\n")
+    
+    return all_cogs_loaded
 
 
 # 6. Evento on_ready 
@@ -167,7 +164,6 @@ async def on_ready():
                 filename=f"log_oBobonic.txt" 
             )
             
-            # Mensagem principal com o anexo
             mensagem_deploy = (
                 f"🤖 **oBobonic** iniciado ou reiniciado em `{data_formatada}`. "
                 f"Verifique o log completo no arquivo anexo abaixo:"
@@ -181,8 +177,8 @@ async def on_ready():
         except Exception as e:
             print(f"❌ ERRO ao enviar arquivo de log para o Discord: {e}")
             
-    # 3. Executa o carregamento dos cogs, que AGORA envia as mensagens de status
-    await load_cogs(bot) 
+    # 3. Executa o carregamento dos cogs e CAPTURA O STATUS
+    cogs_loaded_successfully = await load_cogs(bot) 
 
     # 4. Sincronização de comandos
     try:
@@ -197,8 +193,10 @@ async def on_ready():
     except Exception as e:
         error_message = f"Sincronização falhou: {type(e).__name__}: {e}"
         print(f"❌ ERRO: {error_message}")
-            
-    print("✅ Bot pronto e rodando!") 
+    
+    # ✅ Mensagem final dinâmica
+    status_message = "✅ Bot pronto e rodando!" if cogs_loaded_successfully else "⚠️ Bot rodando (com falhas)!"
+    print(status_message) 
 
 # 7. Execução do Bot 
 if __name__ == '__main__':
