@@ -6,18 +6,13 @@ class ComandosCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # 🛠️ COMANDO PRINCIPAL: !bobo (Agora é o help)
-    @commands.command(name="bobo", aliases=["comandos", "ajuda"]) 
+    @commands.command(name="bobo", aliases=["comandos", "ajuda"])
     async def help_command(self, ctx):
-        """Mostra uma lista de comandos disponíveis usando o comando !bobo."""
-        
         embed = discord.Embed(
             title="📚 Comandos do Bot",
             description="Aqui está uma visão geral dos meus comandos disponíveis.",
             color=discord.Color.blue()
         )
-        
-        # --- Comandos Gerais (Exemplo) ---
         embed.add_field(
             name="Geral",
             value="`!bobo` ou `!comandos` - Exibe esta mensagem de ajuda.\n"
@@ -25,8 +20,6 @@ class ComandosCog(commands.Cog):
                   "`!rank` - Mostra o Top 10 do ranking do servidor.",
             inline=False
         )
-
-        # --- Comandos de Tickets ---
         embed.add_field(
             name="Tickets",
             value="`!ticketpanel` (Admin) - Envia o painel de tickets.\n"
@@ -36,8 +29,6 @@ class ComandosCog(commands.Cog):
                   "`!arquivar` - Encerra, gera transcript e deleta o canal.",
             inline=False
         )
-
-        # --- Comandos de Moderação (Exemplo) ---
         embed.add_field(
             name="Moderação (Requer Permissão)",
             value="`!kick <@user>` - Expulsa um usuário.\n"
@@ -45,18 +36,16 @@ class ComandosCog(commands.Cog):
                   "`!clear <quantia>` - Limpa mensagens no canal.",
             inline=False
         )
-
         embed.set_footer(text=f"Use o prefixo ! antes dos comandos.")
-        
         await ctx.send(embed=embed)
 
-    # 📢 COMANDO ECHO (Exemplo simples)
     @commands.command(name="echo")
     async def echo_command(self, ctx, *, message):
-        """Repete a mensagem enviada."""
         await ctx.send(message)
-
-    # ... Você pode adicionar outros comandos aqui ...
 
 async def setup(bot):
     await bot.add_cog(ComandosCog(bot))
+
+# ============================================================
+# Atualizado em: 2025-11-23 22:41:53 (Horário de Brasília)
+# ============================================================
