@@ -5,8 +5,8 @@ import os
 from dotenv import load_dotenv
 from typing import Optional
 import time 
-import threading # <-- NOVO: Para rodar o Keep-Alive em segundo plano
-from flask import Flask # <-- NOVO: Para criar o servidor web
+import threading 
+from flask import Flask 
 
 # --------------------
 ## 🛑 IMPLEMENTAÇÃO DO KEEP-ALIVE
@@ -16,18 +16,13 @@ def run_keep_alive():
     """Configura e inicia o servidor Flask em uma thread separada."""
     app = Flask(__name__)
     
-    # Rota simples para o health check do Railway
     @app.route('/')
     def home():
         return "Bot is running and healthy!"
 
-    # Obtém a porta do ambiente (default 8080)
     port = int(os.environ.get("PORT", 8080))
     
-    # Roda o servidor Flask. Host 0.0.0.0 é crucial para ambientes de contêiner.
     print(f"🌐 Iniciando servidor Keep-Alive na porta {port}...")
-    # Usa threading.Thread para evitar que o Flask bloqueie o discord.py
-    # Desativa a flag reloader para evitar que o servidor Flask seja reiniciado duas vezes.
     app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
 
 # --------------------
@@ -83,7 +78,6 @@ print("-" * 50)
 
 # 4. Função de Carregamento de Cogs 
 async def load_cogs(bot: commands.Bot):
-    # ... (a função load_cogs permanece a mesma)
     canal_logs = bot.get_channel(CANAL_LOGS_ID)
     print(f"DEBUG_LOG: Canal de Logs encontrado? {'Sim' if canal_logs else 'Não'}")
     print("\n--- Iniciando Carregamento de Cogs ---")
@@ -122,16 +116,44 @@ async def load_cogs(bot: commands.Bot):
 @bot.event
 async def on_ready():
     print(f"\n🚀 Bot Logado como {bot.user} (ID: {bot.user.id})")
+    
+    # 1. Carregamento dos Cogs
     await load_cogs(bot)
-    print("⚠️ Sincronização de comandos desativada para teste de estabilidade.")
-    print("✅ Bot pronto e rodando!") # <-- Chegamos aqui com sucesso!
+
+    # 2. Sincronização de Comandos de Barra (REATIVADA PARA CONSUMIR TEMPO)
+    try:
+        if GUILD_ID:
+            guild_obj = discord.Object(id=GUILD_ID)
+            await bot.tree.sync(guild=guild_obj)
+        else:
+            await bot.tree.sync()
+            
+        print("✅ Comandos de barra (slash) sincronizados com sucesso.")
+        
+    except Exception as e:
+        error_message = f"Falha ao sincronizar comandos de barra: {type(e).__name__}: {e}"
+        print(f"❌ ERRO de Sincronização: {error_message}")
+        
+        unix_timestamp = int(time.time())
+        timestamp_formatado = f"<t:{unix_timestamp}:F>"
+        
+        canal_logs = bot.get_channel(CANAL_LOGS_ID)
+        if canal_logs:
+            try:
+                log_message = f"[{timestamp_formatado}] ❌ Falha crítica na sincronização de comandos. Verifique o `GUILD_ID`. Detalhes: `{error_message}`"
+                await canal_logs.send(log_message)
+            except Exception:
+                pass
+                
+    # Mensagem de Confirmação Final
+    print("✅ Bot pronto e rodando!")
 
 # 6. Execução do Bot
 if __name__ == '__main__':
     try:
         print("Starting Container")
         
-        # 🛑 NOVO: INICIA O KEEP-ALIVE EM UMA THREAD SEPARADA
+        # INICIA O KEEP-ALIVE EM UMA THREAD SEPARADA
         t = threading.Thread(target=run_keep_alive)
         t.start()
         
