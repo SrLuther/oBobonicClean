@@ -10,7 +10,10 @@ load_dotenv()
 def get_int_env(var_name, default_value):
     """Lê a variável do ambiente e garante que ela seja um número inteiro (ID)."""
     try:
-        return int(os.getenv(var_name, str(default_value)))
+        # Tenta ler do ambiente, usando o default se não encontrar.
+        value = os.getenv(var_name)
+        # Verifica se o valor lido do ambiente existe. Se sim, usa-o. Se não, usa o default.
+        return int(value) if value else int(default_value)
     except ValueError:
         return int(default_value)
 
@@ -34,6 +37,8 @@ CANAL_ARQUIVO_ID = get_int_env("CANAL_ARQUIVO_ID", 1441236730517655634) # Canal 
 CANAL_STATUS_ID = get_int_env("CANAL_STATUS_ID", 1440828427761487934) # Canal de Boas-Vindas/Status do Bot.
 CANAL_LOGS_ID = get_int_env("CANAL_LOGS_ID", 1440828555201216582) # Canal para Logs de Carregamento e Alertas de Moderação.
 AI_CHANNEL_ID = get_int_env("AI_CHANNEL_ID", 1440828507931410543) # Canal onde a IA responde automaticamente.
+# ✅ ID de Promoções com o novo valor
+CANAL_PROMO_ID = get_int_env("CANAL_PROMO_ID", 1442151789188350113) 
 
 # --- Canais e Configurações de Tickets ---
 TICKET_CATEGORY_ID = get_int_env("TICKET_CATEGORY_ID", 1441644856429772962) # Categoria onde os tickets são criados.
@@ -72,3 +77,18 @@ LEVEL_REWARDS = {
 
 # --- Configurações de Log ---
 LOG_SEPARATOR = os.getenv("LOG_SEPARATOR", "--------------------------------------------------------")
+
+# ==============================================================================
+# 4. LISTA DE COGS (Para o bot.py saber o que carregar)
+# ==============================================================================
+
+COGS = [
+    'tickets', 
+    'admin', 
+    'ai',
+    'autoresponse', 
+    'moderation', 
+    'xp', 
+    'comandos',
+    'sales', # ✅ Incluído o novo cog de promoções
+]
