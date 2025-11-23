@@ -36,8 +36,7 @@ load_dotenv()
 # --- CLASSE PARA CAPTURAR O LOG ---
 class LogBuffer:
     """Captura todo o output (print) do console para posterior envio ao Discord."""
-    # ✅ CORREÇÃO DE INDENTAÇÃO: O construtor __init__ está corretamente indentado
-    def __init__(self): 
+    def __init__(self):
         self.buffer = StringIO()
         self.original_stdout = sys.stdout
 
@@ -50,7 +49,7 @@ class LogBuffer:
     def get_log(self):
         return self.buffer.getvalue()
 
-log_catcher = LogBuffer() # ✅ Linha 27, agora sem erro de indentação
+log_catcher = LogBuffer() 
 
 
 # 2. Leitura de IDs e Token
@@ -60,7 +59,7 @@ CANAL_LOGS_ID = config.CANAL_LOGS_ID
 TICKET_CATEGORY_ID = config.TICKET_CATEGORY_ID
 TICKET_STAFF_ROLE_ID = config.STAFF_ROLE_ID # Usando STAFF_ROLE_ID do config
 CANAL_PROMO_ID = config.CANAL_PROMO_ID
-LOBBY_CHANNEL_ID = config.LOBBY_CHANNEL_ID # ✅ NOVO ID lido do config
+LOBBY_CHANNEL_ID = config.LOBBY_CHANNEL_ID 
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
@@ -83,7 +82,7 @@ print("-" * 50)
 print(f"DEBUG: GUILD_ID lido: {GUILD_ID} (Tipo: {type(GUILD_ID)})")
 print(f"DEBUG: CANAL_LOGS_ID lido: {CANAL_LOGS_ID} (Tipo: {type(CANAL_LOGS_ID)})")
 print(f"DEBUG: CANAL_PROMO_ID lido: {CANAL_PROMO_ID} (Tipo: {type(CANAL_PROMO_ID)})")
-print(f"DEBUG: LOBBY_CHANNEL_ID lido: {LOBBY_CHANNEL_ID} (Tipo: {type(LOBBY_CHANNEL_ID)})") # ✅ Novo debug
+print(f"DEBUG: LOBBY_CHANNEL_ID lido: {LOBBY_CHANNEL_ID} (Tipo: {type(LOBBY_CHANNEL_ID)})") 
 print("-" * 50)
 
 # 5. Função de Carregamento de Cogs 
@@ -99,7 +98,7 @@ async def load_cogs(bot: commands.Bot):
         # Passando IDs específicos para Cogs
         if cog_name == 'sales':
             kwargs['canal_promo_id'] = CANAL_PROMO_ID
-        elif cog_name == 'voicemanager': # ✅ Passa o LOBBY_CHANNEL_ID
+        elif cog_name == 'voicemanager': 
             kwargs['lobby_channel_id'] = LOBBY_CHANNEL_ID 
             
         try:
@@ -110,7 +109,6 @@ async def load_cogs(bot: commands.Bot):
             error_message = f"Erro: {type(e).__name__}: {e}"
             print(f"[ERRO] Falha ao carregar {cog_name}.py: {error_message}")
 
-    # ... (Restante do bloco de log de sucesso) ...
     print("\n" + "="*60)
     print("🎩✨  Bobonicado conferiu o inventário arcano…")
     print("Se o impossível carregou, provavelmente foi coisa dele. 😎")
@@ -121,18 +119,65 @@ async def load_cogs(bot: commands.Bot):
 # 6. Evento on_ready 
 @bot.event
 async def on_ready():
-    # ... (Restante do on_ready) ...
+    # 1. Parar a captura de logs
+    log_catcher.stop_capture()
+    deploy_log_content = log_catcher.get_log()
+    
+    print(f"\n🚀 Bot Logado como {bot.user} (ID: {bot.user.id})")
+    
+    # Executa o carregamento dos cogs, cujo log também está no buffer
+    await load_cogs(bot) 
 
+    # 2. Sincronização de comandos
+    try:
+        if GUILD_ID:
+            guild_obj = discord.Object(id=GUILD_ID)
+            await bot.tree.sync(guild=guild_obj)
+        else:
+            await bot.tree.sync()
+            
+        print("✅ Comandos de barra (slash) sincronizados com sucesso.")
+        
+    except Exception as e:
+        error_message = f"Sincronização falhou: {type(e).__name__}: {e}"
+        print(f"❌ ERRO: {error_message}")
+        
     # 3. Envio do Log do Deploy para o Discord como arquivo
     canal_logs = bot.get_channel(CANAL_LOGS_ID)
-    if canal_logs:
-        # ... (Lógica de envio de log via arquivo) ...
+    if canal_logs: # Linha 128 (Aproximadamente)
+        try:
+            agora = datetime.datetime.now()
+            data_formatada = agora.strftime("%d/%m/%Y %H:%M:%S")
+
+            log_file = discord.File(
+                fp=StringIO(deploy_log_content), 
+                filename=f"log_oBobonic.txt" 
+            )
             
-    print("✅ Bot pronto e rodando!")
+            mensagem_deploy = (
+                f"🤖 **oBobonic** iniciado ou reiniciado em `{data_formatada}`. "
+                f"Verifique o log completo no arquivo anexo abaixo:"
+            )
+            
+            await canal_logs.send(
+                mensagem_deploy,
+                file=log_file
+            )
+
+            await canal_logs.send(
+                "🎩✨ **Bobonicado conferiu o inventário arcano...**\n"
+                "Se até o impossível carregou, então foi coisa dele mesmo. 😎\n"
+                "🚀 **Todos os cogs foram carregados com sucesso!**"
+            )
+
+        except Exception as e:
+            print(f"❌ ERRO ao enviar arquivo de log para o Discord: {e}")
+            
+    # ✅ CORREÇÃO DE INDENTAÇÃO: Alinhado com o 'if canal_logs:'
+    print("✅ Bot pronto e rodando!") 
 
 # 7. Execução do Bot 
 if __name__ == '__main__':
-    # ... (Bloco de execução com Keep-Alive) ...
     try:
         log_catcher.start_capture()
         print("Starting Container")
