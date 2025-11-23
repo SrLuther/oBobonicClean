@@ -571,6 +571,7 @@ async def reabrir_por_canal(channel: discord.TextChannel, by_user: discord.Membe
 class TicketsCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        # A tarefa é iniciada e aguarda no before_loop
         self.check_inatividade.start()
         
     # --- Comando de Setup do Painel ---
@@ -793,50 +794,69 @@ class TicketsCog(commands.Cog):
     # --- Tarefa de Verificação de Inatividade ---
     @tasks.loop(hours=1)
     async def check_inatividade(self):
-        # ... (lógica de inatividade - inalterada)
-        if not self.bot.is_ready() or not self.bot.guilds:
-            return
-        
-        guild = self.bot.guilds[0]
-        category = guild.get_channel(TICKET_CATEGORY_ID)
-        
-        if not isinstance(category, discord.CategoryChannel) or EXPIRACAO_TICKET_HORAS <= 0:
-            return
+        # 🛑 CORREÇÃO FINAL: Bloco try/except para capturar falhas de runtime e manter o bot vivo
+        try:
+            if not self.bot.is_ready() or not self.bot.guilds:
+                return
             
-        limite = utcnow() - datetime.timedelta(hours=EXPIRACAO_TICKET_HORAS)
-        tickets = await load_all_tickets()
-        
-        for ch in list(category.channels):
-            if not isinstance(ch, discord.TextChannel):
-                continue
+            guild = self.bot.guilds[0]
+            category = guild.get_channel(TICKET_CATEGORY_ID)
             
-            info = tickets.get(str(ch.id))
-            if not info or info.get("closed"):
-                continue
+            if not isinstance(category, discord.CategoryChannel) or EXPIRACAO_TICKET_HORAS <= 0:
+                return
                 
-            try:
-                last = None
-                async for m in ch.history(limit=1, oldest_first=False):
-                    last = m
-                    break
-                    
-                last_time = last.created_at.replace(tzinfo=None) if last else ch.created_at.replace(tzinfo=None)
+            limite = utcnow() - datetime.timedelta(hours=EXPIRACAO_TICKET_HORAS)
+            tickets = await load_all_tickets()
+            
+            for ch in list(category.channels):
+                if not isinstance(ch, discord.TextChannel):
+                    continue
                 
-                if last_time < limite:
-                    await ch.send("⏰ Ticket fechado automaticamente por inatividade (última mensagem há mais de {} horas).".format(EXPIRACAO_TICKET_HORAS))
-                    await fechar_ticket_por_canal(ch, by_user=None) 
+                info = tickets.get(str(ch.id))
+                if not info or info.get("closed"):
+                    continue
                     
-            except discord.NotFound:
-                if str(ch.id) in tickets:
-                    tickets.pop(str(ch.id))
-                    await save_all_tickets(tickets)
-            except Exception as e:
-                print("[tickets] Erro ao checar inatividade no canal {}: {}".format(ch.name, e))
-                continue
+                try:
+                    last = None
+                    async for m in ch.history(limit=1, oldest_first=False):
+                        last = m
+                        break
+                        
+                    last_time = last.created_at.replace(tzinfo=None) if last else ch.created_at.replace(tzinfo=None)
+                    
+                    if last_time < limite:
+                        await ch.send("⏰ Ticket fechado automaticamente por inatividade (última mensagem há mais de {} horas).".format(EXPIRACAO_TICKET_HORAS))
+                        await fechar_ticket_por_canal(ch, by_user=None) 
+                        
+                except discord.NotFound:
+                    if str(ch.id) in tickets:
+                        tickets.pop(str(ch.id))
+                        await save_all_tickets(tickets)
+                except Exception as e:
+                    print("[tickets] Erro ao checar inatividade no canal {}: {}".format(ch.name, e))
+                    continue
+        
+        except Exception as e:
+            # Captura qualquer erro de nível superior e impede que ele derrube o loop principal
+            print(f"[tickets] ❌ ERRO CRÍTICO na tarefa de inatividade: {e}. O bot continua rodando.")
+            
+            # Tenta enviar um aviso ao canal de logs (com segurança)
+            log_c = self.bot.get_channel(CANAL_LOGS_ID)
+            if log_c:
+                try:
+                    await log_c.send(f"🚨 ALERTA: Tarefa de inatividade falhou. O bot continua online. Erro: `{e}`")
+                except:
+                    pass
+            
 
     @check_inatividade.before_loop
     async def before_check(self):
-        await self.bot.wait_until_ready()
+        # 🛑 CORREÇÃO FINAL: Bloco try/except para o before_loop
+        try:
+            await self.bot.wait_until_ready()
+        except Exception as e:
+            print(f"[tickets] ❌ ERRO no before_loop da inatividade: {e}. Tarefa cancelada.")
+            self.check_inatividade.cancel()
         
     def cog_unload(self):
         try:
