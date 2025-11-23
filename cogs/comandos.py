@@ -57,13 +57,13 @@ class ComandosBasicos(commands.Cog):
             inline=False
         )
 
-        # 4. Módulo de Moderação
+        # 4. Módulo de Moderação (CORRIGIDO: !faxina e argumentos completos)
         embed.add_field(
             name="🛡️ Moderação (Requer Permissão)",
             value=(
-                "`!limpar <num>`: Deleta mensagens em massa.\n"
-                "`!ban <membro>`: Bane um usuário.\n"
-                "`!kick <membro>`: Expulsa um usuário.\n"
+                "`!faxina <num>` / (`!purgeall`): Deleta mensagens em massa.\n" # <-- CORRIGIDO
+                "`!ban <membro> [motivo]`: Bane um usuário.\n"
+                "`!kick <membro> [motivo]`: Expulsa um usuário.\n"
                 "`!mute <membro> <tempo>`: Silencia temporariamente.\n"
                 "`!warn <membro> <motivo>`: Adiciona uma advertência.\n"
                 "`!warnings <membro>`: Vê o histórico de advertências."
