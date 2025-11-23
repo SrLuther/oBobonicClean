@@ -152,6 +152,9 @@ async def on_ready():
     
     print(f"\n🚀 Bot Logado como {bot.user} (ID: {bot.user.id})")
     
+    # ✅ LINHA DE DEBUG PARA FORÇAR O DEPLOY
+    print("✅ DEBUG: Forçando novo deploy para aplicar as correções dos Cogs.") 
+    
     # 2. Envio do Log do Deploy para o Discord como arquivo (PRIORIDADE)
     canal_logs = bot.get_channel(CANAL_LOGS_ID)
     if canal_logs:
