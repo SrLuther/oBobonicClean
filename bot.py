@@ -111,6 +111,7 @@ async def load_cogs(bot: commands.Bot) -> bool:
             await bot.load_extension(module_name, **kwargs)
             print(f"[COG] Carregado: {cog_name}.py")
             
+            # NOTIFICAÇÃO NO DISCORD (opcional, pode ser removida se for redundante com o log anexo)
             if canal_logs:
                 await canal_logs.send(f"[{timestamp_formatado}] ✅ Cog **`{cog_name}.py`** carregado com sucesso.")
             
@@ -119,6 +120,7 @@ async def load_cogs(bot: commands.Bot) -> bool:
             print(f"[ERRO] Falha ao carregar {cog_name}.py: {error_message}")
             all_cogs_loaded = False 
             
+            # NOTIFICAÇÃO NO DISCORD
             if canal_logs:
                 await canal_logs.send(f"[{timestamp_formatado}] ❌ Falha crítica ao carregar `{cog_name}`. Verifique o log anexo.")
 
@@ -135,13 +137,28 @@ async def load_cogs(bot: commands.Bot) -> bool:
 
 @bot.event
 async def on_ready():
-    # Para a captura de logs
-    log_catcher.stop_capture()
-    deploy_log_content = log_catcher.get_log()
     
     print(f"\n🚀 Bot Logado como {bot.user} (ID: {bot.user.id})")
     
-    # Envio do Arquivo de Log
+    # 1. Carrega os Cogs (Os erros são impressos e CAPTURADOS AQUI)
+    cogs_loaded_successfully = await load_cogs(bot) 
+
+    # 2. Sincroniza Comandos
+    try:
+        if GUILD_ID:
+            guild_obj = discord.Object(id=GUILD_ID)
+            await bot.tree.sync(guild=guild_obj)
+        else:
+            await bot.tree.sync()
+        print("✅ Comandos de barra (slash) sincronizados.")
+    except Exception as e:
+        print(f"❌ ERRO Sincronização: {e}")
+    
+    # 3. Finaliza a captura de logs e obtém o conteúdo COMPLETO
+    log_catcher.stop_capture()
+    deploy_log_content = log_catcher.get_log()
+
+    # 4. Envio do Arquivo de Log COMPLETO para o Discord
     canal_logs = bot.get_channel(CANAL_LOGS_ID)
     if canal_logs:
         try:
@@ -155,36 +172,17 @@ async def on_ready():
             
             mensagem_deploy = (
                 f"🤖 **oBobonic** iniciado ou reiniciado em `{data_formatada}`. "
-                f"Verifique o log completo no arquivo anexo abaixo:"
+                f"Verifique o **log completo** no arquivo anexo abaixo:"
             )
             
             await canal_logs.send(mensagem_deploy, file=log_file)
-
-            # Mensagem temática
-            await canal_logs.send(
-                "🎩✨ **Bobonicado conferiu o inventário arcano...**\n"
-                "Se até o impossível carregou, então foi coisa dele mesmo. 😎\n"
-                "🚀 **Iniciando verificação de status dos Cogs...**"
-            )
-
-        except Exception as e:
-            print(f"❌ ERRO ao enviar log para o Discord: {e}")
             
-    # Carrega os Cogs
-    cogs_loaded_successfully = await load_cogs(bot) 
-
-    # Sincroniza Comandos
-    try:
-        if GUILD_ID:
-            guild_obj = discord.Object(id=GUILD_ID)
-            await bot.tree.sync(guild=guild_obj)
-        else:
-            await bot.tree.sync()
-        print("✅ Comandos de barra (slash) sincronizados.")
-    except Exception as e:
-        print(f"❌ ERRO Sincronização: {e}")
-    
-    # Mensagem Final
+        except Exception as e:
+            # Re-inicia a captura para o erro não se perder
+            log_catcher.start_capture()
+            print(f"❌ ERRO CRÍTICO ao enviar log para o Discord: {e}")
+            
+    # 5. Mensagem Final no console
     status_message = "✅ Bot pronto e rodando!" if cogs_loaded_successfully else "⚠️ Bot rodando (com falhas)!"
     print(status_message) 
 
@@ -207,4 +205,4 @@ if __name__ == '__main__':
         print(f"❌ ERRO FATAL: {e}")
         exit(1)
 
-# Atualizado em: 23/11/2025 19:22 (Horário de Brasília)
+# Atualizado em: 23/11/2025 19:30 (Horário de Brasília)
