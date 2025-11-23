@@ -42,8 +42,8 @@ bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 COGS = [
     'tickets', 
     'admin', 
-    # 'ai',   <-- TEMPORARIAMENTE DESATIVADO PARA EVITAR O CRASH
-    'autoresponse', 
+    # 'ai',             <-- CONTINUA DESATIVADO
+    # 'autoresponse',   <-- NOVO DESATIVADO PARA ISOLAR O CRASH
     'moderation', 
     'xp', 
     'comandos',
