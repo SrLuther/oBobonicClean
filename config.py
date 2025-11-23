@@ -42,6 +42,7 @@ LEVEL_REWARDS = {
     10: 1441985070738178048, # Ex: "Veterano"
     25: 1441985110315630643, # Ex: "Mestre do Chat"
     50: 1441985166435418254, # Ex: "Lenda do Servidor"
+}
 
 # --- Configurações de Log ---
 LOG_SEPARATOR = "--------------------------------------------------------" 
