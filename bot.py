@@ -46,7 +46,7 @@ COGS = [
     # 'ai',             
     # 'autoresponse',   
     'moderation', 
-    # 'xp',             <-- NOVO DESATIVADO PARA ISOLAR O LOOP DE BACKGROUND
+    # 'xp',             
     'comandos',
 ]
 
@@ -143,6 +143,9 @@ async def on_ready():
     #             await canal_logs.send(log_message)
     #         except Exception:
     #             pass
+                
+    # 🚀 Mensagem de Confirmação Final
+    print("✅ Bot pronto e rodando!")
 
 # 6. Execução do Bot
 if __name__ == '__main__':
