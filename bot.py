@@ -41,10 +41,10 @@ bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
 # Lista de Cogs
 COGS = [
-    'tickets', 
+    # 'tickets',        <-- NOVO DESATIVADO PARA ISOLAR O LOOP DE BACKGROUND
     'admin', 
-    # 'ai',             <-- CONTINUA DESATIVADO
-    # 'autoresponse',   <-- CONTINUA DESATIVADO
+    # 'ai',             
+    # 'autoresponse',   
     'moderation', 
     'xp', 
     'comandos',
