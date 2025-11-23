@@ -37,7 +37,6 @@ if TOKEN is None:
     raise ValueError("Token do bot não encontrado no .env")
     
 # 2. Inicialização do Bot
-# ------------------------------------
 # Usamos Intents.all() para garantir que XP por Voz, Moderação e Boas-Vindas funcionem.
 intents = discord.Intents.all() 
 
@@ -49,7 +48,6 @@ bot = commands.Bot(
 )
 
 # 3. Lista de Cogs
-# ------------------------------------
 COGS = [
     'tickets',      # Sistema de Tickets
     'admin',        # Comandos de Manutenção (reload, load, unload)
@@ -61,37 +59,45 @@ COGS = [
 ]
 
 # 4. Função de Carregamento Assíncrono dos Cogs
-# ------------------------------------
 async def load_cogs():
     canal_logs = bot.get_channel(CANAL_LOGS_ID)
     
-    if canal_logs:
-        # Linhas de envio de log temporariamente comentadas
-        pass
-        
-    for cog_name in COGS:
-        module_name = f'cogs.{cog_name}'
-        try:
-            await bot.load_extension(module_name)
-            log_time = get_detailed_log_time()
-            descricao = f"📦 Cog {cog_name} carregado"
+    # 🛑 NOVO: Bloco de segurança para o envio de logs de COGS
+    try:
+        if canal_logs:
+            # LOGS RESTAURADOS: Envio de log inicial
+            await canal_logs.send(LOG_SEPARATOR)
+            await canal_logs.send(f"**⏳ Iniciando o carregamento dos módulos...**")
             
-            print(f"[COG] Carregado: {cog_name}.py")
-            if canal_logs:
-                pass # Linhas de envio de log temporariamente comentadas
+        for cog_name in COGS:
+            module_name = f'cogs.{cog_name}'
+            try:
+                await bot.load_extension(module_name)
+                log_time = get_detailed_log_time()
+                descricao = f"📦 Cog {cog_name} carregado"
                 
-        except Exception as e:
-            log_time = get_detailed_log_time()
+                print(f"[COG] Carregado: {cog_name}.py")
+                if canal_logs:
+                    # LOGS RESTAURADOS: Envio de log de sucesso
+                    await canal_logs.send(f"`{log_time}` {descricao}")
+                    
+            except Exception as e:
+                log_time = get_detailed_log_time()
+                error_message = f"Extension 'cogs.{cog_name}' raised an error: {type(e).__name__}: {e}"
+                
+                print(f"[ERRO] Falha ao carregar {cog_name}.py: {error_message}")
+                if canal_logs:
+                    # LOGS RESTAURADOS: Envio de log de erro
+                    await canal_logs.send(f"`{log_time}` ❌ **ALERTA DE ERRO:** Falha ao carregar **{cog_name}.py**: {error_message}")
+        
+        if canal_logs:
+            # LOGS RESTAURADOS: Envio de separador final
+            await canal_logs.send(LOG_SEPARATOR)
             
-            # Formata o erro para ser mais legível no console/logs
-            error_message = f"Extension 'cogs.{cog_name}' raised an error: {type(e).__name__}: {e}"
-            
-            print(f"[ERRO] Falha ao carregar {cog_name}.py: {error_message}")
-            if canal_logs:
-                pass # Linhas de envio de log temporariamente comentadas
-    
-    if canal_logs:
-        pass # Linhas de envio de log temporariamente comentadas
+    except discord.Forbidden:
+        print("⚠️ AVISO: Bot sem permissão para escrever no canal de logs durante o carregamento. Logs de COGS desabilitados.")
+    except Exception as e:
+        print(f"⚠️ AVISO: Erro inesperado no log de carregamento: {e}. Logs de COGS desabilitados.")
                 
 # --- Evento on_ready ---
 @bot.event
@@ -100,13 +106,22 @@ async def on_ready():
     
     await load_cogs()
     
+    # 🛑 NOVO: Sincronização dos Comandos de Barra (Slash Commands)
+    try:
+        # Sincroniza os comandos de barra, crucial para bots modernos.
+        await bot.tree.sync(guild=discord.Object(id=GUILD_ID))
+        print("✅ Comandos de barra (slash) sincronizados com sucesso.")
+    except Exception as e:
+        # Se falhar, é um erro de API ou ID, mas não deve quebrar o loop principal.
+        print(f"❌ ERRO FATAL: Falha ao sincronizar comandos de barra na Guilda ID {GUILD_ID}: {e}")
+        
     # Prepara a data e hora para a mensagem FINAL
     status_time = get_status_time_format()
     
     # Busca o canal de LOGS para a mensagem final de status
     canal_logs = bot.get_channel(CANAL_LOGS_ID)
     
-    # 🛑 CORREÇÃO FINAL: Usa try/except para capturar erro de permissão (Forbidden)
+    # Mantemos o bloco try/except aqui para a mensagem final (Corrigido no passo anterior)
     if canal_logs: 
         try:
             # Envia a mensagem final de status para o canal de LOGS
