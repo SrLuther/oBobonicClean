@@ -29,6 +29,11 @@ XP_MIN = 15      # Quantidade MÍNIMA de XP ganha por mensagem
 XP_MAX = 25      # Quantidade MÁXIMA de XP ganha por mensagem
 XP_COOLDOWN = 60 # Cooldown (em segundos) entre ganhos de XP por usuário
 
+# --- Configurações de XP por Voz --- 
+
+VOICE_XP_GAIN = 50        # XP ganho a cada intervalo de tempo
+VOICE_XP_INTERVAL_MIN = 5 # Intervalo (em minutos) para checar e conceder XP
+
 # --- Configurações de Recompensas por Nível --- 
 #  Mapeia NÍVEL : ID_DO_CARGO (Ex: Nível 5 ganha o Cargo 123)
 
