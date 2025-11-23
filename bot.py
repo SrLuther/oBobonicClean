@@ -8,17 +8,22 @@ from typing import Optional
 # 1. Carregar Variáveis de Ambiente e Configuração
 load_dotenv()
 
-# Tenta importar variáveis críticas do config.py. Se não existir, usa 0.
-try:
-    from config import GUILD_ID, CANAL_LOGS_ID, TICKET_CATEGORY_ID, TICKET_STAFF_ROLE_ID
-except ImportError:
-    print("⚠️ config.py não encontrado. Usando IDs padrão (0).")
-    GUILD_ID = 0
-    CANAL_LOGS_ID = 0
-    TICKET_CATEGORY_ID = 0
-    TICKET_STAFF_ROLE_ID = 0
+# 🛑 NOVO: Função para ler IDs diretamente do ambiente (Railway/Local)
+def get_env_id(key):
+    # Tenta pegar a variável e converter para int. Se falhar, retorna 0.
+    value = os.getenv(key)
+    try:
+        return int(value) if value else 0
+    except ValueError:
+        print(f"❌ ERRO: {key} deve ser um número inteiro. Verifique suas variáveis de ambiente.")
+        return 0
 
-# O Token do Bot é lido do ambiente (Railway ou .env)
+GUILD_ID = get_env_id("GUILD_ID")
+CANAL_LOGS_ID = get_env_id("CANAL_LOGS_ID")
+TICKET_CATEGORY_ID = get_env_id("TICKET_CATEGORY_ID")
+TICKET_STAFF_ROLE_ID = get_env_id("TICKET_STAFF_ROLE_ID")
+
+# O Token do Bot é lido do ambiente
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 if not TOKEN:
@@ -55,9 +60,10 @@ print("-" * 50)
 async def load_cogs(bot: commands.Bot):
     """Carrega todos os cogs com tratamento de erros robusto e logs."""
     
+    # ⚠️ Esta chamada só funciona se a ID for válida e o bot tiver cacheado o canal.
     canal_logs = bot.get_channel(CANAL_LOGS_ID)
     
-    # 💡 NOVO DIAGNÓSTICO: Verifica se o canal de logs foi encontrado.
+    # Diagnóstico
     print(f"DEBUG_LOG: Canal de Logs encontrado? {'Sim' if canal_logs else 'Não'}")
     
     print("\n--- Iniciando Carregamento de Cogs ---")
@@ -73,7 +79,7 @@ async def load_cogs(bot: commands.Bot):
                 try:
                     await canal_logs.send(f"✅ Cog **`{cog_name}.py`** carregado com sucesso.")
                 except discord.Forbidden:
-                    # ⚠️ Aviso: Este print indica falta de permissão.
+                    # Este print indica falta de permissão.
                     print(f"⚠️ Aviso: Não consegui notificar o canal de logs. Permissões insuficientes.")
             
         except discord.ext.commands.ExtensionNotFound:
