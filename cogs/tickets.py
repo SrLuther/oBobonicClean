@@ -5,14 +5,15 @@ import asyncio
 import time
 import io # Necessário para o transcript
 
-# Assumimos que TICKET_CATEGORY_ID, CANAL_LOGS_ID e TICKET_STAFF_ROLE_ID
-# são importados ou definidos no config.py
+# Assumimos que as variáveis são importadas ou definidas no config.py.
+# 🛑 SOLUÇÃO DO NAMERROR: GUILD_ID adicionado à importação.
 try:
-    from config import TICKET_CATEGORY_ID, CANAL_LOGS_ID, TICKET_STAFF_ROLE_ID
+    from config import TICKET_CATEGORY_ID, CANAL_LOGS_ID, TICKET_STAFF_ROLE_ID, GUILD_ID 
 except ImportError:
     TICKET_CATEGORY_ID = 0
     CANAL_LOGS_ID = 0
     TICKET_STAFF_ROLE_ID = 0
+    GUILD_ID = 0 # Valor de fallback
     
 # Dicionário simples para armazenar o último horário de atividade do ticket
 ticket_activity = {}
@@ -24,7 +25,7 @@ class TicketsCog(commands.Cog):
     def cog_unload(self):
         self.check_inatividade.cancel()
 
-    # 🛑 CORREÇÃO FINAL: Inicia o loop no on_ready, não no __init__
+    # 🛑 CORREÇÃO FINAL: Inicia o loop no on_ready (garante que o bot esteja pronto)
     @commands.Cog.listener()
     async def on_ready(self):
         # Garante que o loop comece apenas após o bot estar totalmente pronto.
@@ -42,9 +43,7 @@ class TicketsCog(commands.Cog):
             INACTIVITY_LIMIT = 48 * 3600  # 48 horas em segundos
             current_time = time.time()
             
-            # Tenta obter o ID do servidor do bot, assumindo que ele está em um só guild para este contexto
-            guild_id = self.bot.GUILD_ID if hasattr(self.bot, 'GUILD_ID') else None
-            guild = self.bot.get_guild(guild_id) 
+            guild = self.bot.get_guild(GUILD_ID) # Usa o GUILD_ID importado
             if not guild:
                 return
 
@@ -53,7 +52,6 @@ class TicketsCog(commands.Cog):
                 return
 
             for channel in category.channels:
-                # Se for um canal de ticket e estiver inativo
                 if channel.id in ticket_activity:
                     last_activity = ticket_activity[channel.id]
                     
@@ -66,7 +64,6 @@ class TicketsCog(commands.Cog):
                         del ticket_activity[channel.id] # Prepara para o arquivamento no próximo ciclo
                     
         except Exception as e:
-            # Captura a exceção e impede que derrube o bot
             print(f"[tickets] ❌ ERRO CRÍTICO na tarefa de inatividade: {e}. O bot continua rodando.")
             
     # ------------------ Listener de Mensagens para Rastrear Atividade ------------------
@@ -86,7 +83,6 @@ class TicketsCog(commands.Cog):
         """Cria um arquivo de transcript (histórico) das mensagens."""
         transcript = f"Transcript do Ticket: {channel.name}\nCriado em: {channel.created_at.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
         
-        # Inverte para que as mensagens mais antigas venham primeiro
         messages = [msg async for msg in channel.history(limit=None, oldest_first=True)]
         
         for msg in messages:
@@ -95,7 +91,6 @@ class TicketsCog(commands.Cog):
             for attachment in msg.attachments:
                 transcript += f"  (Anexo: {attachment.url})\n"
         
-        # Cria um arquivo em memória
         file = discord.File(io.StringIO(transcript), filename=f"transcript-{channel.name}.txt")
         return file
 
@@ -125,7 +120,6 @@ class TicketsCog(commands.Cog):
             color=discord.Color.blue()
         )
         
-        # View com o botão
         view = TicketView(self.bot, TICKET_CATEGORY_ID, TICKET_STAFF_ROLE_ID)
         await ctx.send(embed=embed, view=view)
         await ctx.message.delete()
@@ -137,12 +131,12 @@ class TicketsCog(commands.Cog):
         if ctx.channel.category_id != TICKET_CATEGORY_ID:
             return await ctx.send("Este comando só pode ser usado em um canal de ticket.")
 
-        # Obtém o membro que abriu o ticket (assumindo que o nome do canal o contenha)
         try:
+            # Tenta encontrar o ID do membro no nome do canal (ex: ticket-usuario-123456789)
             user_id = int(ctx.channel.name.split('-')[-1])
             ticket_opener = ctx.guild.get_member(user_id)
         except ValueError:
-            ticket_opener = None # Não foi possível identificar o usuário
+            return await ctx.send("Não foi possível fechar o ticket: Usuário do ticket não identificado.")
 
         # Remove permissão de envio (fechamento suave)
         await ctx.channel.set_permissions(ticket_opener, send_messages=False)
@@ -157,7 +151,6 @@ class TicketsCog(commands.Cog):
         if ctx.channel.category_id != TICKET_CATEGORY_ID:
             return await ctx.send("Este comando só pode ser usado em um canal de ticket.")
         
-        # Tenta obter o membro que abriu o ticket
         try:
             user_id = int(ctx.channel.name.split('-')[-1])
             ticket_opener = ctx.guild.get_member(user_id)
@@ -190,18 +183,22 @@ class TicketsCog(commands.Cog):
 
 
     @commands.command(name="arquivar", aliases=["deletar", "delete"])
-    @commands.has_any_role(TICKET_STAFF_ROLE_ID, "administrator") # Exemplo de verificação de role
+    @commands.has_any_role(TICKET_STAFF_ROLE_ID, "administrator") # Requer cargo de Staff ou Admin
     async def archive_ticket(self, ctx):
         """Gera o transcript e deleta o canal do ticket."""
         if ctx.channel.category_id != TICKET_CATEGORY_ID:
             return await ctx.send("Este comando só pode ser usado em um canal de ticket.")
 
-        await ctx.send("⚠️ **AVISO:** Este ticket será ARQUIVADO e o canal DELETADO em 5 segundos. Gere o transcript (`!transcript`) se necessário.")
+        await ctx.send("⚠️ **AVISO:** Este ticket será ARQUIVADO e o canal DELETADO em 5 segundos.")
         await asyncio.sleep(5)
         
         # Gera o transcript antes de deletar
-        await self.transcript_ticket(ctx) 
-        
+        try:
+            await self.transcript_ticket(ctx) 
+        except Exception as e:
+            # Não impede a exclusão se o transcript falhar
+            print(f"Falha ao gerar transcript antes de deletar: {e}")
+            
         await self.send_log("Ticket Arquivado e Deletado", ctx.channel, ctx.author)
         await ctx.channel.delete()
 
@@ -224,15 +221,18 @@ class TicketView(discord.ui.View):
         member = interaction.user
         
         # 1. Checa se o usuário já tem um ticket aberto na categoria
+        # Note: Esta é uma verificação simples, você pode precisar de uma base de dados para algo mais robusto
         for channel in category.channels:
             if f"-{member.id}" in channel.name:
-                return await interaction.followup.send("Você já possui um ticket aberto.", ephemeral=True)
+                return await interaction.followup.send("Você já possui um ticket aberto. Por favor, feche o ticket anterior antes de abrir um novo.", ephemeral=True)
 
         # 2. Cria o canal
+        staff_role = guild.get_role(self.staff_role_id)
+        
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(view_channel=False),
             member: discord.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True),
-            guild.get_role(self.staff_role_id): discord.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True)
+            staff_role: discord.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True) # Permissões para a Staff
         }
         
         ticket_channel = await category.create_text_channel(
@@ -243,7 +243,7 @@ class TicketView(discord.ui.View):
 
         # 3. Mensagem de Boas-vindas
         await ticket_channel.send(
-            f"Bem-vindo {member.mention}! Um membro da equipe <@&{self.staff_role_id}> estará com você em breve. "
+            f"👋 Bem-vindo {member.mention}! Um membro da equipe {staff_role.mention} estará com você em breve. "
             f"Descreva seu problema ou pergunta aqui."
         )
 
@@ -256,7 +256,7 @@ class TicketView(discord.ui.View):
 
 
 async def setup(bot):
-    # Passamos o GUILD_ID para o bot, pois ele é necessário para o transcript/log
+    # Passamos o GUILD_ID para o bot, caso necessário (embora o GUILD_ID importado seja usado)
     if not hasattr(bot, 'GUILD_ID') and GUILD_ID:
         bot.GUILD_ID = GUILD_ID 
         
