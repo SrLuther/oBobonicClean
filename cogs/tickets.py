@@ -24,10 +24,12 @@ from typing import Optional
 # ==============================================================================
 # 🧩 SEÇÃO 1: CONFIGURAÇÃO E CONSTANTES (Importa tudo do config.py)
 # ==============================================================================
+import os
 try:
     from config import (
         CANAL_PAINEL_ID, CANAL_ARQUIVO_ID, TICKET_CATEGORY_ID, CANAL_STATUS_ID,
-        MOD_ROLE_IDS, STAFF_ROLE_ID, EXPIRACAO_TICKET_HORAS, TICKET_ID_LENGTH
+        MOD_ROLE_IDS, STAFF_ROLE_ID, EXPIRACAO_TICKET_HORAS, TICKET_ID_LENGTH,
+        CANAL_LOGS_ID # 🛑 NOVO: Importando o ID do canal de logs
     )
     # TICKET_ID_LENGTH não será mais usado, mas o mantemos por compatibilidade
 except ImportError:
@@ -40,6 +42,7 @@ except ImportError:
     STAFF_ROLE_ID = []
     EXPIRACAO_TICKET_HORAS = 48
     TICKET_ID_LENGTH = 5
+    CANAL_LOGS_ID = 0 # 🛑 NOVO: Definindo padrão em caso de erro
 
 # Paths de Arquivo
 DATA_DIR = "data"
@@ -398,7 +401,8 @@ async def criar_ticket(interaction: discord.Interaction, reason: str, descricao:
     await interaction.followup.send("✅ Seu ticket foi criado: {}".format(channel.mention), ephemeral=True)
 
     # Log de status
-    log_c = guild.get_channel(CANAL_STATUS_ID)
+    # 🛑 CORRIGIDO: Agora usa CANAL_LOGS_ID em vez de CANAL_STATUS_ID para logs de criação.
+    log_c = guild.get_channel(CANAL_LOGS_ID)
     if log_c and isinstance(log_c, discord.TextChannel):
         await log_c.send("🟢 Ticket criado: {} (ID {}) por {}".format(channel.name, ticket_id, author.mention))
 
@@ -553,7 +557,7 @@ async def reabrir_por_canal(channel: discord.TextChannel, by_user: discord.Membe
     except discord.Forbidden:
         await channel.send("⚠️ Não consegui restaurar as permissões de envio de mensagens. Permissões insuficientes.")
         
-    log = channel.guild.get_channel(CANAL_STATUS_ID)
+    log = channel.guild.get_channel(CANAL_LOGS_ID)
     if log and isinstance(log, discord.TextChannel):
         who = by_user.mention if by_user else "Sistema"
         await log.send("🔓 Ticket {} reaberto por {}".format(channel.name, who))
