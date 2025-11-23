@@ -38,7 +38,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 COGS = [
     'tickets', 
     'admin', 
-    # 'ai',   # <--- Deixamos este cog COMENTADO até confirmarmos a estabilidade total
+    'ai',
     'autoresponse', 
     'moderation', 
     'xp', 

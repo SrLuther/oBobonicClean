@@ -6,10 +6,10 @@ class ComandosCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # 🛠️ COMANDO AJUDA (Substitui o 'help' problemático)
-    @commands.command(name="ajuda", aliases=["comandos", "help"])
+    # 🛠️ COMANDO PRINCIPAL: !bobo (Agora é o help)
+    @commands.command(name="bobo", aliases=["comandos", "ajuda"]) 
     async def help_command(self, ctx):
-        """Mostra uma lista de comandos disponíveis."""
+        """Mostra uma lista de comandos disponíveis usando o comando !bobo."""
         
         embed = discord.Embed(
             title="📚 Comandos do Bot",
@@ -20,7 +20,7 @@ class ComandosCog(commands.Cog):
         # --- Comandos Gerais (Exemplo) ---
         embed.add_field(
             name="Geral",
-            value="`!ajuda` ou `!comandos` - Exibe esta mensagem.\n"
+            value="`!bobo` ou `!comandos` - Exibe esta mensagem de ajuda.\n"
                   "`!xp` - Mostra seu nível e progresso de XP.\n"
                   "`!rank` - Mostra o Top 10 do ranking do servidor.",
             inline=False
