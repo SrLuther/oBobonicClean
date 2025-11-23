@@ -3,6 +3,7 @@ from discord.ext import commands
 import os
 from dotenv import load_dotenv
 import asyncio
+# Garanta que todas as IDs e constantes estejam aqui
 from config import CANAL_STATUS_ID, GUILD_ID, CANAL_LOGS_ID, LOG_SEPARATOR
 import logging 
 from datetime import datetime
@@ -34,37 +35,46 @@ load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 if TOKEN is None:
     raise ValueError("Token do bot não encontrado no .env")
+    
+# 2. Inicialização do Bot
+# ------------------------------------
+# Usamos Intents.all() para garantir que XP por Voz, Moderação e Boas-Vindas funcionem.
+intents = discord.Intents.all() 
 
-intents = discord.Intents.all()
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(
+    command_prefix='!', 
+    intents=intents, 
+    # 🛑 CORREÇÃO AQUI: Desabilita o comando de ajuda padrão para usar o de comandos.py
+    help_command=None 
+)
 
-# --- Mapas de descrição ---
-COG_DESCRICOES = {
-    "admin": "⚙️ Sistema administrativo carregado",
-    "ai": "🤖 Sistema de AI carregado",
-    "autoresponse": "💬 Sistema de respostas automáticas carregado",
-    "moderation": "🛡️ Sistema de moderação carregado",
-    "xp": "⭐ Sistema de XP carregado",
-    "tickets": "🎫 Sistema de tickets carregado",
-    "comandos": "🧰 Sistema de comandos carregado"
-}
+# 3. Lista de Cogs
+# ------------------------------------
+COGS = [
+    'tickets',      # Sistema de Tickets
+    'admin',        # Comandos de Manutenção (reload, load, unload)
+    'ai',           # Inteligência Artificial (Gemini)
+    'autoresponse', # Boas-Vindas e Auto-Respostas
+    'moderation',   # Moderação e Filtros
+    'xp',           # Sistema de XP e Ranking
+    'comandos',     # Menu de Ajuda (!ajuda)
+]
 
-# --- Função para carregar todos os cogs (Logs enviados para CANAL_LOGS_ID) ---
+# 4. Função de Carregamento Assíncrono dos Cogs
+# ------------------------------------
 async def load_cogs():
     canal_logs = bot.get_channel(CANAL_LOGS_ID)
     
     if canal_logs:
         await canal_logs.send(LOG_SEPARATOR)
-        await canal_logs.send(f"**⏰ Iniciando Carregamento de Cogs ({len(COG_DESCRICOES)} total)...**")
-
-    cogs_order = ["tickets", "comandos", "admin", "ai", "autoresponse", "moderation", "xp"]
-
-    for cog_name in cogs_order:
+        await canal_logs.send(f"**⏳ Iniciando o carregamento dos módulos...**")
+        
+    for cog_name in COGS:
+        module_name = f'cogs.{cog_name}'
         try:
-            await bot.load_extension(f"cogs.{cog_name}")
-            
+            await bot.load_extension(module_name)
             log_time = get_detailed_log_time()
-            descricao = COG_DESCRICOES.get(cog_name, f"📦 Cog {cog_name} carregado")
+            descricao = f"📦 Cog {cog_name} carregado"
             
             print(f"[COG] Carregado: {cog_name}.py")
             if canal_logs:
@@ -73,9 +83,12 @@ async def load_cogs():
         except Exception as e:
             log_time = get_detailed_log_time()
             
-            print(f"[ERRO] Falha ao carregar {cog_name}.py: {e}")
+            # Formata o erro para ser mais legível no console/logs
+            error_message = f"Extension 'cogs.{cog_name}' raised an error: {type(e).__name__}: {e}"
+            
+            print(f"[ERRO] Falha ao carregar {cog_name}.py: {error_message}")
             if canal_logs:
-                await canal_logs.send(f"`{log_time}` ❌ **ALERTA DE ERRO:** Falha ao carregar **{cog_name}.py**: {e}")
+                await canal_logs.send(f"`{log_time}` ❌ **ALERTA DE ERRO:** Falha ao carregar **{cog_name}.py**: {error_message}")
     
     if canal_logs:
         await canal_logs.send(LOG_SEPARATOR)
@@ -95,14 +108,13 @@ async def on_ready():
     
     if canal_logs:
         # Envia a mensagem final de status para o canal de LOGS
-        await canal_logs.send(f"✅ Todos os cogs carregados em **{status_time}**")
-    else:
-        # Se nem o canal de logs existir, registra um aviso interno
-        logging.warning(f"Canal de logs (ID: {CANAL_LOGS_ID}) não encontrado para enviar confirmação final.")
+        await canal_logs.send(f"✅ Todos os módulos carregados. **Bobonic está Online!** (Última Inicialização: {status_time})")
 
-# --- Função principal ---
-async def main():
-    await bot.start(TOKEN)
-
+# 5. Início do Bot
+# ------------------------------------
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        bot.run(TOKEN)
+    except Exception as e:
+        logging.error(f"Erro fatal ao iniciar o bot: {e}")
+        print(f"Erro fatal ao iniciar o bot: {e}")
