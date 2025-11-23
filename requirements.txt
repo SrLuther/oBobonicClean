@@ -2,4 +2,4 @@ discord.py==2.6.4
 aiohttp==3.8.4
 requests==2.31.0
 python-dotenv==1.0.0
-google-genai==0.15.0
+google-genai==1.15.0
