@@ -66,10 +66,8 @@ async def load_cogs():
     canal_logs = bot.get_channel(CANAL_LOGS_ID)
     
     if canal_logs:
-        # COMENTADO: Desabilita envio de log inicial para evitar crash por ID inválido
-        # await canal_logs.send(LOG_SEPARATOR)
-        # await canal_logs.send(f"**⏳ Iniciando o carregamento dos módulos...**")
-        pass # Mantém o bloco para estrutura futura
+        # Linhas de envio de log temporariamente comentadas
+        pass
         
     for cog_name in COGS:
         module_name = f'cogs.{cog_name}'
@@ -80,9 +78,7 @@ async def load_cogs():
             
             print(f"[COG] Carregado: {cog_name}.py")
             if canal_logs:
-                # COMENTADO: Desabilita envio de log de sucesso
-                # await canal_logs.send(f"`{log_time}` {descricao}")
-                pass
+                pass # Linhas de envio de log temporariamente comentadas
                 
         except Exception as e:
             log_time = get_detailed_log_time()
@@ -92,14 +88,10 @@ async def load_cogs():
             
             print(f"[ERRO] Falha ao carregar {cog_name}.py: {error_message}")
             if canal_logs:
-                # COMENTADO: Desabilita envio de log de erro
-                # await canal_logs.send(f"`{log_time}` ❌ **ALERTA DE ERRO:** Falha ao carregar **{cog_name}.py**: {error_message}")
-                pass
+                pass # Linhas de envio de log temporariamente comentadas
     
     if canal_logs:
-        # COMENTADO: Desabilita envio de separador final
-        # await canal_logs.send(LOG_SEPARATOR)
-        pass
+        pass # Linhas de envio de log temporariamente comentadas
                 
 # --- Evento on_ready ---
 @bot.event
@@ -114,10 +106,15 @@ async def on_ready():
     # Busca o canal de LOGS para a mensagem final de status
     canal_logs = bot.get_channel(CANAL_LOGS_ID)
     
-    # Esta verificação é crucial e está correta: só envia se o canal existir (não for None)
+    # 🛑 CORREÇÃO FINAL: Usa try/except para capturar erro de permissão (Forbidden)
     if canal_logs: 
-        # Envia a mensagem final de status para o canal de LOGS
-        await canal_logs.send(f"✅ Todos os módulos carregados. **Bobonic está Online!** (Última Inicialização: {status_time})")
+        try:
+            # Envia a mensagem final de status para o canal de LOGS
+            await canal_logs.send(f"✅ Todos os módulos carregados. **Bobonic está Online!** (Última Inicialização: {status_time})")
+        except discord.Forbidden:
+            print(f"⚠️ AVISO: Bot sem permissão para escrever no canal de logs {canal_logs.name} ({CANAL_LOGS_ID}). O bot continuará online.")
+        except Exception as e:
+            print(f"⚠️ AVISO: Erro desconhecido ao enviar log final: {e}. O bot continuará online.")
 
 # 5. Início do Bot
 # ------------------------------------
