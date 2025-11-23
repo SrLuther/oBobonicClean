@@ -1,3 +1,5 @@
+# cogs/xp.py
+
 import discord
 from discord.ext import commands, tasks
 import json
@@ -6,11 +8,8 @@ import asyncio
 import random
 import time
 from operator import itemgetter
-# 🛑 NOVO: Importa as configurações de XP por Voz
-from config import (
-    LEADERBOARD_CHANNEL_ID, XP_MIN, XP_MAX, XP_COOLDOWN, LEVEL_REWARDS,
-    VOICE_XP_GAIN, VOICE_XP_INTERVAL_MIN 
-) 
+# Importa todas as configurações de XP e Ranking do config.py
+from config import LEADERBOARD_CHANNEL_ID, XP_MIN, XP_MAX, XP_COOLDOWN, LEVEL_REWARDS 
 
 # Nome do arquivo de dados (Será criado na pasta raiz)
 XP_FILE = "xp.json"
@@ -48,95 +47,70 @@ class XPSystem(commands.Cog):
         self.LEADERBOARD_CHANNEL_ID = LEADERBOARD_CHANNEL_ID
         self.rewards = LEVEL_REWARDS 
         
+        # Dicionário para rastrear o último momento em que um usuário ganhou XP
         self.cooldowns = {} 
 
         if not os.path.exists(self.xp_file):
             save_xp_data(self.xp_file, {})
             
         self.update_leaderboard_task.start()
-        # 🎤 INICIA A TAREFA DE XP POR VOZ
-        self.voice_xp_task.start()
 
     # ------------------ Hooks do Ciclo de Vida do Cog ------------------
 
     def cog_unload(self):
         self.update_leaderboard_task.cancel()
-        self.voice_xp_task.cancel() # Cancela a nova tarefa no unload
 
-    # ------------------ TAREFA 1: Atualização do Ranking (Inalterada) ------------------
-
-    @tasks.loop(hours=1)
+    @tasks.loop(hours=1) # Executa a cada 1 hora
     async def update_leaderboard_task(self):
-        # ... (código para atualizar o ranking) ...
-        await self.bot.wait_until_ready()
+        """Task que atualiza o ranking no canal dedicado. CORRIGIDA com try/except."""
         
-        channel = self.bot.get_channel(self.LEADERBOARD_CHANNEL_ID)
-        
-        if not channel:
-            return
-
-        guild = channel.guild 
-        embed = await self.generate_leaderboard_embed(guild, auto_update=True)
-        
+        # 🛑 CORREÇÃO ABRANGENTE: Envolve todo o corpo do loop em um try/except.
         try:
-            async for message in channel.history(limit=50):
-                if message.author == self.bot.user and message.embeds and message.embeds[0].title.startswith("🏆 Ranking de XP"):
-                    await message.edit(embed=embed)
-                    return
-            await channel.send(embed=embed)
+            await self.bot.wait_until_ready()
+            
+            channel = self.bot.get_channel(self.LEADERBOARD_CHANNEL_ID)
+            
+            if not channel:
+                return
+
+            guild = channel.guild 
+            embed = await self.generate_leaderboard_embed(guild, auto_update=True)
+            
+            # Tenta encontrar e editar a última mensagem de ranking do bot
+            # Este bloco já estava em try/except no seu código, mas agora está 
+            # aninhado dentro da proteção maior.
+            try:
+                async for message in channel.history(limit=50):
+                    if message.author == self.bot.user and message.embeds and message.embeds[0].title.startswith("🏆 Ranking de XP"):
+                        await message.edit(embed=embed)
+                        return
+                
+                # Se não encontrar, envia uma nova
+                await channel.send(embed=embed)
+
+            except Exception as e:
+                # Erro ao enviar/editar a mensagem (permissão ou API)
+                print(f"❌ ERRO no envio/edição da mensagem de ranking: {e}")
 
         except Exception as e:
-            print(f"❌ ERRO no loop de atualização de ranking: {e}")
+            # Captura qualquer erro de nível superior (ex: falha ao gerar o embed, quebra de guild ID)
+            print(f"[xp] ❌ ERRO CRÍTICO na tarefa de ranking: {e}. O bot continua rodando.")
+            # O bot não morre, o que é o objetivo principal.
 
-    # ------------------ TAREFA 2: XP por Voz (NOVA) ------------------
-    
-    @tasks.loop(minutes=VOICE_XP_INTERVAL_MIN)
-    async def voice_xp_task(self):
-        """Concede XP periodicamente a usuários ativos em canais de voz."""
-        
-        await self.bot.wait_until_ready()
-        
-        # Percorre todos os servidores onde o bot está
-        for guild in self.bot.guilds:
-            for member in guild.members:
-                
-                # Verifica se o membro está em um canal de voz
-                if member.voice and member.voice.channel:
-                    
-                    # Ignora se estiver em canais AFK, se estiver mutado pelo servidor ou por si mesmo
-                    # NOTE: A condição de mudo (self_mute/mute) pode ser ajustada.
-                    # Se você quer recompensar quem está escutando, use self_deaf/deaf.
-                    if member.voice.afk:
-                        continue
-                    
-                    # Condição para ganhar XP: Não pode estar surdo (deaf)
-                    if member.voice.self_deaf or member.voice.deaf:
-                        continue
-                        
-                    # Se chegou aqui, está em voz e ativo (falando ou escutando)
-                    try:
-                        # Chama a função existente para adicionar XP
-                        await self.add_xp_and_check_level(member, VOICE_XP_GAIN)
-                    except Exception as e:
-                        print(f"Erro ao conceder XP por voz para {member.name}: {e}")
-
-    # ------------------ Operações de Dados (Inalteradas) ------------------
+    # ------------------ Operações de Dados ------------------
 
     async def get_user_data(self, user_id):
-        # ...
         data = await self.bot.loop.run_in_executor(None, load_xp_data, self.xp_file)
         user_data = data.get(str(user_id), {"xp": 0, "level": 0})
         return data, user_data
 
     async def save_user_data(self, data):
-        # ...
         await self.bot.loop.run_in_executor(None, save_xp_data, self.xp_file, data)
 
-    # ------------------ Lógica de Level Up com Recompensas (Inalterada) ------------------
+    # ------------------ Lógica de Level Up com Recompensas ------------------
 
     async def add_xp_and_check_level(self, member: discord.Member, amount):
         """Adiciona XP, verifica o nível e aplica as recompensas de cargo."""
-        # ... (código para adicionar xp e verificar nível) ...
         
         user_id = member.id
         all_data, user_data = await self.get_user_data(user_id)
@@ -156,13 +130,14 @@ class XPSystem(commands.Cog):
         all_data[str(user_id)] = user_data
         await self.save_user_data(all_data)
         
+        # 🏅 Lógica de Atribuição de Cargo 
         if old_level < new_level:
             await self.check_and_assign_rewards(member, old_level, new_level)
         
         return new_level, leveled_up
 
     async def check_and_assign_rewards(self, member: discord.Member, old_level: int, new_level: int):
-        # ... (código para atribuir cargo) ...
+        """Verifica quais cargos o membro deve receber."""
         
         reward_levels = {int(k): v for k, v in self.rewards.items()}
         
@@ -176,11 +151,10 @@ class XPSystem(commands.Cog):
                     except discord.Forbidden:
                         print(f"❌ ERRO: Não consegui adicionar o cargo {role.name}. Permissões/Hierarquia insuficientes.")
                         
-    # ------------------ Lógica de Geração do Ranking (Inalterada) ------------------
+    # ------------------ Lógica de Geração do Ranking ------------------
     
     async def generate_leaderboard_embed(self, guild, auto_update=False):
         """Função reutilizável para gerar o Embed do Top 10."""
-        # ... (código para gerar o ranking) ...
         all_data = await self.bot.loop.run_in_executor(None, load_xp_data, self.xp_file)
 
         leaderboard = []
@@ -196,8 +170,8 @@ class XPSystem(commands.Cog):
             title=f"🏆 Ranking de XP (Top 10){title_suffix}",
             description=(
                 f"O XP é conquistado por **atividade no chat**. Você ganha **{XP_MIN} a {XP_MAX} XP** "
-                f"a cada **{XP_COOLDOWN} segundos** que envia uma mensagem. **XP por Voz:** Você ganha **{VOICE_XP_GAIN} XP** a cada **{VOICE_XP_INTERVAL_MIN} minutos** ativo!"
-            ), # <-- ATUALIZAÇÃO DA DESCRIÇÃO!
+                f"a cada **{XP_COOLDOWN} segundos** que envia uma mensagem."
+            ),
             color=discord.Color.dark_orange()
         )
         
@@ -221,23 +195,24 @@ class XPSystem(commands.Cog):
         
         return embed
 
-    # ------------------ Listener de Mensagens com Cooldown (Inalterada) ------------------
+    # ------------------ Listener de Mensagens com Cooldown ------------------
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        # ... (código para XP por mensagem) ...
         if message.author.bot or message.content.startswith(self.bot.command_prefix) or len(message.content) < 3:
             return
         
         user_id = message.author.id
         current_time = time.time()
         
+        # Verifica o cooldown
         if user_id in self.cooldowns and (current_time - self.cooldowns[user_id] < XP_COOLDOWN):
             return
             
         self.cooldowns[user_id] = current_time
         xp_gain = random.randint(XP_MIN, XP_MAX)
         
+        # Chama a função passando o objeto Member para a lógica de recompensa
         new_level, leveled_up = await self.add_xp_and_check_level(message.author, xp_gain)
         
         if leveled_up:
@@ -247,11 +222,11 @@ class XPSystem(commands.Cog):
                 f"Próximo nível em {xp_next} XP."
             )
 
-    # ------------------ Comandos (Inalterados, mas agora refletem XP por Voz) ------------------
+    # ------------------ Comandos ------------------
 
     @commands.command(name="xp", aliases=["level", "lvl"])
     async def show_xp(self, ctx, member: discord.Member = None):
-        # ...
+        """Mostra o nível e o XP de um usuário ou o seu próprio."""
         member = member or ctx.author
         
         _, user_data = await self.get_user_data(member.id)
@@ -299,18 +274,10 @@ class XPSystem(commands.Cog):
         )
         
         embed.add_field(
-            name="Ganhando XP (Atividade no Chat)",
+            name="Ganhando XP (Atividade)",
             value=(
                 f"Você ganha **{XP_MIN} a {XP_MAX} XP** ao enviar uma mensagem válida no chat.\n"
                 f"**Regra Anti-Spam:** Você só pode ganhar XP novamente após **{XP_COOLDOWN} segundos** da última vez que ganhou."
-            ),
-            inline=False
-        )
-        
-        embed.add_field(
-            name="Ganhando XP (Atividade por Voz) 🎤", # <-- NOVO
-            value=(
-                f"Você ganha **{VOICE_XP_GAIN} XP** a cada **{VOICE_XP_INTERVAL_MIN} minutos** que passa em um canal de voz, desde que não esteja com *surdo ativado*."
             ),
             inline=False
         )
