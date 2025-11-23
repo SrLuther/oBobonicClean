@@ -42,7 +42,7 @@ bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 COGS = [
     'tickets', 
     'admin', 
-    'ai',   
+    # 'ai',   <-- TEMPORARIAMENTE DESATIVADO PARA EVITAR O CRASH
     'autoresponse', 
     'moderation', 
     'xp', 
@@ -60,7 +60,6 @@ print("-" * 50)
 async def load_cogs(bot: commands.Bot):
     """Carrega todos os cogs com tratamento de erros robusto e logs."""
     
-    # ⚠️ Esta chamada só funciona se a ID for válida e o bot tiver cacheado o canal.
     canal_logs = bot.get_channel(CANAL_LOGS_ID)
     
     # Diagnóstico
