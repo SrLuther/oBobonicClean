@@ -1,131 +1,104 @@
 import discord
 from discord.ext import commands
 
-# ID do cargo moderador
-MOD_ROLE_ID = 1440828412599210135
-# ID do canal específico para enviar o painel de tickets
-TICKET_CHANNEL_ID = 1440909767974453328
-
-class Comandos(commands.Cog):
+# ==============================================================================
+# 🚀 CLASSE PRINCIPAL: ComandosBasicos
+# ==============================================================================
+class ComandosBasicos(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # -------------------- Ajuda --------------------
-    @commands.command(name="ajuda")
+    # ------------------ Comandos Básicos ------------------
+
+    @commands.command(name="ping")
+    async def ping(self, ctx):
+        """Mostra a latência do bot."""
+        latency_ms = round(self.bot.latency * 1000)
+        await ctx.send(f"🏓 Pong! Latência: **{latency_ms}ms**")
+
+
+    # ------------------ Menu de Ajuda Principal ------------------
+
+    @commands.command(name="ajuda", aliases=['help'])
     async def ajuda(self, ctx):
+        """Exibe o menu de ajuda com todos os módulos do bot."""
+        
         embed = discord.Embed(
-            title="📜 Lista de Comandos do oBobonic",
-            description="Aqui estão todos os comandos disponíveis e o que eles fazem:",
-            color=discord.Color.green()
+            title="🤖 Menu de Ajuda do Bobonic",
+            description="Use `!` seguido do comando para interagir. Se precisar de um tutorial, a equipe pode ajudar!",
+            color=discord.Color.blue()
         )
-
-        # 🎫 Tickets
+        
+        # 1. Módulo Básico
         embed.add_field(
-            name="🎫 Tickets",
+            name="🛠️ Básico/Utilidades",
+            value="`!ajuda` / `!help`: Exibe este menu completo.\n`!ping`: Verifica a latência do bot.",
+            inline=False
+        )
+        
+        # 2. Módulo de Inteligência Artificial (AI)
+        embed.add_field(
+            name="🧠 Inteligência Artificial (Gemini)",
             value=(
-                "• `!abrirticket` — Abre um ticket de suporte (através do botão no painel).\n"
-                "• `!aceitarticket <ticket>` — Moderador aceita um ticket (através do botão no ticket).\n"
-                "• `!fecharticket <ticket>` — Moderador fecha e arquiva um ticket (através do botão no ticket).\n"
-                "• `!ticket` — Moderador envia e fixa o painel de tickets (canal específico)."
+                "`!ia <pergunta>` / `!chat`: Inicia um chat com memória.\n"
+                "`!imagem <prompt>` / `!gerar`: Gera uma imagem a partir do seu prompt."
+            ),
+            inline=False
+        )
+        
+        # 3. Módulo de XP e Ranking
+        embed.add_field(
+            name="⭐ XP e Ranking",
+            value=(
+                "`!xp [membro]`: Mostra seu nível e progresso.\n"
+                "`!rank`: Exibe o Top 10 do servidor.\n"
+                "`!xpinfo`: Regras de ganho de XP e níveis."
             ),
             inline=False
         )
 
-        # 🧹 Limpeza / Mensagens
+        # 4. Módulo de Moderação
         embed.add_field(
-            name="🧹 Limpeza / Mensagens",
+            name="🛡️ Moderação (Requer Permissão)",
             value=(
-                "• `!faxina` — Limpa o máximo de mensagens do canal.\n"
-                "• `!limpar <x>` — Deleta mensagens cumulativas até atingir x caracteres.\n"
-                "⚠️ Ambos exigem permissão de **Gerenciar Mensagens**."
+                "`!limpar <num>`: Deleta mensagens em massa.\n"
+                "`!ban <membro>`: Bane um usuário.\n"
+                "`!kick <membro>`: Expulsa um usuário.\n"
+                "`!mute <membro> <tempo>`: Silencia temporariamente.\n"
+                "`!warn <membro> <motivo>`: Adiciona uma advertência.\n"
+                "`!warnings <membro>`: Vê o histórico de advertências."
+            ),
+            inline=False
+        )
+        
+        # 5. Módulo de Tickets
+        embed.add_field(
+            name="🎫 Tickets e Suporte",
+            value=(
+                "`!ticketpanel`: Envia o painel de criação de tickets (Admin).\n"
+                "`!fechar`: Fecha o ticket atual.\n"
+                "`!arquivar`: Arquiva (deleta) o ticket após gerar o transcript."
+            ),
+            inline=False
+        )
+        
+        # 6. Módulo de Administração (Apenas para Dono)
+        embed.add_field(
+            name="⚙️ Admin/Dev (Apenas para o Dono do Bot)",
+            value=(
+                "`!carregar <cog>` / `!descarregar <cog>`\n"
+                "`!recarregar <cog>`: Gerencia os módulos do bot em tempo real."
             ),
             inline=False
         )
 
-        # ⚙️ Administração
-        embed.add_field(
-            name="⚙️ Administração",
-            value=(
-                "• `!reload <cog>` — Recarrega uma extensão (admin/moderador).\n"
-                "• `!load <cog>` — Carrega uma extensão.\n"
-                "• `!unload <cog>` — Descarrega uma extensão."
-            ),
-            inline=False
-        )
-
-        # 🛡️ Moderação
-        embed.add_field(
-            name="🛡️ Moderação",
-            value=(
-                "• `!ban <usuário> [motivo]` — Bane um usuário.\n"
-                "• `!kick <usuário> [motivo]` — Expulsa um usuário.\n"
-                "• `!mute <usuário> [tempo]` — Silencia um usuário.\n"
-                "• `!unmute <usuário>` — Remove o silêncio.\n"
-                "• `!warn <usuário> [motivo]` — Adiciona advertência.\n"
-                "• `!warnings <usuário>` — Mostra advertências de um usuário."
-            ),
-            inline=False
-        )
-
-        # ⭐ XP / Ranking
-        embed.add_field(
-            name="⭐ XP / Ranking",
-            value=(
-                "• `!xp <usuário>` — Mostra o XP atual de um usuário.\n"
-                "• `!rank <usuário>` — Mostra a posição no ranking."
-            ),
-            inline=False
-        )
-
-        # 📌 Utilitário
-        embed.add_field(
-            name="📌 Utilitário",
-            value="• `!ajuda` — Mostra esta mensagem de ajuda.",
-            inline=False
-        )
-
+        embed.set_footer(text="Agradecemos por usar o Bobonic! Sempre ativo e melhorando.")
+        
         await ctx.send(embed=embed)
 
-    # -------------------- Faxina --------------------
-    @commands.command(name="faxina")
-    @commands.has_permissions(manage_messages=True)
-    async def faxina(self, ctx):
-        try:
-            deleted = await ctx.channel.purge()
-            await ctx.send(f"🧹 Faxina feita! {len(deleted)} mensagens deletadas.", delete_after=5)
-        except discord.Forbidden:
-            await ctx.send("❌ Não tenho permissão para deletar mensagens neste canal.")
-        except discord.HTTPException as e:
-            await ctx.send(f"❌ Ocorreu um erro ao tentar deletar as mensagens: {e}")
 
-    # -------------------- Limpar --------------------
-    @commands.command(name="limpar")
-    @commands.has_permissions(manage_messages=True)
-    async def limpar(self, ctx, quantidade: int):
-        if quantidade <= 0:
-            await ctx.send("❌ A quantidade de caracteres precisa ser maior que 0.", delete_after=5)
-            return
-
-        contador = 0
-        mensagens = []
-
-        async for msg in ctx.channel.history(limit=None):
-            contador += len(msg.content)
-            mensagens.append(msg)
-            if contador >= quantidade:
-                break
-
-        if mensagens:
-            try:
-                await ctx.channel.delete_messages(mensagens)
-                await ctx.send(f"🧹 Mensagens deletadas até atingir {quantidade} caracteres.", delete_after=5)
-            except discord.Forbidden:
-                await ctx.send("❌ Não tenho permissão para deletar mensagens neste canal.")
-            except discord.HTTPException as e:
-                await ctx.send(f"❌ Ocorreu um erro ao tentar deletar as mensagens: {e}")
-        else:
-            await ctx.send("⚠️ Não foram encontradas mensagens para deletar.", delete_after=5)
-
-# -------------------- Setup da Cog --------------------
+# ==============================================================================
+# ⚙️ FUNÇÃO DE SETUP
+# ==============================================================================
 async def setup(bot):
-    await bot.add_cog(Comandos(bot))
+    await bot.add_cog(ComandosBasicos(bot))
