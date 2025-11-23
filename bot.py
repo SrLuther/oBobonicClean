@@ -51,7 +51,7 @@ bot = commands.Bot(
 COGS = [
     'tickets',      # Sistema de Tickets
     'admin',        # Comandos de Manutenção (reload, load, unload)
-    'ai',           # Inteligência Artificial (Gemini)
+   # 'ai',           # Inteligência Artificial (Gemini)
     'autoresponse', # Boas-Vindas e Auto-Respostas
     'moderation',   # Moderação e Filtros
     'xp',           # Sistema de XP e Ranking
