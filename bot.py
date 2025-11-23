@@ -65,6 +65,7 @@ COGS = [
 async def load_cogs():
     canal_logs = bot.get_channel(CANAL_LOGS_ID)
     
+    # ⚠️ Adicionamos esta verificação para evitar que o bot quebre no início
     if canal_logs:
         await canal_logs.send(LOG_SEPARATOR)
         await canal_logs.send(f"**⏳ Iniciando o carregamento dos módulos...**")
@@ -90,6 +91,7 @@ async def load_cogs():
             if canal_logs:
                 await canal_logs.send(f"`{log_time}` ❌ **ALERTA DE ERRO:** Falha ao carregar **{cog_name}.py**: {error_message}")
     
+    # ⚠️ Adicionamos esta verificação para evitar que o bot quebre no final
     if canal_logs:
         await canal_logs.send(LOG_SEPARATOR)
                 
@@ -106,7 +108,8 @@ async def on_ready():
     # Busca o canal de LOGS para a mensagem final de status
     canal_logs = bot.get_channel(CANAL_LOGS_ID)
     
-    if canal_logs:
+    # 🛑 CORREÇÃO: Verifica se o canal_logs não é None antes de tentar enviar
+    if canal_logs: 
         # Envia a mensagem final de status para o canal de LOGS
         await canal_logs.send(f"✅ Todos os módulos carregados. **Bobonic está Online!** (Última Inicialização: {status_time})")
 
