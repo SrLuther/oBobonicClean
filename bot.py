@@ -12,32 +12,7 @@ import datetime
 import config 
 
 # --------------------
-## 1. INICIALIZAÇÃO DE VARIÁVEIS E KEEP-ALIVE
-# --------------------
-
-# Carregar Variáveis de Ambiente e Configuração
-load_dotenv()
-
-# Leitura de IDs e Token
-GUILD_ID = config.GUILD_ID
-CANAL_LOGS_ID = config.CANAL_LOGS_ID
-TICKET_CATEGORY_ID = config.TICKET_CATEGORY_ID
-TICKET_STAFF_ROLE_ID = config.STAFF_ROLE_ID 
-CANAL_PROMO_ID = config.CANAL_PROMO_ID
-LOBBY_CHANNEL_ID = config.LOBBY_CHANNEL_ID 
-
-TOKEN = os.getenv("DISCORD_TOKEN")
-
-if not TOKEN:
-    print("❌ ERRO: DISCORD_TOKEN não encontrado. Verifique seu .env ou variáveis do Railway.")
-    exit(1)
-
-# --------------------
-## FIM DA 1. INICIALIZAÇÃO DE VARIÁVEIS E KEEP-ALIVE
-# --------------------
-
-# --------------------
-## 2. IMPLEMENTAÇÃO DO KEEP-ALIVE (FLASK)
+## 1. IMPLEMENTAÇÃO DO KEEP-ALIVE (FLASK)
 # --------------------
 
 def run_keep_alive():
@@ -53,15 +28,14 @@ def run_keep_alive():
     app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
 
 # --------------------
-## FIM DA 2. IMPLEMENTAÇÃO DO KEEP-ALIVE (FLASK)
+## 2. CONFIGURAÇÃO E VARIÁVEIS
 # --------------------
 
-# --------------------
-## 3. CLASSE DE CAPTURA DE LOGS
-# --------------------
+# Carregar Variáveis de Ambiente
+load_dotenv()
 
+# Classe para capturar o log do console
 class LogBuffer:
-    """Captura todo o output (print) do console para posterior envio ao Discord."""
     def __init__(self):
         self.buffer = StringIO()
         self.original_stdout = sys.stdout
@@ -73,48 +47,48 @@ class LogBuffer:
         sys.stdout = self.original_stdout
 
     def get_log(self):
-        # Retorna o conteúdo e limpa o buffer para futuras capturas, se necessário
         return self.buffer.getvalue()
 
 log_catcher = LogBuffer() 
 
-# --------------------
-## FIM DA 3. CLASSE DE CAPTURA DE LOGS
-# --------------------
+# Leitura de IDs do arquivo config
+GUILD_ID = config.GUILD_ID
+CANAL_LOGS_ID = config.CANAL_LOGS_ID
+TICKET_CATEGORY_ID = config.TICKET_CATEGORY_ID
+TICKET_STAFF_ROLE_ID = config.STAFF_ROLE_ID 
+CANAL_PROMO_ID = config.CANAL_PROMO_ID
+LOBBY_CHANNEL_ID = config.LOBBY_CHANNEL_ID 
 
-# --------------------
-## 4. CONFIGURAÇÃO BASE DO BOT
-# --------------------
+TOKEN = os.getenv("DISCORD_TOKEN")
 
+if not TOKEN:
+    print("❌ ERRO: DISCORD_TOKEN não encontrado.")
+    exit(1)
+
+# Configuração do Bot
 intents = discord.Intents.default()
 intents.members = True 
 intents.message_content = True 
 
-# Bot sem o comando de help padrão e com as intenções necessárias
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None) 
 
-# Lista de Cogs (Lida diretamente do config)
+# Lista de Cogs
 COGS = config.COGS
 
-# Bloco de Debug para confirmar se os IDs foram lidos
+# Debug de IDs
 print("-" * 50)
-print(f"DEBUG: GUILD_ID lido: {GUILD_ID} (Tipo: {type(GUILD_ID)})")
-print(f"DEBUG: CANAL_LOGS_ID lido: {CANAL_LOGS_ID} (Tipo: {type(CANAL_LOGS_ID)})")
-print(f"DEBUG: CANAL_PROMO_ID lido: {CANAL_PROMO_ID} (Tipo: {type(CANAL_PROMO_ID)})")
-print(f"DEBUG: LOBBY_CHANNEL_ID lido: {LOBBY_CHANNEL_ID} (Tipo: {type(LOBBY_CHANNEL_ID)})") 
+print(f"DEBUG: GUILD_ID: {GUILD_ID}")
+print(f"DEBUG: CANAL_LOGS_ID: {CANAL_LOGS_ID}")
+print(f"DEBUG: CANAL_PROMO_ID: {CANAL_PROMO_ID}")
+print(f"DEBUG: LOBBY_CHANNEL_ID: {LOBBY_CHANNEL_ID}") 
 print("-" * 50)
 
 # --------------------
-## FIM DA 4. CONFIGURAÇÃO BASE DO BOT
-# --------------------
-
-
-# --------------------
-## 5. FUNÇÃO DE CARREGAMENTO DE COGS
+## 3. FUNÇÕES AUXILIARES
 # --------------------
 
 async def load_cogs(bot: commands.Bot) -> bool:
-    """Carrega todos os cogs com tratamento de erros robusto e logs no Discord."""
+    """Carrega todos os cogs e notifica no Discord."""
     
     canal_logs = bot.get_channel(CANAL_LOGS_ID)
     unix_timestamp = int(time.time())
@@ -128,70 +102,52 @@ async def load_cogs(bot: commands.Bot) -> bool:
         module_name = f"cogs.{cog_name}"
         kwargs = {}
         
-        # Mapeamento dos argumentos que causam o TypeError se não forem **kwargs
         if cog_name == 'sales':
             kwargs['canal_promo_id'] = CANAL_PROMO_ID
         elif cog_name == 'voicemanager': 
             kwargs['lobby_channel_id'] = LOBBY_CHANNEL_ID 
             
         try:
-            # Carrega o cog, passando os argumentos como **kwargs
             await bot.load_extension(module_name, **kwargs)
             print(f"[COG] Carregado: {cog_name}.py")
             
             if canal_logs:
-                # O log de sucesso é enviada para o canal de logs
-                await canal_logs.send(
-                    f"[{timestamp_formatado}] ✅ Cog **`{cog_name}.py`** carregado com sucesso."
-                )
+                await canal_logs.send(f"[{timestamp_formatado}] ✅ Cog **`{cog_name}.py`** carregado com sucesso.")
             
         except Exception as e:
             error_message = f"Erro: {type(e).__name__}: {e}"
             print(f"[ERRO] Falha ao carregar {cog_name}.py: {error_message}")
             all_cogs_loaded = False 
             
-            # O log de falha crítica é enviada para o canal de logs
             if canal_logs:
-                await canal_logs.send(
-                    f"[{timestamp_formatado}] ❌ Falha crítica ao carregar `{cog_name}`. Verifique o **log anexo** para detalhes."
-                )
+                await canal_logs.send(f"[{timestamp_formatado}] ❌ Falha crítica ao carregar `{cog_name}`. Verifique o log anexo.")
 
-    # Mensagem final do Bobonicado no console
     print("\n" + "="*60)
-    print("🎩✨  Bobonicado conferiu o inventário arcano…")
-    print(f"Carregamento de cogs finalizado. Status: {'SUCESSO' if all_cogs_loaded else 'FALHA'}")
+    print("🎩✨ Bobonicado conferiu o inventário arcano...")
+    print(f"Status Final: {'SUCESSO' if all_cogs_loaded else 'FALHA'}")
     print("="*60 + "\n")
     
     return all_cogs_loaded
 
 # --------------------
-## FIM DA 5. FUNÇÃO DE CARREGAMENTO DE COGS
-# --------------------
-
-
-# --------------------
-## 6. EVENTO ON_READY (LOGICA DE BOOT)
+## 4. EVENTO ON_READY
 # --------------------
 
 @bot.event
 async def on_ready():
-    # 1. Parar a captura de logs e obter o conteúdo
+    # Para a captura de logs
     log_catcher.stop_capture()
     deploy_log_content = log_catcher.get_log()
     
-    # Mensagens importantes de console (aparecerão no log)
     print(f"\n🚀 Bot Logado como {bot.user} (ID: {bot.user.id})")
-    # ✅ LINHA DE DEBUG para forçar o deploy
-    print("✅ ATENÇÃO: Último re-deploy forçado para correção dos Cogs.") 
     
-    # 2. Envio do Log do Deploy para o Discord como arquivo
+    # Envio do Arquivo de Log
     canal_logs = bot.get_channel(CANAL_LOGS_ID)
     if canal_logs:
         try:
             agora = datetime.datetime.now()
             data_formatada = agora.strftime("%d/%m/%Y %H:%M:%S")
 
-            # Cria o arquivo de log para anexar
             log_file = discord.File(
                 fp=StringIO(deploy_log_content), 
                 filename=f"log_oBobonic.txt" 
@@ -202,53 +158,53 @@ async def on_ready():
                 f"Verifique o log completo no arquivo anexo abaixo:"
             )
             
+            await canal_logs.send(mensagem_deploy, file=log_file)
+
+            # Mensagem temática
             await canal_logs.send(
-                mensagem_deploy,
-                file=log_file
+                "🎩✨ **Bobonicado conferiu o inventário arcano...**\n"
+                "Se até o impossível carregou, então foi coisa dele mesmo. 😎\n"
+                "🚀 **Iniciando verificação de status dos Cogs...**"
             )
 
         except Exception as e:
-            print(f"❌ ERRO ao enviar arquivo de log para o Discord: {e}")
+            print(f"❌ ERRO ao enviar log para o Discord: {e}")
             
-    # 3. Executa o carregamento dos cogs e CAPTURA O STATUS
+    # Carrega os Cogs
     cogs_loaded_successfully = await load_cogs(bot) 
 
-    # 4. Sincronização de comandos
+    # Sincroniza Comandos
     try:
         if GUILD_ID:
             guild_obj = discord.Object(id=GUILD_ID)
             await bot.tree.sync(guild=guild_obj)
         else:
             await bot.tree.sync()
-            
-        print("✅ Comandos de barra (slash) sincronizados com sucesso.")
-        
+        print("✅ Comandos de barra (slash) sincronizados.")
     except Exception as e:
-        error_message = f"Sincronização falhou: {type(e).__name__}: {e}"
-        print(f"❌ ERRO: {error_message}")
+        print(f"❌ ERRO Sincronização: {e}")
     
-    # 5. Mensagem final dinâmica
+    # Mensagem Final
     status_message = "✅ Bot pronto e rodando!" if cogs_loaded_successfully else "⚠️ Bot rodando (com falhas)!"
     print(status_message) 
 
 # --------------------
-## FIM DA 6. EVENTO ON_READY (LOGICA DE BOOT)
-# --------------------
-
-
-# --------------------
-## 7. EXECUÇÃO PRINCIPAL
+## 5. EXECUÇÃO PRINCIPAL
 # --------------------
 
 if __name__ == '__main__':
     try:
-        # Inicia a captura de logs antes de tudo
         log_catcher.start_capture()
         print("Starting Container")
         
-        # Inicia o servidor Keep-Alive em uma thread separada
         t = threading.Thread(target=run_keep_alive)
         t.start()
         print(f"🌐 Iniciando servidor Keep-Alive na porta {os.environ.get('PORT', 8080)}...")
 
-        # Inicia o bot do Discord
+        bot.run(TOKEN)
+    except Exception as e:
+        log_catcher.stop_capture()
+        print(f"❌ ERRO FATAL: {e}")
+        exit(1)
+
+# Atualizado em: 23/11/2025 19:22 (Horário de Brasília)
