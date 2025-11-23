@@ -16,6 +16,7 @@ TICKET_NOTIFY_CHANNEL_ID = 1440918150957891656 # Canal que deve receber notifica
 MOD_ROLE_IDS = [1440828410556321882, 1440828412599210135]  # Cargos que podem acessar painel administrativo
 STAFF_ROLE_ID = [1440828410556321882, 1440828412599210135] # Cargo usado nos tickets para moderadores
 MEMBER_ROLE_ID = 1440828415103074356 # Cargo que será aplicado automaticamente a novos membros assim que chegarem
+QUARANTINE_ROLE_ID = 1441973275008831669  # Cargo que será usado para quarentena (deve ter permissão mínima)
 
 # --- Configurações de Tickets ---
 EXPIRACAO_TICKET_HORAS = 48   # Tempo máximo de inatividade para fechar automaticamente tickets
