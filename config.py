@@ -23,5 +23,20 @@ QUARANTINE_ROLE_ID = 1441973275008831669  # Cargo que será usado para quarenten
 EXPIRACAO_TICKET_HORAS = 48   # Tempo máximo de inatividade para fechar automaticamente tickets
 TICKET_ID_LENGTH = 5          # Tamanho do código de identificação do ticket
 
+# --- Configurações do Sistema de XP --- 
+
+XP_MIN = 15      # Quantidade MÍNIMA de XP ganha por mensagem
+XP_MAX = 25      # Quantidade MÁXIMA de XP ganha por mensagem
+XP_COOLDOWN = 60 # Cooldown (em segundos) entre ganhos de XP por usuário
+
+# --- Configurações de Recompensas por Nível --- 
+#  Mapeia NÍVEL : ID_DO_CARGO (Ex: Nível 5 ganha o Cargo 123)
+
+LEVEL_REWARDS = {
+    5: 1441984913770549298,  # Ex: "Membro Ativo"
+    10: 1441985070738178048, # Ex: "Veterano"
+    25: 1441985110315630643, # Ex: "Mestre do Chat"
+    50: 1441985166435418254, # Ex: "Lenda do Servidor"
+
 # --- Configurações de Log ---
 LOG_SEPARATOR = "--------------------------------------------------------" 
