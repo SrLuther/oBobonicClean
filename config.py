@@ -20,7 +20,7 @@ def get_int_env(var_name, default_value):
 # ==============================================================================
 # 2. CHAVES E SECRETS (Lidos do Ambiente)
 # ==============================================================================
-# O bot.py lerá o DISCORD_TOKEN diretamente do ambiente.
+# Lidos EXCLUSIVAMENTE do ambiente (DISCORD_TOKEN e GEMINI_API_KEY)
 # A chave GEMINI é lida aqui porque o módulo 'ai.py' a importa.
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "chave_gemini_falsa_para_dev")
 
@@ -32,40 +32,40 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "chave_gemini_falsa_para_dev")
 GUILD_ID = get_int_env("GUILD_ID", 1440802112601854159) # ID do Servidor Principal.
 
 # --- Canais de Mensagens e Logs --- 
-CANAL_PAINEL_ID = get_int_env("CANAL_PAINEL_ID", 1440909767974453328) # Canal onde fica o Painel de Tickets.
-CANAL_ARQUIVO_ID = get_int_env("CANAL_ARQUIVO_ID", 1441236730517655634) # Canal para transcripts de tickets arquivados.
-CANAL_STATUS_ID = get_int_env("CANAL_STATUS_ID", 1440828427761487934) # Canal de Boas-Vindas/Status do Bot.
-CANAL_LOGS_ID = get_int_env("CANAL_LOGS_ID", 1440828555201216582) # Canal para Logs de Carregamento e Alertas de Moderação.
-AI_CHANNEL_ID = get_int_env("AI_CHANNEL_ID", 1440828507931410543) # Canal onde a IA responde automaticamente.
-# ✅ ID de Promoções com o novo valor
-CANAL_PROMO_ID = get_int_env("CANAL_PROMO_ID", 1442151789188350113) 
+CANAL_PAINEL_ID = get_int_env("CANAL_PAINEL_ID", 1440909767974453328) 
+CANAL_ARQUIVO_ID = get_int_env("CANAL_ARQUIVO_ID", 1441236730517655634) 
+CANAL_STATUS_ID = get_int_env("CANAL_STATUS_ID", 1440828427761487934) 
+CANAL_LOGS_ID = get_int_env("CANAL_LOGS_ID", 1440828555201216582) 
+AI_CHANNEL_ID = get_int_env("AI_CHANNEL_ID", 1440828507931410543) 
+CANAL_PROMO_ID = get_int_env("CANAL_PROMO_ID", 1442151789188350113) # ID de Promoções
+LOBBY_CHANNEL_ID = get_int_env("LOBBY_CHANNEL_ID", 1440828526478491648) # 👈 ID do Canal Join-to-Create
 
 # --- Canais e Configurações de Tickets ---
-TICKET_CATEGORY_ID = get_int_env("TICKET_CATEGORY_ID", 1441644856429772962) # Categoria onde os tickets são criados.
-TICKET_ARCHIVE_CHANNEL_ID = get_int_env("TICKET_ARCHIVE_CHANNEL_ID", 1441236730517655634) # Canal de arquivamento de tickets (cópia de CANAL_ARQUIVO_ID).
-TICKET_NOTIFY_CHANNEL_ID = get_int_env("TICKET_NOTIFY_CHANNEL_ID", 1440918150957891656) # Canal para notificação de abertura de tickets.
-EXPIRACAO_TICKET_HORAS = get_int_env("EXPIRACAO_TICKET_HORAS", 48) # Tempo (em horas) para fechar tickets inativos.
-TICKET_ID_LENGTH = get_int_env("TICKET_ID_LENGTH", 5) # Tamanho do código de identificação do ticket.
+TICKET_CATEGORY_ID = get_int_env("TICKET_CATEGORY_ID", 1441644856429772962) 
+TICKET_ARCHIVE_CHANNEL_ID = get_int_env("TICKET_ARCHIVE_CHANNEL_ID", 1441236730517655634) 
+TICKET_NOTIFY_CHANNEL_ID = get_int_env("TICKET_NOTIFY_CHANNEL_ID", 1440918150957891656) 
+EXPIRACAO_TICKET_HORAS = get_int_env("EXPIRACAO_TICKET_HORAS", 48) 
+TICKET_ID_LENGTH = get_int_env("TICKET_ID_LENGTH", 5) 
 
 # --- Canais de XP ---
-LEADERBOARD_CHANNEL_ID = get_int_env("LEADERBOARD_CHANNEL_ID", 123456789012345678) # 🛑 ID do Canal onde o ranking de XP é postado (corrigido para o erro).
+LEADERBOARD_CHANNEL_ID = get_int_env("LEADERBOARD_CHANNEL_ID", 123456789012345678) 
 
 # --- Roles / Cargos ---
-MEMBER_ROLE_ID = get_int_env("MEMBER_ROLE_ID", 1440828415103074356) # Cargo aplicado a novos membros.
-QUARANTINE_ROLE_ID = get_int_env("QUARANTINE_ROLE_ID", 1441973275008831669) # Cargo usado para quarentena (punição).
+MEMBER_ROLE_ID = get_int_env("MEMBER_ROLE_ID", 1440828415103074356) 
+QUARANTINE_ROLE_ID = get_int_env("QUARANTINE_ROLE_ID", 1441973275008831669) 
 
 # --- Arrays e Dicionários (Não lemos do ambiente para simplificar o código) ---
-MOD_ROLE_IDS = [1440828410556321882, 1440828412599210135] # Cargos que podem acessar o painel administrativo.
-STAFF_ROLE_ID = [1440828410556321882, 1440828412599210135] # Cargo usado nos tickets (moderadores).
+MOD_ROLE_IDS = [1440828410556321882, 1440828412599210135] # Cargos Moderadores/Admin
+STAFF_ROLE_ID = [1440828410556321882, 1440828412599210135] # Cargo usado nos tickets
 
 # --- Configurações de XP --- 
-XP_MIN = get_int_env("XP_MIN", 15) # XP MÍNIMO ganho por mensagem.
-XP_MAX = get_int_env("XP_MAX", 25) # XP MÁXIMO ganho por mensagem.
-XP_COOLDOWN = get_int_env("XP_COOLDOWN", 60) # Cooldown (segundos) entre ganhos de XP.
+XP_MIN = get_int_env("XP_MIN", 15) 
+XP_MAX = get_int_env("XP_MAX", 25) 
+XP_COOLDOWN = get_int_env("XP_COOLDOWN", 60) 
 
 # --- Configurações de XP por Voz --- 
-VOICE_XP_GAIN = get_int_env("VOICE_XP_GAIN", 50) # XP ganho a cada intervalo.
-VOICE_XP_INTERVAL_MIN = get_int_env("VOICE_XP_INTERVAL_MIN", 5) # Intervalo (minutos) para conceder XP por voz.
+VOICE_XP_GAIN = get_int_env("VOICE_XP_GAIN", 50) 
+VOICE_XP_INTERVAL_MIN = get_int_env("VOICE_XP_INTERVAL_MIN", 5) 
 
 # --- Configurações de Recompensas por Nível (Hardcoded) --- 
 LEVEL_REWARDS = {
@@ -90,5 +90,6 @@ COGS = [
     'moderation', 
     'xp', 
     'comandos',
-    'sales', # ✅ Incluído o novo cog de promoções
+    'sales',
+    'voicemanager',
 ]
