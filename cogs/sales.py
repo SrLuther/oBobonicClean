@@ -8,7 +8,7 @@ import os
 import aiohttp
 from bs4 import BeautifulSoup
 from typing import List, Dict, Any
-import asyncio # Adicionado para garantir a execução assíncrona
+import asyncio 
 
 # Define o nome do arquivo para persistência de dados
 DATA_FILE = "data/sales_history.json"
@@ -44,15 +44,13 @@ def save_sales_history(data: Dict[str, Any]):
 
 class MultiPlatformSales(commands.Cog):
     
-    # ✅ CORREÇÃO 1: O construtor deve explicitamente receber o ID do canal
     def __init__(self, bot, canal_promo_id: int):
         self.bot = bot
-        self.canal_promo_id = canal_promo_id # Salva o ID do canal na instância do Cog
+        self.canal_promo_id = canal_promo_id 
         self.sales_history = load_sales_history()
-        self.checar_promocoes.start() # Inicia a tarefa agendada
+        self.checar_promocoes.start() 
         print(f"[SALES] Cog inicializado. Canal de destino: {self.canal_promo_id}")
         
-    # Limpa a tarefa agendada quando o cog é descarregado
     def cog_unload(self):
         self.checar_promocoes.cancel()
 
@@ -65,8 +63,7 @@ class MultiPlatformSales(commands.Cog):
             
         print(f"Buscando em {platform}...")
         
-        # Simulação de dados (Substituir pela lógica real de aiohttp + BeautifulSoup)
-        await asyncio.sleep(2) # Simula o tempo de requisição
+        await asyncio.sleep(2) 
         if platform == "steam":
             return [
                 {"title": "Deep Rock Galactic", "price": "R$ 19,99", "link": "link_drg"},
@@ -82,17 +79,13 @@ class MultiPlatformSales(commands.Cog):
         """Executa o scraping, compara e envia as novas promoções."""
         all_new_sales = []
         
-        # 1. Busca em todas as plataformas
         for platform in PLATFORM_URLS:
             sales = await self.fetch_sales(platform)
             all_new_sales.extend(sales)
             
-        # 2. Compara com o histórico e identifica as novas (Lógica omitida para brevidade)
-        
         if enviar_novas:
             canal = self.bot.get_channel(self.canal_promo_id)
             if canal:
-                # 3. Envia a mensagem com as promoções (usando Embed)
                 embed = discord.Embed(
                     title="🔥 Novas Ofertas de Jogos!",
                     description=f"Encontradas {len(all_new_sales)} promoções atualizadas.",
@@ -105,21 +98,19 @@ class MultiPlatformSales(commands.Cog):
                         inline=False
                     )
                 
-                # Envio da mensagem
                 try:
                     await canal.send(embed=embed)
                     print(f"[SALES] {len(all_new_sales)} promoções enviadas para o canal {canal.id}.")
                 except Exception as e:
                     print(f"[ERRO] Falha ao enviar promoções para o Discord: {e}")
 
-        # 4. Atualiza o histórico
-        self.sales_history['sales'] = all_new_sales # Apenas para fins de teste
+        self.sales_history['sales'] = all_new_sales 
         self.sales_history['last_run'] = int(time.time())
         save_sales_history(self.sales_history)
 
 
     # --- TAREFA AGENDADA ---
-    @tasks.loop(hours=24) # Exemplo: roda a cada 24 horas
+    @tasks.loop(hours=24) 
     async def checar_promocoes(self):
         await self.raspar_e_enviar_promocoes(enviar_novas=True)
         
@@ -140,9 +131,8 @@ class MultiPlatformSales(commands.Cog):
 # SETUP DO COG
 # ==============================================================================
 
-# ✅ CORREÇÃO 2: A função setup deve aceitar **kwargs (keyword arguments)
+# ✅ CORREÇÃO: A função setup deve aceitar **kwargs para evitar o TypeError
 async def setup(bot, **kwargs): 
-    # Passa o 'canal_promo_id' (que está dentro de kwargs) para o construtor do Cog
     if 'canal_promo_id' in kwargs:
         await bot.add_cog(MultiPlatformSales(bot, canal_promo_id=kwargs['canal_promo_id']))
     else:

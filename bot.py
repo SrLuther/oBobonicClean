@@ -14,7 +14,7 @@ import config
 # --------------------
 ## 🛑 IMPLEMENTAÇÃO DO KEEP-ALIVE
 # --------------------
-# ... (NÃO HÁ ALTERAÇÕES AQUI)
+
 def run_keep_alive():
     """Configura e inicia o servidor Flask em uma thread separada."""
     app = Flask(__name__)
@@ -53,7 +53,6 @@ log_catcher = LogBuffer()
 
 
 # 2. Leitura de IDs e Token
-# ... (NÃO HÁ ALTERAÇÕES AQUI)
 GUILD_ID = config.GUILD_ID
 CANAL_LOGS_ID = config.CANAL_LOGS_ID
 TICKET_CATEGORY_ID = config.TICKET_CATEGORY_ID
@@ -78,7 +77,6 @@ bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 COGS = config.COGS
 
 # 4. Bloco de Debug 
-# ... (NÃO HÁ ALTERAÇÕES AQUI)
 print("-" * 50)
 print(f"DEBUG: GUILD_ID lido: {GUILD_ID} (Tipo: {type(GUILD_ID)})")
 print(f"DEBUG: CANAL_LOGS_ID lido: {CANAL_LOGS_ID} (Tipo: {type(CANAL_LOGS_ID)})")
@@ -97,7 +95,6 @@ async def load_cogs(bot: commands.Bot):
     
     print("\n--- Iniciando Carregamento de Cogs ---")
     
-    # Variável para rastrear se todos os cogs carregaram
     all_cogs_loaded = True 
     
     for cog_name in COGS:
@@ -123,7 +120,7 @@ async def load_cogs(bot: commands.Bot):
         except Exception as e:
             error_message = f"Erro: {type(e).__name__}: {e}"
             print(f"[ERRO] Falha ao carregar {cog_name}.py: {error_message}")
-            all_cogs_loaded = False # Marca falha
+            all_cogs_loaded = False 
             
             # ❌ ENVIAR MENSAGEM DE FALHA DE VOLTA AO DISCORD
             if canal_logs:
@@ -188,7 +185,6 @@ async def on_ready():
     await load_cogs(bot) 
 
     # 4. Sincronização de comandos
-    # ... (Bloco de sincronização de comandos)
     try:
         if GUILD_ID:
             guild_obj = discord.Object(id=GUILD_ID)
@@ -205,7 +201,6 @@ async def on_ready():
     print("✅ Bot pronto e rodando!") 
 
 # 7. Execução do Bot 
-# ... (NÃO HÁ ALTERAÇÕES AQUI)
 if __name__ == '__main__':
     try:
         log_catcher.start_capture()
