@@ -114,7 +114,7 @@ class TicketsCog(commands.Cog):
             ),
             color=discord.Color.blue()
         )
-        view = TicketView(self.bot, config.TICKET_CATEGORY_ID, config.STAFF_ROLE_ID[1])
+        view = TicketView(self.bot, config.TICKET_CATEGORY_ID, config.STAFF_ROLE_ID)
         await ctx.send(embed=embed, view=view)
         await ctx.message.delete()
         await self.send_log("Painel de Tickets enviado", ctx.channel, ctx.author)
