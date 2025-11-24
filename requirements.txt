@@ -1,8 +1,21 @@
+# --- Core do Discord ---
 discord.py==2.6.4
 aiohttp==3.8.4
+
+# --- Requests e Web ---
 requests==2.31.0
+beautifulsoup4==4.12.3
+lxml==5.2.2
+
+# --- Ambiente / Utilidades ---
 python-dotenv==1.0.0
+pytz==2024.1
+
+# --- IA ---
 google-genai==1.15.0
-flask
-beautifulsoup4
-pytz
+
+# --- Servidor Keep-Alive ---
+flask==3.0.3
+
+# --- Otimizações (opcionais, mas muito úteis) ---
+ujson==5.10.0
