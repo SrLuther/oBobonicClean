@@ -52,6 +52,7 @@ TICKET_CATEGORY_ID = config.TICKET_CATEGORY_ID
 TICKET_STAFF_ROLE_ID = config.STAFF_ROLE_ID
 CANAL_PROMO_ID = config.CANAL_PROMO_ID
 LOBBY_CHANNEL_ID = config.LOBBY_CHANNEL_ID
+CANAL_PAINEL_ID = config.CANAL_PAINEL_ID  # ID da sala do painel persistente
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 if not TOKEN:
@@ -73,6 +74,7 @@ print(f"DEBUG: GUILD_ID: {GUILD_ID}")
 print(f"DEBUG: CANAL_LOGS_ID: {CANAL_LOGS_ID}")
 print(f"DEBUG: CANAL_PROMO_ID: {CANAL_PROMO_ID}")
 print(f"DEBUG: LOBBY_CHANNEL_ID: {LOBBY_CHANNEL_ID}")
+print(f"DEBUG: CANAL_PAINEL_ID: {CANAL_PAINEL_ID}")
 print("-" * 50)
 
 # --------------------
@@ -98,7 +100,6 @@ async def load_cogs(bot: commands.Bot) -> bool:
                 try:
                     await canal_logs.send(f"[{timestamp_formatado}] ✅ Cog **`{cog_name}.py`** carregado com sucesso.")
                 except Exception:
-                    # Não falha o carregamento por causa de problema ao notificar canal
                     pass
 
         except Exception as e:
@@ -120,13 +121,39 @@ async def load_cogs(bot: commands.Bot) -> bool:
     return all_cogs_loaded
 
 # --------------------
-# 4. EVENTO on_ready
+# 4. FUNÇÃO PARA CRIAR O PAINEL PERSISTENTE
+# --------------------
+async def criar_painel_ticket():
+    """
+    Cria um painel persistente na sala CANAL_PAINEL_ID com o botão
+    para abrir ticket. Se já existir uma mensagem fixa, não cria outra.
+    """
+    canal = bot.get_channel(CANAL_PAINEL_ID)
+    if not canal:
+        print(f"❌ Canal do painel ({CANAL_PAINEL_ID}) não encontrado.")
+        return
+
+    # Checa se já existe uma mensagem fixada com painel
+    mensagens = await canal.history(limit=50).flatten()
+    for msg in mensagens:
+        if msg.pinned:
+            print("✅ Painel já fixado encontrado, pulando criação.")
+            return
+
+    from cogs.tickets.tickets_views import gerar_view_ticket
+    view = gerar_view_ticket()
+    painel_msg = await canal.send("🎫 Clique no botão abaixo para abrir um ticket:", view=view)
+    await painel_msg.pin()
+    print(f"✅ Painel persistente criado e fixado em {canal.name} ({canal.id})")
+
+# --------------------
+# 5. EVENTO on_ready
 # --------------------
 @bot.event
 async def on_ready():
     print(f"\n🚀 Bot Logado como {bot.user} (ID: {bot.user.id})")
 
-    # start capture is already called in __main__
+    # start capture já chamado no __main__
     cogs_loaded_successfully = await load_cogs(bot)
 
     # sincroniza comandos
@@ -139,6 +166,12 @@ async def on_ready():
         print("✅ Comandos de barra (slash) sincronizados.")
     except Exception as e:
         print(f"❌ ERRO Sincronização: {e}")
+
+    # cria painel persistente
+    try:
+        await criar_painel_ticket()
+    except Exception as e:
+        print(f"❌ ERRO ao criar painel persistente: {e}")
 
     # finaliza captura e envia log
     try:
@@ -166,7 +199,6 @@ async def on_ready():
             await canal_logs.send(mensagem_deploy, file=log_file)
 
         except Exception as e:
-            # caso falhe ao enviar, reativa captura para não perder erros posteriores
             log_catcher.start_capture()
             print(f"❌ ERRO CRÍTICO ao enviar log para o Discord: {e}")
 
@@ -174,7 +206,7 @@ async def on_ready():
     print(status_message)
 
 # --------------------
-# 5. EXECUÇÃO PRINCIPAL
+# 6. EXECUÇÃO PRINCIPAL
 # --------------------
 if __name__ == '__main__':
     try:
@@ -196,5 +228,5 @@ if __name__ == '__main__':
         exit(1)
 
 # ============================================================
-# Atualizado em: 2025-11-23 22:41:53 (Horário de Brasília)
+# Atualizado em: 2025-11-27
 # ============================================================
