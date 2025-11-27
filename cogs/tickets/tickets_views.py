@@ -1,59 +1,46 @@
-# ============================================================
-# cogs/tickets/tickets_views.py
-# Embeds e botões do sistema de tickets
-# ============================================================
-
 import discord
+from discord.ui import View, Button, Modal, TextInput
 
-# ===================== EMBEDS =====================
+def gerar_view_ticket(controller):
+    class AbrirTicketModal(Modal):
+        def __init__(self):
+            super().__init__(title="Abrir Ticket")
+            self.descricao = TextInput(
+                label="Descrição breve do problema",
+                style=discord.TextStyle.paragraph,
+                placeholder="Digite aqui...",
+                required=True,
+                max_length=500
+            )
+            self.add_item(self.descricao)
 
-def gerar_embed_painel():
-    embed = discord.Embed(
-        title="🎫 Abrir Ticket",
-        description="Para abrir um ticket, clique no botão abaixo e forneça uma breve descrição do assunto.\n"
-                    "Nossa equipe irá te atender em breve.",
-        color=0x3498db
-    )
-    embed.set_footer(text="oBobonic - Sistema de Tickets")
-    return embed
+        async def on_submit(self, interaction: discord.Interaction):
+            await controller.criar_ticket(interaction, self.descricao.value)
 
-def gerar_embed_ticket(usuario, ticket_id, assunto):
-    embed = discord.Embed(
-        title=f"🎫 Ticket #{ticket_id}",
-        description=f"Olá {usuario.mention}!\n**Assunto:** {assunto}\n\n"
-                    f"Use os botões abaixo conforme necessário.",
-        color=0x3498db
-    )
-    embed.set_footer(text="Sistema de Tickets oBobonic")
-    return embed
+    class AbrirTicketButton(View):
+        def __init__(self):
+            super().__init__(timeout=None)
+            self.add_item(Button(label="Abrir Ticket", style=discord.ButtonStyle.green, custom_id="abrir_ticket"))
 
-# ===================== VIEWS =====================
+        @discord.ui.button(label="Abrir Ticket", style=discord.ButtonStyle.green, custom_id="abrir_ticket")
+        async def abrir_ticket_button(self, button: Button, interaction: discord.Interaction):
+            await interaction.response.send_modal(AbrirTicketModal())
 
-def gerar_view_painel():
-    view = discord.ui.View(timeout=None)
-    view.add_item(
-        discord.ui.Button(
-            label="Abrir Ticket",
-            style=discord.ButtonStyle.primary,
-            custom_id="abrir_ticket"
-        )
-    )
-    return view
+    return AbrirTicketButton()
 
-def gerar_view_ticket_ativo():
-    view = discord.ui.View(timeout=None)
-    view.add_item(
-        discord.ui.Button(
-            label="Fechar Ticket",
-            style=discord.ButtonStyle.danger,
-            custom_id="fechar_ticket"
-        )
-    )
-    view.add_item(
-        discord.ui.Button(
-            label="Assumir Ticket",
-            style=discord.ButtonStyle.success,
-            custom_id="assumir_ticket"
-        )
-    )
-    return view
+def gerar_ticket_view(controller, canal_ticket, usuario, ticket_id):
+    class TicketView(View):
+        def __init__(self):
+            super().__init__(timeout=None)
+            self.add_item(Button(label="Fechar", style=discord.ButtonStyle.red, custom_id=f"fechar_{ticket_id}"))
+            self.add_item(Button(label="Assumir", style=discord.ButtonStyle.blurple, custom_id=f"assumir_{ticket_id}"))
+
+        @discord.ui.button(label="Fechar", style=discord.ButtonStyle.red)
+        async def fechar_button(self, button: Button, interaction: discord.Interaction):
+            await controller.fechar_ticket(interaction.channel, interaction.user, ticket_id)
+
+        @discord.ui.button(label="Assumir", style=discord.ButtonStyle.blurple)
+        async def assumir_button(self, button: Button, interaction: discord.Interaction):
+            await controller.assumir_ticket(interaction.channel, interaction.user, ticket_id)
+
+    return TicketView()

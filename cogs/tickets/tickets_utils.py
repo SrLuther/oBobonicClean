@@ -1,43 +1,39 @@
-# ============================================================
-# cogs/tickets/tickets_utils.py
-# Funções utilitárias do sistema de tickets
-# ============================================================
-
 import os
 import datetime
 import config
 
-TICKET_LOGS_DIR = "tickets_logs"
-TICKET_SEQ_FILE = "ticket_sequence.txt"
+TICKET_IDS_FILE = "tickets_ids.txt"
 
-if not os.path.exists(TICKET_LOGS_DIR):
-    os.makedirs(TICKET_LOGS_DIR)
+def ler_ticket_ids():
+    if not os.path.exists(TICKET_IDS_FILE):
+        with open(TICKET_IDS_FILE, "w") as f:
+            f.write("0")
+        return 0
+    with open(TICKET_IDS_FILE, "r") as f:
+        return int(f.read().strip())
 
 def gerar_ticket_id():
-    """Gera ID numérico sequencial persistente."""
-    if not os.path.exists(TICKET_SEQ_FILE):
-        with open(TICKET_SEQ_FILE, 'w') as f:
-            f.write("0")
+    ticket_id = ler_ticket_ids() + 1
+    with open(TICKET_IDS_FILE, "w") as f:
+        f.write(str(ticket_id))
+    return ticket_id
 
-    with open(TICKET_SEQ_FILE, 'r') as f:
-        last_id = int(f.read().strip())
+async def salvar_transcript(canal, usuario, ticket_id, feedback):
+    agora = datetime.datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+    nome_arquivo = f"ticket_{ticket_id}_{usuario.name}_{agora}.txt"
+    caminho = os.path.join("tickets_transcripts", nome_arquivo)
 
-    new_id = last_id + 1
+    if not os.path.exists("tickets_transcripts"):
+        os.makedirs("tickets_transcripts")
 
-    with open(TICKET_SEQ_FILE, 'w') as f:
-        f.write(str(new_id))
+    async for msg in canal.history(limit=None):
+        with open(caminho, "a", encoding="utf-8") as f:
+            f.write(f"[{msg.created_at}] {msg.author}: {msg.content}\n")
 
-    return f"{new_id:03d}"  # pad com zeros
+    with open(caminho, "a", encoding="utf-8") as f:
+        f.write(f"\nFEEDBACK: {feedback}\n")
 
-def salvar_log_ticket(ticket_id, conteudo):
-    filename = os.path.join(TICKET_LOGS_DIR, f"ticket_{ticket_id}.txt")
-    with open(filename, 'w', encoding='utf-8') as f:
-        f.write(conteudo)
-    return filename
-
-def is_mod(member):
-    """Checa se membro é moderador"""
-    return any(role.id in config.MOD_ROLE_IDS for role in member.roles)
-
-def format_timestamp():
-    return datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    # envia para canal de arquivos
+    canal_arquivo = canal.guild.get_channel(config.CANAL_ARQUIVO_ID)
+    if canal_arquivo:
+        await canal_arquivo.send(file=discord.File(caminho))
