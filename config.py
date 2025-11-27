@@ -1,6 +1,6 @@
 # ============================================================
 # config.py
-# Atualizado em: 2025-11-23 23:55:00 (Horário de Brasília)
+# Atualizado em: 2025-11-27 17:05:00 (Horário de Brasília)
 # ============================================================
 
 import os
@@ -80,10 +80,15 @@ LEADERBOARD_CHANNEL_ID = get_int_env("LEADERBOARD_CHANNEL_ID", 12345678901234567
 LOG_SEPARATOR = os.getenv("LOG_SEPARATOR", "--------------------------------------------------------")
 
 # ======================================================================
-# 4. LISTA DE COGS
+# 4. LISTA DE COGS (AJUSTADO PARA TICKETS DIVIDIDOS)
 # ======================================================================
 COGS = [
-    'tickets', 
+    # Sistema de Tickets separado
+    'tickets.tickets_core',   # Cog principal com a classe TicketsCog
+    'tickets.tickets_views',  # Botões, views, modais
+    'tickets.tickets_utils',  # Funções auxiliares: logs, transcript, etc.
+
+    # Demais COGs do bot
     'admin', 
     'ai',
     'autoresponse', 
