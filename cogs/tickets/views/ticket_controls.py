@@ -1,45 +1,44 @@
-# cogs/tickets/views/ticket_controls.py
 import discord
-import asyncio
-from .staff_actions import StaffPanelView
-from ..modals.feedback_modal import FeedbackModal
-import config
+from discord.ext import commands
+from discord import app_commands
 
-class TicketControlView(discord.ui.View):
-    def __init__(self, bot, ticket_channel, member, staff_role):
-        super().__init__(timeout=None)
+from .tickets_service import TicketsService
+from .tickets_views import TicketsView
+from .tickets_utils import gerar_id_ticket_formato
+
+class TicketsController(commands.Cog):
+    def __init__(self, bot):
         self.bot = bot
-        self.ticket_channel = ticket_channel
-        self.member = member
-        self.staff_role = staff_role
+        self.service = TicketsService(bot)
 
-    # --- Botão Fechar ---
-    @discord.ui.button(label="Fechar", style=discord.ButtonStyle.red, custom_id="close_ticket_button")
-    async def close_ticket_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # Somente membro dono do ticket ou staff
-        is_staff = False
-        if self.staff_role:
-            is_staff = self.staff_role in interaction.user.roles
+    # ============================================
+    # Slash Command principal: /ticket
+    # ============================================
+    @app_commands.command(name="ticket", description="Abre um ticket privado com a staff.")
+    async def abrir_ticket(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
 
-        if self.member != interaction.user and not is_staff:
-            return await interaction.response.send_message(
-                "Você não tem permissão para fechar este ticket.", ephemeral=True
+        canal = await self.service.criar_ticket(interaction)
+
+        if canal:
+            await interaction.followup.send(
+                f"Seu ticket foi criado: {canal.mention}",
+                ephemeral=True
+            )
+        else:
+            await interaction.followup.send(
+                "❌ Ocorreu um erro ao criar seu ticket.", ephemeral=True
             )
 
-        # Abre modal para feedback
-        await interaction.response.send_modal(FeedbackModal(self.ticket_channel, interaction.user, self.bot))
+    # ============================================
+    # Botão: Encerrar ticket
+    # ============================================
+    @commands.Cog.listener()
+    async def on_interaction(self, interaction: discord.Interaction):
+        if interaction.type == discord.InteractionType.component:
+            custom_id = interaction.data.get("custom_id")
 
-    # --- Botão STAFF (somente moderador) ---
-    @discord.ui.button(label="STAFF", style=discord.ButtonStyle.gray, custom_id="staff_ticket_button")
-    async def staff_ticket_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        is_staff = False
-        if self.staff_role:
-            is_staff = self.staff_role in interaction.user.roles
-
-        if not is_staff:
-            return await interaction.response.send_message(
-                "Somente moderadores podem acessar este painel.", ephemeral=True
-            )
-
-        view = StaffPanelView(self.bot, self.ticket_channel, self.member)
-        await interaction.response.send_message("Painel STAFF aberto:", view=view, ephemeral=True)
+            if custom_id == "fechar_ticket":
+                await self.service.encerrar_ticket(interaction)
+            elif custom_id == "confirmar_encerramento":
+                await self.service.confirmar_fechamento(interaction)

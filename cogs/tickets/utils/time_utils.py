@@ -1,9 +1,13 @@
-# cogs/tickets/utils/time_utils.py
-from datetime import datetime
-import pytz
+import asyncio
 
-tz = pytz.timezone("America/Sao_Paulo")
+# Simples gerador de IDs sequenciais.
+# Em produção você pode substituir por banco de dados.
+ticket_sequencial = 1
 
-def now_str():
-    """Retorna data/hora no timezone de São Paulo no formato YYYY-MM-DD HH:MM:SS"""
-    return datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+async def gerar_id_ticket_formato():
+    global ticket_sequencial
+
+    id_num = ticket_sequencial
+    ticket_sequencial += 1
+
+    return str(id_num).zfill(5)
