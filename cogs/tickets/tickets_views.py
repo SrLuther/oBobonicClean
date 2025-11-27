@@ -13,13 +13,11 @@ def gerar_embed_ticket(usuario, ticket_id):
     embed.set_footer(text="Sistema de Tickets oBobonic")
     return embed
 
-
 # ======================================================
 # VIEW DE BOTÕES
 # ======================================================
 def gerar_view_ticket():
     view = discord.ui.View(timeout=None)
-
     view.add_item(
         discord.ui.Button(
             label="Encerrar Ticket",
@@ -27,5 +25,4 @@ def gerar_view_ticket():
             custom_id="fechar_ticket"
         )
     )
-
     return view

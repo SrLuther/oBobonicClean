@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 
 from .tickets_service import TicketsService
-from .tickets_views import TicketsView
+from .tickets_views import gerar_embed_ticket, gerar_view_ticket
 from .tickets_utils import gerar_id_ticket_formato
 
 class TicketsController(commands.Cog):

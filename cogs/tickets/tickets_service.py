@@ -1,94 +1,45 @@
 import discord
-from discord.ext import commands
-import datetime
-import config
-
 from .tickets_views import gerar_embed_ticket, gerar_view_ticket
 from .tickets_utils import gerar_id_ticket_formato
+from config import TICKET_CATEGORY_ID, TICKET_ARCHIVE_CHANNEL_ID
 
 class TicketsService:
     def __init__(self, bot):
         self.bot = bot
 
-    # ============================================================
-    # CRIAÇÃO DO TICKET
-    # ============================================================
     async def criar_ticket(self, interaction: discord.Interaction):
         guild = interaction.guild
         usuario = interaction.user
 
-        categoria = guild.get_channel(config.TICKET_CATEGORY_ID)
-
-        # Gera ID: exemplo T-00001
+        # Gerar ID do ticket
         ticket_id = await gerar_id_ticket_formato()
 
-        nome_canal = f"ticket-{ticket_id}-{usuario.name}".replace(" ", "-").lower()
-
+        # Criar canal do ticket
+        category = discord.utils.get(guild.categories, id=TICKET_CATEGORY_ID)
         canal = await guild.create_text_channel(
-            name=nome_canal,
-            category=categoria,
-            topic=f"Ticket de {usuario} | ID: {ticket_id}"
+            name=f"ticket-{ticket_id}",
+            category=category,
+            topic=f"Ticket de {usuario} ({usuario.id})",
+            reason="Novo ticket criado via /ticket"
         )
 
-        # Permissões
-        await canal.set_permissions(guild.default_role, read_messages=False)
-        await canal.set_permissions(usuario, read_messages=True, send_messages=True)
-
-        # Staff
-        staff_role = guild.get_role(config.STAFF_ROLE_ID)
-        if staff_role:
-            await canal.set_permissions(staff_role, read_messages=True, send_messages=True)
-
-        # Envia mensagem inicial
+        # Enviar mensagem inicial com embed + botões
         embed = gerar_embed_ticket(usuario, ticket_id)
         view = gerar_view_ticket()
-
         await canal.send(embed=embed, view=view)
-
-        # Notificação opcional
-        notify = guild.get_channel(config.TICKET_NOTIFY_CHANNEL_ID)
-        if notify:
-            await notify.send(f"📩 Novo Ticket criado: {canal.mention}")
 
         return canal
 
-    # ============================================================
-    # ENCERRAR TICKET
-    # ============================================================
     async def encerrar_ticket(self, interaction: discord.Interaction):
-        view = discord.ui.View(timeout=None)
-        view.add_item(
-            discord.ui.Button(
-                style=discord.ButtonStyle.danger,
-                label="Confirmar encerramento",
-                custom_id="confirmar_encerramento"
-            )
-        )
+        canal = interaction.channel
+        usuario = interaction.user
+        # Mensagem de confirmação
+        await canal.send(f"{usuario.mention} solicitou encerrar este ticket. Clique no botão para confirmar.",
+                         view=gerar_view_ticket())
 
-        await interaction.response.send_message(
-            "Tem certeza que deseja encerrar o ticket?",
-            view=view,
-            ephemeral=True
-        )
-
-    # ============================================================
-    # CONFIRMAR FECHAMENTO
-    # ============================================================
     async def confirmar_fechamento(self, interaction: discord.Interaction):
         canal = interaction.channel
-
-        embed = discord.Embed(
-            title="Ticket Encerrado",
-            description=f"O ticket foi encerrado por **{interaction.user}**.",
-            color=0xff5555,
-            timestamp=datetime.datetime.utcnow()
-        )
-
-        await canal.send(embed=embed)
-
-        await canal.edit(name=f"{canal.name}-fechado")
-
-        await interaction.response.send_message(
-            "Ticket encerrado com sucesso!",
-            ephemeral=True
-        )
+        # Mover para canal de arquivamento
+        archive_channel = discord.utils.get(interaction.guild.channels, id=TICKET_ARCHIVE_CHANNEL_ID)
+        await canal.delete(reason="Ticket encerrado e arquivado")
+        # Pode adicionar aqui log no canal de notificação
