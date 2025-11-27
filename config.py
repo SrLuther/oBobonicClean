@@ -83,12 +83,7 @@ LOG_SEPARATOR = os.getenv("LOG_SEPARATOR", "------------------------------------
 # 4. LISTA DE COGS (AJUSTADO PARA TICKETS DIVIDIDOS)
 # ======================================================================
 COGS = [
-    # Sistema de Tickets separado
-    'tickets.tickets_core',   # Cog principal com a classe TicketsCog
-    'tickets.tickets_views',  # Botões, views, modais
-    'tickets.tickets_utils',  # Funções auxiliares: logs, transcript, etc.
-
-    # Demais COGs do bot
+    'tickets',   # Só o pacote tickets
     'admin', 
     'ai',
     'autoresponse', 
