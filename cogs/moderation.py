@@ -3,28 +3,36 @@ from discord.ext import commands
 import discord
 import re
 from datetime import datetime
+from typing import Optional, List, Any, cast
 from config import CANAL_LOGS_ID, QUARANTINE_ROLE_ID
 
 class Moderation(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self, bot: commands.Bot):
+        self.bot: commands.Bot = bot
         try:
             with open("palavroes.txt", "r", encoding="utf8") as f:
-                self.badwords = [w.strip().lower() for w in f.readlines()]
+                self.badwords: List[str] = [w.strip().lower() for w in f.readlines()]
         except FileNotFoundError:
             print("⚠️ Arquivo palavroes.txt não encontrado. Filtro de palavrões desativado.")
             self.badwords = []
 
-    def get_log_channel(self, guild):
-        return self.bot.get_channel(CANAL_LOGS_ID)
+    def get_log_channel(self, guild: Optional[discord.Guild]) -> Optional[discord.TextChannel]:
+        channel = self.bot.get_channel(CANAL_LOGS_ID)
+        return cast(Optional[discord.TextChannel], channel)
 
     @commands.command(name="faxina", aliases=['purgeall'])
     @commands.has_permissions(manage_messages=True)
-    async def faxina(self, ctx):
-        await ctx.message.delete()
+    async def faxina(self, ctx: commands.Context[Any]) -> None:
         try:
-            deleted = await ctx.channel.purge()
-            log_channel = self.get_log_channel(ctx.guild)
+            if ctx.guild is None or not isinstance(ctx.channel, discord.TextChannel):
+                await ctx.send("❌ Este comando só pode ser usado em canais de texto do servidor.", delete_after=8)
+                return
+            try:
+                await ctx.message.delete()
+            except (discord.NotFound, discord.Forbidden):
+                pass
+            deleted: List[discord.Message] = await ctx.channel.purge()
+            log_channel: Optional[discord.TextChannel] = self.get_log_channel(ctx.guild)
             if log_channel:
                 embed = discord.Embed(
                     title="🧹 Faxina Completa (Purge)",
@@ -45,14 +53,17 @@ class Moderation(commands.Cog):
 
     @commands.command(name="limpar", aliases=['clear'])
     @commands.has_permissions(manage_messages=True)
-    async def limpar(self, ctx, quantidade: int):
+    async def limpar(self, ctx: commands.Context[Any], quantidade: int) -> None:
+        if ctx.guild is None or not isinstance(ctx.channel, discord.TextChannel):
+            await ctx.send("❌ Este comando só pode ser usado em canais de texto do servidor.", delete_after=8)
+            return
         await ctx.message.delete()
         if quantidade <= 0:
             await ctx.send("❌ A quantidade de caracteres precisa ser maior que 0.", delete_after=5)
             return
 
-        contador = 0
-        mensagens = []
+        contador: int = 0
+        mensagens: List[discord.Message] = []
 
         async for msg in ctx.channel.history(limit=None):
             contador += len(msg.content)
@@ -63,7 +74,7 @@ class Moderation(commands.Cog):
         if mensagens:
             try:
                 await ctx.channel.delete_messages(mensagens)
-                log_channel = self.get_log_channel(ctx.guild)
+                log_channel: Optional[discord.TextChannel] = self.get_log_channel(ctx.guild)
                 if log_channel:
                     embed = discord.Embed(
                         title="🧹 Limpeza por Caracteres",
@@ -86,16 +97,21 @@ class Moderation(commands.Cog):
 
     @commands.command(aliases=['limparall'])
     @commands.has_permissions(administrator=True)
-    async def limpezageral(self, ctx, usuario: discord.Member, limite: int = 200):
+    async def limpezageral(self, ctx: commands.Context[Any], usuario: discord.Member, limite: int = 200) -> None:
         if not 1 <= limite <= 1000:
-            return await ctx.send("O limite deve ser entre 1 e 1000.")
+            await ctx.send("O limite deve ser entre 1 e 1000.")
+            return
 
+        if ctx.guild is None:
+            await ctx.send("❌ Este comando só pode ser usado dentro de um servidor.", delete_after=8)
+            return
         await ctx.message.delete()
 
-        log_channel = self.get_log_channel(ctx.guild)
-        mensagens_apagadas = 0
+        log_channel: Optional[discord.TextChannel] = self.get_log_channel(ctx.guild)
+        mensagens_apagadas: int = 0
 
-        quarantine_role = ctx.guild.get_role(QUARANTINE_ROLE_ID)
+        guild: discord.Guild = ctx.guild
+        quarantine_role: Optional[discord.Role] = guild.get_role(QUARANTINE_ROLE_ID)
         if quarantine_role:
             try:
                 await usuario.edit(roles=[quarantine_role], reason="Conta comprometida/Raid - Quarentena.")
@@ -105,12 +121,12 @@ class Moderation(commands.Cog):
             except Exception as e:
                 print(f"Erro ao aplicar quarentena: {e}")
 
-        for channel in ctx.guild.text_channels:
+        for channel in guild.text_channels:
             try:
-                def is_target(message):
+                def is_target(message: discord.Message) -> bool:
                     return message.author == usuario
 
-                deleted = await channel.purge(limit=limite, check=is_target)
+                deleted: List[discord.Message] = await channel.purge(limit=limite, check=is_target)
 
                 if deleted:
                     mensagens_apagadas += len(deleted)
@@ -141,11 +157,11 @@ class Moderation(commands.Cog):
             await log_channel.send(embed=embed)
 
     @commands.Cog.listener()
-    async def on_message(self, message):
+    async def on_message(self, message: discord.Message) -> None:
         if message.author.bot:
             return
 
-        log_channel = self.get_log_channel(message.guild)
+        log_channel: Optional[discord.TextChannel] = self.get_log_channel(message.guild)
         now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
         convite_regex = r"(discord\.gg/|discord\.com/invite/)"
@@ -162,7 +178,7 @@ class Moderation(commands.Cog):
                 await log_channel.send(f"⚠ Palavrão detectado ({now}) de {message.author.mention}:\n`{message.content}`")
             return
 
-async def setup(bot):
+async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Moderation(bot))
 
 # ============================================================
