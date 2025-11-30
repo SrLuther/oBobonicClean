@@ -31,6 +31,10 @@ COR_LOJAS = {
     "steam": discord.Color.dark_blue()
 }
 
+ENABLE_EPIC = getattr(config, "ENABLE_EPIC", False)
+ENABLE_NUUVEM = getattr(config, "ENABLE_NUUVEM", True)
+DEBUG_PROMOS = getattr(config, "DEBUG_PROMOS", False)
+
 # endpoints (padrão) - podem ser alterados conforme necessidade
 STEAM_SEARCH_URL = "https://store.steampowered.com/search/?specials=1"
 NUUVEM_PROMO_URL = "https://www.nuuvem.com/br-en/promo/ofertas-nuuvem"
@@ -283,6 +287,51 @@ async def fetch_epic_promos(session: aiohttp.ClientSession) -> List[Dict[str, An
     list_values: List[Dict[str, Any]] = list(uniq.values())
     return list_values[:60]
 
+async def fetch_ggdeals_promos(session: aiohttp.ClientSession) -> List[Dict[str, Any]]:
+    url_main = "https://gg.deals/deals/"
+    html = await fetch_text(session, url_main)
+    if not html:
+        return []
+    soup: Any = BeautifulSoup(html, "html.parser")
+    results: List[Dict[str, Any]] = []
+    items: Any = soup.select("a[href]")
+    for a in items:
+        href: Any = a.get("href")
+        if not href:
+            continue
+        if "/game/" in href or "/deal/" in href:
+            try:
+                name: Any = a.get("title") or a.text.strip()[:120]
+                link: Any = href if str(href).startswith("http") else f"https://gg.deals{href}"
+                parent: Any = a.parent
+                disc_src: Any = ""
+                store_src: Any = ""
+                price_text: Any = ""
+                if parent:
+                    disc_tag: Any = parent.select_one(".discount") or parent.select_one(".badge") or parent.select_one(".label")
+                    disc_src = disc_tag.text.strip() if disc_tag else ""
+                    store_tag: Any = parent.select_one(".shop") or parent.select_one(".store") or parent.select_one(".shop-name")
+                    store_src = store_tag.text.strip() if store_tag else "gg.deals"
+                    price_tag: Any = parent.select_one(".price") or parent.select_one(".deal-price")
+                    price_text = price_tag.text.strip() if price_tag else ""
+                discount = extract_discount(str(disc_src))
+                image = pick_image_url(a) or (parent and pick_image_url(parent))
+                results.append({
+                    "id": link,
+                    "nome": name or "Oferta",
+                    "link": link,
+                    "preco": str(price_text),
+                    "loja": (store_src or "gg.deals").lower(),
+                    "discount": discount,
+                    "image": image or ""
+                })
+            except Exception:
+                continue
+    uniq: Dict[str, Dict[str, Any]] = {}
+    for r in results:
+        uniq[r["link"]] = r
+    return list(uniq.values())[:200]
+
 # ======================================================================
 # View com botão "Ver Promoção"
 # ======================================================================
@@ -320,10 +369,8 @@ class Sales(commands.Cog):
         timeout = aiohttp.ClientTimeout(total=30)
         async with aiohttp.ClientSession(timeout=timeout) as session:
             # paraleliza as chamadas
-            tasks_fetch = [
-                fetch_steam_promos(session),
-                fetch_nuuvem_promos(session),
-                fetch_epic_promos(session)
+            tasks_fetch: List[Any] = [
+                fetch_ggdeals_promos(session)
             ]
             try:
                 results: List[Any] = await asyncio.gather(*tasks_fetch, return_exceptions=True)
@@ -346,17 +393,14 @@ class Sales(commands.Cog):
             print(f"[sales] ❌ Canal de promoções não encontrado (ID: {self.canal_promo_id})")
             return
 
-        # agrupa por loja e filtra desconto >= 50; pega top-10 por loja
-        grouped: Dict[str, List[Dict[str, Any]]] = {}
-        for p in promotions:
-            loja = (p.get("loja") or "").lower()
-            grouped.setdefault(loja, []).append(p)
+        filtered: List[Dict[str, Any]] = [x for x in promotions if int(x.get("discount", 0)) >= 50]
+        filtered.sort(key=lambda x: int(x.get("discount", 0)), reverse=True)
+        filtered = filtered[:20]
 
-        filtered: List[Dict[str, Any]] = []
-        for loja, items in grouped.items():
-            with_disc = [x for x in items if int(x.get("discount", 0)) >= 50]
-            with_disc.sort(key=lambda x: int(x.get("discount", 0)), reverse=True)
-            filtered.extend(with_disc[:10])
+        if DEBUG_PROMOS:
+            cnt_all = len(promotions)
+            cnt_50 = len(filtered)
+            print(f"[sales] debug total={cnt_all} ge50={cnt_50}")
 
         sent_count = 0
         for promo in filtered:
