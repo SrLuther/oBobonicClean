@@ -40,10 +40,18 @@ def gerar_ticket_view(controller, canal_ticket, usuario, ticket_id):
 
         @discord.ui.button(label="Fechar", style=discord.ButtonStyle.red)
         async def fechar_button(self, interaction: discord.Interaction, button: Button):
+            try:
+                await interaction.response.send_message("🔒 Fechando o ticket...", ephemeral=True)
+            except Exception:
+                pass
             await controller.fechar_ticket(interaction.channel, interaction.user, ticket_id)
 
         @discord.ui.button(label="Assumir", style=discord.ButtonStyle.blurple)
         async def assumir_button(self, interaction: discord.Interaction, button: Button):
+            try:
+                await interaction.response.send_message("🛡️ Ticket assumido.", ephemeral=True)
+            except Exception:
+                pass
             await controller.assumir_ticket(interaction.channel, interaction.user, ticket_id)
 
     return TicketView()
