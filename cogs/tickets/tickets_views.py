@@ -22,7 +22,7 @@ def gerar_view_ticket(controller):
             super().__init__(timeout=None)
 
         @discord.ui.button(label="Abrir Ticket", style=discord.ButtonStyle.green, custom_id="abrir_ticket")
-        async def abrir_ticket_button(self, button: Button, interaction: discord.Interaction):
+        async def abrir_ticket_button(self, interaction: discord.Interaction, button: Button):
             await interaction.response.send_modal(AbrirTicketModal())
 
     return AbrirTicketButton()
@@ -33,11 +33,11 @@ def gerar_ticket_view(controller, canal_ticket, usuario, ticket_id):
             super().__init__(timeout=None)
 
         @discord.ui.button(label="Fechar", style=discord.ButtonStyle.red)
-        async def fechar_button(self, button: Button, interaction: discord.Interaction):
+        async def fechar_button(self, interaction: discord.Interaction, button: Button):
             await controller.fechar_ticket(interaction.channel, interaction.user, ticket_id)
 
         @discord.ui.button(label="Assumir", style=discord.ButtonStyle.blurple)
-        async def assumir_button(self, button: Button, interaction: discord.Interaction):
+        async def assumir_button(self, interaction: discord.Interaction, button: Button):
             await controller.assumir_ticket(interaction.channel, interaction.user, ticket_id)
 
     return TicketView()
