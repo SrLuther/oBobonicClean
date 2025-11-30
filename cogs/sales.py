@@ -33,7 +33,7 @@ DEBUG_PROMOS = getattr(config, "DEBUG_PROMOS", False)
 
 # endpoints de referência (apenas GMG)
 GMG_BASE_URL = "https://www.greenmangaming.com"
-GMG_HOME_PT = "https://www.greenmangaming.com/pt/"
+GMG_HOME_PT = "https://www.greenmangaming.com/pt/sales/"
 
 # ======================================================================
 # Utilitários: cache
@@ -193,6 +193,8 @@ async def fetch_gmg_promos(session: aiohttp.ClientSession) -> List[Dict[str, Any
             continue
         if "/pt/" not in href:
             continue
+        if str(href).rstrip("/") == "/pt/sales" or str(href).endswith("/pt/sales/"):
+            continue
         try:
             name: Any = a.get("title") or a.text.strip()[:120]
             link: Any = href if str(href).startswith("http") else f"{GMG_BASE_URL}{href}"
@@ -207,6 +209,15 @@ async def fetch_gmg_promos(session: aiohttp.ClientSession) -> List[Dict[str, Any
                     price_text = price_tag.text.strip()
             discount = extract_discount(str(disc_src))
             image = pick_image_url(a) or (parent and pick_image_url(parent))
+            if image:
+                if image.startswith("//"):
+                    image = f"https:{image}"
+                elif image.startswith("/"):
+                    image = f"{GMG_BASE_URL}{image}"
+            if not discount and not price_text:
+                continue
+            if not name:
+                continue
             results.append({
                 "id": link,
                 "nome": name or "Oferta GMG",
