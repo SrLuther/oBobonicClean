@@ -110,24 +110,25 @@ async def fetch_text_cf(session: aiohttp.ClientSession, url: str, timeout: int =
     base = await fetch_text(session, url, timeout)
     if base:
         return base
-    try:
-        async def run_sync() -> str:
-            try:
-                import cloudscraper
-                scraper = cloudscraper.create_scraper()
-                headers = {
-                    "User-Agent": USER_AGENT,
-                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                    "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-                    "Referer": "https://www.google.com/",
-                }
-                resp = scraper.get(url, headers=headers, timeout=timeout)
-                if getattr(resp, "status_code", None) == 200:
-                    return resp.text
-            except Exception:
-                return ""
+    def run_sync_cf() -> str:
+        try:
+            import importlib
+            cs = importlib.import_module("cloudscraper")
+            scraper: Any = cs.create_scraper()
+            headers = {
+                "User-Agent": USER_AGENT,
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+                "Referer": "https://www.google.com/",
+            }
+            resp = scraper.get(url, headers=headers, timeout=timeout)
+            if getattr(resp, "status_code", None) == 200:
+                return resp.text
             return ""
-        return await asyncio.to_thread(lambda: asyncio.run(run_sync()))
+        except Exception:
+            return ""
+    try:
+        return await asyncio.to_thread(run_sync_cf)
     except Exception:
         return ""
 
