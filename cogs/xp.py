@@ -3,7 +3,6 @@ import discord
 from discord.ext import commands, tasks
 import json
 import os
-import time
 from operator import itemgetter
 import config
 
@@ -21,12 +20,17 @@ except Exception:
 XP_FILE = "xp.json"
 
 def load_xp_data(file_path):
-    if not os.path.exists(file_path): return {}
+    if not os.path.exists(file_path):
+        return {}
     try:
-        with open(file_path, "r") as f: return json.load(f)
-    except json.JSONDecodeError: return {}
+        with open(file_path, "r") as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        return {}
+
 def save_xp_data(file_path, data):
-    with open(file_path, "w") as f: json.dump(data, f, indent=4)
+    with open(file_path, "w") as f:
+        json.dump(data, f, indent=4)
 def get_level_xp_needed(level):
     return 5 * level**2 + 50 * level + 100
 
@@ -124,7 +128,7 @@ class XPSystem(commands.Cog):
             except Exception:
                 continue
         embed.add_field(name="Os Melhores:", value=rank_text if rank_text else "Nenhum XP registrado ainda.")
-        embed.set_footer(text=f"Próxima atualização em aproximadamente 1 hora." if auto_update else "Use !xp para ver seu progresso detalhado.")
+        embed.set_footer(text=("Próxima atualização em aproximadamente 1 hora." if auto_update else "Use !xp para ver seu progresso detalhado."))
         return embed
 
     @commands.Cog.listener()

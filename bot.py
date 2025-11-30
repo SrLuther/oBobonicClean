@@ -23,6 +23,7 @@ def run_keep_alive():
     @app.route('/')
     def home():
         return "Bot is running and healthy!"
+    _ = home.__name__
 
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
@@ -144,9 +145,15 @@ async def criar_painel_ticket():
             return
 
     from cogs.tickets.tickets_views import gerar_view_ticket
+    try:
+        from cogs.tickets.tickets_controls import TicketsController
+    except Exception:
+        print("⚠️ Não foi possível importar TicketsController para validação de tipo.")
+        return
+
     controller = bot.get_cog('TicketsController')
-    if not controller:
-        print("⚠️ TicketsController não está carregado ainda; painel não será criado por bot.py.")
+    if not isinstance(controller, TicketsController):
+        print("⚠️ TicketsController não encontrado ou tipo inválido; painel não será criado por bot.py.")
         return
     view = gerar_view_ticket(controller)
     painel_msg = await canal.send("🎫 Clique no botão abaixo para abrir um ticket:", view=view)
@@ -197,7 +204,7 @@ async def on_ready():
             from io import BytesIO
             log_file = discord.File(
                 fp=BytesIO(deploy_log_content.encode('utf-8')),
-                filename=f"log_oBobonic.txt"
+                filename="log_oBobonic.txt"
             )
 
             mensagem_deploy = (

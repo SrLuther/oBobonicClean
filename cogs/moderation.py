@@ -2,7 +2,6 @@
 from discord.ext import commands
 import discord
 import re
-import os
 from datetime import datetime
 from config import CANAL_LOGS_ID, QUARANTINE_ROLE_ID
 

@@ -1,1 +1,3 @@
 worker: python bot.py
+diagnostics: ruff check .
+format: ruff format .

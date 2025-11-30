@@ -1,17 +1,15 @@
 import discord
 from discord.ext import commands, tasks
-from discord.ui import Button, View, Modal, TextInput
 import asyncio
-import os
-from io import StringIO
 import datetime
 import config
+from typing import Optional, Union, Mapping
 
-from .tickets_utils import salvar_transcript, gerar_ticket_id, ler_ticket_ids
+from .tickets_utils import salvar_transcript, gerar_ticket_id
 from .tickets_views import gerar_view_ticket
 
 class TicketsController(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.inatividade_check.start()
 
@@ -26,9 +24,9 @@ class TicketsController(commands.Cog):
         except Exception:
             pass
 
-    async def criar_painel_ticket(self):
+    async def criar_painel_ticket(self) -> None:
         canal = self.bot.get_channel(config.CANAL_PAINEL_ID)
-        if not canal:
+        if not isinstance(canal, discord.TextChannel):
             print(f"❌ Canal do painel ({config.CANAL_PAINEL_ID}) não encontrado.")
             return
 
@@ -56,14 +54,38 @@ class TicketsController(commands.Cog):
     # ------------------------
     # CRIAR TICKET
     # ------------------------
-    async def criar_ticket(self, interaction: discord.Interaction, descricao: str):
-        guild = interaction.guild
+    async def criar_ticket(self, interaction: discord.Interaction, descricao: str) -> None:
+        guild: Optional[discord.Guild] = interaction.guild
+        if guild is None:
+            try:
+                await interaction.response.send_message("❌ Esta ação só pode ser usada dentro de um servidor.", ephemeral=True)
+            except Exception:
+                pass
+            return
         ticket_id = gerar_ticket_id()
-        membro = interaction.user
+        usuario = interaction.user
+        membro: Optional[discord.Member]
+        if isinstance(usuario, discord.Member):
+            membro = usuario
+        else:
+            membro = guild.get_member(usuario.id)
+        if membro is None:
+            try:
+                await interaction.response.send_message("❌ Não foi possível identificar o membro do servidor.", ephemeral=True)
+            except Exception:
+                pass
+            return
         nome_canal = f"TICKET {ticket_id} - {membro.name}"
         categoria = guild.get_channel(config.TICKET_CATEGORY_ID)
+        if not isinstance(categoria, discord.CategoryChannel):
+            print(f"❌ Categoria de tickets inválida ({config.TICKET_CATEGORY_ID}).")
+            try:
+                await interaction.response.send_message("❌ Categoria de tickets não encontrada. Avise a equipe.", ephemeral=True)
+            except Exception:
+                pass
+            return
 
-        overwrites = {
+        overwrites: Mapping[Union[discord.Role, discord.Member, discord.Object], discord.PermissionOverwrite] = {
             guild.default_role: discord.PermissionOverwrite(read_messages=False),
             membro: discord.PermissionOverwrite(read_messages=True, send_messages=True),
         }
@@ -100,9 +122,9 @@ class TicketsController(commands.Cog):
     # ------------------------
     # FECHAR TICKET
     # ------------------------
-    async def fechar_ticket(self, canal, usuario, ticket_id):
-        def check(m):
-            return m.author == usuario and isinstance(m.channel, discord.TextChannel)
+    async def fechar_ticket(self, canal: discord.TextChannel, usuario: discord.Member, ticket_id: int | str) -> None:
+        def check(m: discord.Message) -> bool:
+            return bool(m.author == usuario and isinstance(m.channel, discord.TextChannel))
 
         await canal.send("💬 Por favor, envie um breve feedback sobre este ticket antes de fechá-lo:")
 
@@ -119,11 +141,11 @@ class TicketsController(commands.Cog):
     # ------------------------
     # ASSUMIR TICKET
     # ------------------------
-    async def assumir_ticket(self, canal, usuario, ticket_id):
+    async def assumir_ticket(self, canal: discord.TextChannel, usuario: discord.Member, ticket_id: int | str) -> None:
         # Verifica se é moderador
         mod_ids = [role.id for role in usuario.roles]
         if not any(role in config.MOD_ROLE_IDS for role in mod_ids):
-            await canal.send(f"⚠️ Apenas moderadores podem assumir tickets. Por favor, seja paciente.")
+            await canal.send("⚠️ Apenas moderadores podem assumir tickets. Por favor, seja paciente.")
             return
 
         agora = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
@@ -136,12 +158,15 @@ class TicketsController(commands.Cog):
     async def inatividade_check(self):
         for guild in self.bot.guilds:
             categoria = guild.get_channel(config.TICKET_CATEGORY_ID)
-            if not categoria:
+            if not isinstance(categoria, discord.CategoryChannel):
                 continue
             for canal in categoria.text_channels:
                 if canal.name.startswith("TICKET"):
-                    delta = datetime.datetime.utcnow() - canal.created_at.replace(tzinfo=None)
+                    from discord.utils import utcnow
+                    delta = utcnow() - canal.created_at
                     if delta.total_seconds() >= config.EXPIRACAO_TICKET_HORAS * 3600:
                         await canal.send(f"⏰ Ticket inativo por mais de {config.EXPIRACAO_TICKET_HORAS} horas, será arquivado.")
-                        await salvar_transcript(canal, canal.guild.owner, canal.name.split()[1], "Ticket inativo automaticamente")
+                        owner_candidate: Optional[discord.Member] = canal.guild.owner or canal.guild.me
+                        if owner_candidate:
+                            await salvar_transcript(canal, owner_candidate, canal.name.split()[1], "Ticket inativo automaticamente")
                         await canal.delete()

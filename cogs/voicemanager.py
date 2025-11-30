@@ -23,7 +23,7 @@ class VoiceManager(commands.Cog):
                 print(f"❌ [VoiceManager] O canal Lobby (ID: {self.lobby_id}) precisa estar em uma categoria.")
                 try:
                     await member.move_to(None)
-                except:
+                except Exception:
                     pass
                 return
 

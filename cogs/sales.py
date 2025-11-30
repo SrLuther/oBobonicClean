@@ -99,7 +99,6 @@ async def fetch_steam_promos(session: aiohttp.ClientSession) -> List[Dict[str, s
     # Steam usa 'search_result_row' para itens
     for row in soup.select(".search_result_row"):
         try:
-            title = row.get("data-ds-appid")
             # fallback para texto se data-ds-appid nao existir
             name_tag = row.select_one(".title")
             name = name_tag.text.strip() if name_tag else row.get("data-ds-appid", "Jogo Steam")

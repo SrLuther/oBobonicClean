@@ -19,7 +19,12 @@ def gerar_ticket_id():
         f.write(str(ticket_id))
     return ticket_id
 
-async def salvar_transcript(canal, usuario, ticket_id, feedback):
+async def salvar_transcript(
+    canal: discord.TextChannel,
+    usuario: discord.Member,
+    ticket_id: int | str,
+    feedback: str,
+) -> None:
     agora = datetime.datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
     nome_arquivo = f"ticket_{ticket_id}_{usuario.name}_{agora}.txt"
     caminho = os.path.join("tickets_transcripts", nome_arquivo)
@@ -36,5 +41,5 @@ async def salvar_transcript(canal, usuario, ticket_id, feedback):
 
     # envia para canal de arquivos
     canal_arquivo = canal.guild.get_channel(config.CANAL_ARQUIVO_ID)
-    if canal_arquivo:
+    if isinstance(canal_arquivo, discord.TextChannel):
         await canal_arquivo.send(file=discord.File(caminho))
