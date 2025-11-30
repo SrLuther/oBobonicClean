@@ -114,12 +114,21 @@ async def fetch_text_cf(session: aiohttp.ClientSession, url: str, timeout: int =
         try:
             import importlib
             cs = importlib.import_module("cloudscraper")
-            scraper: Any = cs.create_scraper()
+            scraper: Any = cs.create_scraper(
+                browser={"browser": "chrome", "platform": "windows", "mobile": False}
+            )
             headers = {
                 "User-Agent": USER_AGENT,
                 "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                 "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
                 "Referer": "https://www.google.com/",
+                "sec-ch-ua": '"Chromium";v="120", "Google Chrome";v="120", "Not?A_Brand";v="24"',
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": '"Windows"',
+                "sec-fetch-site": "same-origin",
+                "sec-fetch-mode": "navigate",
+                "sec-fetch-user": "?1",
+                "sec-fetch-dest": "document",
             }
             resp = scraper.get(url, headers=headers, timeout=timeout)
             if getattr(resp, "status_code", None) == 200:
@@ -129,6 +138,16 @@ async def fetch_text_cf(session: aiohttp.ClientSession, url: str, timeout: int =
             return ""
     try:
         return await asyncio.to_thread(run_sync_cf)
+    except Exception:
+        pass
+    try:
+        from urllib.parse import urlsplit
+        parts = urlsplit(url)
+        proxy_url = f"https://r.jina.ai/http://{parts.netloc}{parts.path or ''}"
+        if parts.query:
+            proxy_url += f"?{parts.query}"
+        proxy_html = await fetch_text(session, proxy_url, timeout)
+        return proxy_html
     except Exception:
         return ""
 
@@ -356,6 +375,33 @@ async def fetch_ggdeals_promos(session: aiohttp.ClientSession) -> List[Dict[str,
     uniq: Dict[str, Dict[str, Any]] = {}
     for r in results:
         uniq[r["link"]] = r
+    if not uniq:
+        import re
+        try:
+            links = re.findall(r"href=\"(/(?:game|deal)/[^\"]+)\"", html)
+            discounts = re.findall(r"(-?\d+)\s*%", html)
+            for i, lnk in enumerate(links[:400]):
+                link = f"https://gg.deals{lnk}"
+                disc = 0
+                if i < len(discounts):
+                    try:
+                        disc = abs(int(discounts[i]))
+                    except Exception:
+                        disc = 0
+                results.append({
+                    "id": link,
+                    "nome": "Oferta GG.deals",
+                    "link": link,
+                    "preco": "",
+                    "loja": "gg.deals",
+                    "discount": disc,
+                    "image": ""
+                })
+        except Exception:
+            pass
+        uniq = {}
+        for r in results:
+            uniq[r["link"]] = r
     return list(uniq.values())[:200]
 
 # ======================================================================
