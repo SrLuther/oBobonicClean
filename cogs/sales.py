@@ -3,7 +3,7 @@ from discord.ext import commands, tasks
 import aiohttp
 import asyncio
 from bs4 import BeautifulSoup
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, cast
 import json
 import os
 import ssl
@@ -18,12 +18,12 @@ USER_AGENT = (
 
 CACHE_FILE = "data/sales_cache.json"
 
-STORE_COLORS: Dict[str, discord.Color] = {
-    "gmg": discord.Color.green(),
-    "fanatical": discord.Color.dark_orange(),
-    "gamesplanet": discord.Color.dark_blue(),
-    "nuuvem": discord.Color.blue(),
-    "humble": discord.Color.dark_gray(),
+STORE_COLORS: Dict[str, int] = {
+    "gmg": discord.Color.from_rgb(67, 160, 71).value,
+    "fanatical": discord.Color.from_rgb(255, 140, 0).value,
+    "gamesplanet": discord.Color.from_rgb(25, 118, 210).value,
+    "nuuvem": discord.Color.from_rgb(33, 150, 243).value,
+    "humble": discord.Color.from_rgb(96, 96, 96).value,
 }
 
 GMG_URL = "https://www.greenmangaming.com/pt/sales/"
@@ -240,6 +240,59 @@ def pick_image(elem: Any, parent: Any, base: str) -> str:
             return normalize_image(img2.get("src") or img2.get("data-src"), base)
     return ""
 
+def detect_steam(elem: Any, parent: Any, link: str) -> bool:
+    try:
+        import re
+        texts: List[str] = []
+        for key in ("aria-label", "title", "data-name"):
+            v = elem.get(key)
+            if isinstance(v, str) and v:
+                texts.append(v)
+        if parent:
+            try:
+                pt = parent.get_text(" ", strip=True)
+                if isinstance(pt, str) and pt:
+                    texts.append(pt)
+            except Exception:
+                pass
+            try:
+                cls_attr = parent.get("class")
+                if isinstance(cls_attr, list) and cls_attr:
+                    cls_list = cast(List[str], cls_attr)
+                    if cls_list:
+                        texts.append(" ".join(cls_list))
+                elif isinstance(cls_attr, str) and cls_attr:
+                    texts.append(cls_attr)
+            except Exception:
+                pass
+            for sel in (".badge", ".label", ".product-platform", ".platform", ".drm", "[data-qa='drm']"):
+                n = parent.select_one(sel)
+                if n:
+                    try:
+                        nt = n.get_text(" ", strip=True)
+                        if isinstance(nt, str) and nt:
+                            texts.append(nt)
+                    except Exception:
+                        pass
+                    try:
+                        ncls_attr = n.get("class")
+                        if isinstance(ncls_attr, list) and ncls_attr:
+                            ncls_list = cast(List[str], ncls_attr)
+                            if ncls_list:
+                                texts.append(" ".join(ncls_list))
+                        elif isinstance(ncls_attr, str) and ncls_attr:
+                            texts.append(ncls_attr)
+                    except Exception:
+                        pass
+        if "steam" in link.lower():
+            return True
+        blob = " ".join(texts)
+        if re.search(r"steam", blob, re.I):
+            return True
+    except Exception:
+        return False
+    return False
+
 async def scrape_generic(session: aiohttp.ClientSession, base_url: str, store_key: str, required_path: Optional[str] = None) -> List[Dict[str, Any]]:
     html = await fetch_text(session, base_url)
     if not html:
@@ -261,9 +314,9 @@ async def scrape_generic(session: aiohttp.ClientSession, base_url: str, store_ke
             try:
                 from urllib.parse import urlsplit
                 parts = urlsplit(base_url)
-                link = f"{parts.scheme}://{parts.netloc}{href}"
+                link = f"{parts.scheme}://{parts.netloc}{str(href)}"
             except Exception:
-                link = href
+                link = str(href)
         parent = a.parent
         parent_text = parent.get_text(" ", strip=True) if parent else ""
         discount = extract_discount(parent_text)
@@ -272,6 +325,7 @@ async def scrape_generic(session: aiohttp.ClientSession, base_url: str, store_ke
             continue
         name = pick_name(a, parent) or "Oferta"
         image = pick_image(a, parent, base_url)
+        steam = detect_steam(a, parent, link)
         results.append({
             "id": link,
             "nome": name,
@@ -282,6 +336,7 @@ async def scrape_generic(session: aiohttp.ClientSession, base_url: str, store_ke
             "loja": store_key,
             "discount": discount,
             "image": image,
+            "steam": steam,
         })
     uniq: Dict[str, Dict[str, Any]] = {}
     for r in results:
@@ -349,7 +404,7 @@ class Sales(commands.Cog):
             return 0
         await self._ensure_rates()
         filtered = [x for x in promotions if int(x.get("discount", 0)) >= 50]
-        filtered.sort(key=lambda x: int(x.get("discount", 0)), reverse=True)
+        filtered.sort(key=lambda x: (0 if x.get("steam") else 1, -int(x.get("discount", 0))))
         filtered = filtered[:20]
         sent_count = 0
         for p in filtered:
@@ -366,7 +421,9 @@ class Sales(commands.Cog):
             preco_original = p.get("preco_original", "")
             discount = int(p.get("discount", 0))
             image_url = p.get("image") or ""
-            color = STORE_COLORS.get(loja, discord.Color.default())
+            steam_flag = bool(p.get("steam"))
+            color_val = STORE_COLORS.get(loja)
+            color = discord.Color(color_val) if isinstance(color_val, int) else discord.Color.default()
             preco_atual_d = await self._to_brl_str(preco_atual)
             preco_original_d = await self._to_brl_str(preco_original)
             preco_d = await self._to_brl_str(preco)
@@ -380,6 +437,8 @@ class Sales(commands.Cog):
                 preco_line = preco_d
 
             desc = f"{preco_line}\nDesconto: {discount}%"
+            if steam_flag:
+                desc += "\nAtivação: Steam"
             if link:
                 desc += f"\n\n[Ver oferta]({link})"
 
@@ -474,13 +533,15 @@ class Sales(commands.Cog):
             return f"{amount:.2f}"
 
     @commands.command(name="promo")
-    async def promo(self, ctx: commands.Context[Any]) -> None:
+    async def promo(self, ctx: commands.Context[Any], *, filtro: Optional[str] = None) -> None:
         await ctx.send("🔎 Buscando promoções...")
         try:
             promos = await self.collect()
             if not promos:
                 await ctx.send("⚠️ Nenhuma promoção encontrada agora.")
                 return
+            if isinstance(filtro, str) and filtro.strip().lower() == "steam":
+                promos = [p for p in promos if bool(p.get("steam"))]
             sent = await self.send(promos)
             await ctx.send(f"✅ {sent} promoções enviadas.")
         except Exception as e:
