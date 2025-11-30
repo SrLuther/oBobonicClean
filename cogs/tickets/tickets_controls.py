@@ -3,7 +3,7 @@ from discord.ext import commands, tasks
 import asyncio
 import datetime
 import config
-from typing import Optional, Union, Mapping
+from typing import Optional, Union, Mapping, Any
 
 from .tickets_utils import salvar_transcript, gerar_ticket_id
 from .tickets_views import gerar_view_ticket
@@ -50,6 +50,15 @@ class TicketsController(commands.Cog):
         )
         await painel_msg.pin()
         print(f"✅ Painel persistente criado em {canal.name} ({canal.id})")
+
+    @commands.command(name="ticketpanel", aliases=["paineltickets", "painel"])
+    @commands.has_permissions(administrator=True)
+    async def ticketpanel(self, ctx: commands.Context[Any]) -> None:
+        await self.criar_painel_ticket()
+        try:
+            await ctx.send("✅ Painel de tickets enviado e fixado.", delete_after=10)
+        except Exception:
+            pass
 
     # ------------------------
     # CRIAR TICKET

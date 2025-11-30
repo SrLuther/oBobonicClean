@@ -29,6 +29,8 @@ class ComandosCog(commands.Cog):
             "unload": "Descarrega uma extensão (admin).",
             "restart": "Reinicia o bot (admin).",
             "shutdown": "Desliga o bot (admin)."
+            ,
+            "ticketpanel": "Envia o painel de tickets (admin)."
         }
 
     @commands.command(name="bobo", aliases=["comandos", "ajuda"])
