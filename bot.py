@@ -99,7 +99,7 @@ async def load_cogs(bot: commands.Bot) -> bool:
             await bot.load_extension(module_name)
             print(f"[COG] Carregado: {cog_name}.py")
 
-            if canal_logs:
+            if isinstance(canal_logs, discord.TextChannel):
                 try:
                     await canal_logs.send(f"[{timestamp_formatado}] ✅ Cog **`{cog_name}.py`** carregado com sucesso.")
                 except Exception:
@@ -110,7 +110,7 @@ async def load_cogs(bot: commands.Bot) -> bool:
             print(f"[ERRO] Falha ao carregar {cog_name}.py: {error_message}")
             all_cogs_loaded = False
 
-            if canal_logs:
+            if isinstance(canal_logs, discord.TextChannel):
                 try:
                     await canal_logs.send(f"[{timestamp_formatado}] ❌ Falha crítica ao carregar `{cog_name}`. Verifique o log anexo.")
                 except Exception:
@@ -132,7 +132,7 @@ async def criar_painel_ticket():
     para abrir ticket. Se já existir uma mensagem fixa, não cria outra.
     """
     canal = bot.get_channel(CANAL_PAINEL_ID)
-    if not canal:
+    if not isinstance(canal, discord.TextChannel):
         print(f"❌ Canal do painel ({CANAL_PAINEL_ID}) não encontrado.")
         return
 
@@ -158,7 +158,8 @@ async def criar_painel_ticket():
 # --------------------
 @bot.event
 async def on_ready():
-    print(f"\n🚀 Bot Logado como {bot.user} (ID: {bot.user.id})")
+    user = bot.user
+    print(f"\n🚀 Bot Logado como {user} (ID: {user.id if user else 'desconhecido'})")
 
     # start capture já chamado no __main__
     cogs_loaded_successfully = await load_cogs(bot)
@@ -188,13 +189,14 @@ async def on_ready():
         deploy_log_content = "Erro ao recuperar log."
 
     canal_logs = bot.get_channel(CANAL_LOGS_ID)
-    if canal_logs:
+    if isinstance(canal_logs, discord.TextChannel):
         try:
             agora = datetime.datetime.now()
             data_formatada = agora.strftime("%d/%m/%Y %H:%M:%S")
 
+            from io import BytesIO
             log_file = discord.File(
-                fp=StringIO(deploy_log_content),
+                fp=BytesIO(deploy_log_content.encode('utf-8')),
                 filename=f"log_oBobonic.txt"
             )
 
