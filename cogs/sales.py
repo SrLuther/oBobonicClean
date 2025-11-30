@@ -91,6 +91,16 @@ async def fetch_text(session: aiohttp.ClientSession, url: str, timeout: int = 20
                 return ""
     except Exception as e:
         print(f"[sales] ❌ Erro fetch {url}: {e}")
+        if "CERTIFICATE_VERIFY_FAILED" in str(e):
+            try:
+                async with session.get(url, headers=headers, timeout=timeout, allow_redirects=True, ssl=False) as resp:
+                    if resp.status == 200:
+                        return await resp.text()
+                    else:
+                        print(f"[sales] ❌ {url} retornou status {resp.status} (ssl=False)")
+                        return ""
+            except Exception as e2:
+                print(f"[sales] ❌ Erro fetch {url} com ssl=False: {e2}")
         return ""
 
 async def fetch_text_cf(session: aiohttp.ClientSession, url: str, timeout: int = 20) -> str:
@@ -168,6 +178,43 @@ def pick_image_url(elem: Any) -> Optional[str]:
         return None
     return None
 
+def pick_name(elem: Any, parent: Any) -> Optional[str]:
+    try:
+        import re
+        def norm(s: str) -> str:
+            return re.sub(r"\s+", " ", s).strip()
+        candidates: List[str] = []
+        for key in ("aria-label", "title", "data-name"):
+            v = elem.get(key)
+            if isinstance(v, str) and v:
+                candidates.append(v)
+        img: Any = elem.select_one("img")
+        if img:
+            alt = img.get("alt")
+            if isinstance(alt, str) and alt:
+                candidates.append(alt)
+        if parent:
+            for sel in ("[data-qa='product-card-title']", ".product-title", ".product-name", ".name", "h3", "h2", "h4", ".title"):
+                t = parent.select_one(sel)
+                if t:
+                    tt = t.get_text(" ", strip=True)
+                    if isinstance(tt, str) and tt:
+                        candidates.append(tt)
+        try:
+            txt = " ".join(list(elem.stripped_strings))
+            if txt:
+                candidates.append(txt)
+        except Exception:
+            pass
+        for c in candidates:
+            c2 = re.sub(r"<!--.*?-->", " ", c)
+            c2 = norm(c2)
+            if len(c2) >= 2:
+                return c2[:120]
+    except Exception:
+        return None
+    return None
+
 async def fetch_steam_promos(session: aiohttp.ClientSession) -> List[Dict[str, Any]]:
     return []
 
@@ -196,7 +243,6 @@ async def fetch_gmg_promos(session: aiohttp.ClientSession) -> List[Dict[str, Any
         if str(href).rstrip("/") == "/pt/sales" or str(href).endswith("/pt/sales/"):
             continue
         try:
-            name: Any = a.get("title") or a.text.strip()[:120]
             link: Any = href if str(href).startswith("http") else f"{GMG_BASE_URL}{href}"
             parent: Any = a.parent
             price_text: Any = ""
@@ -214,6 +260,7 @@ async def fetch_gmg_promos(session: aiohttp.ClientSession) -> List[Dict[str, Any
                     image = f"https:{image}"
                 elif image.startswith("/"):
                     image = f"{GMG_BASE_URL}{image}"
+            name = pick_name(a, parent)
             if not discount and not price_text:
                 continue
             if not name:
