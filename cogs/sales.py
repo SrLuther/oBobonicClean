@@ -33,11 +33,11 @@ COR_LOJAS = {
 
 # endpoints (padrão) - podem ser alterados conforme necessidade
 STEAM_SEARCH_URL = "https://store.steampowered.com/search/?specials=1"
-NUUVEM_PROMO_URL = "https://www.nuuvem.com/br-pt/deals/games"
+NUUVEM_PROMO_URL = "https://www.nuuvem.com/br-en/promo/ofertas-nuuvem"
 EPIC_STORE_URL = "https://store.epicgames.com/pt-BR/browse?sortBy=currentPrice&sortDir=asc&discountType=ALL"
 NUUVEM_FALLBACK_URLS = [
-    "https://www.nuuvem.com/br-pt/catalog?filter=promo&sort=discount",
-    "https://www.nuuvem.com/br-pt/catalog/platforms/pc/specials"
+    "https://www.nuuvem.com/br-en/promo/ofertas-da-semana",
+    "https://www.nuuvem.com/br-en"
 ]
 EPIC_FALLBACK_URLS = [
     "https://store.epicgames.com/pt-BR/browse?sortBy=discount&category=Game&direction=DESC",
