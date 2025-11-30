@@ -9,6 +9,7 @@ import os
 from datetime import datetime, timedelta
 import pytz
 import config
+import ssl
 from typing import List, Dict, Any, Optional, cast
 
 # ======================================================================
@@ -93,6 +94,16 @@ async def fetch_text(session: aiohttp.ClientSession, url: str, timeout: int = 20
         print(f"[sales] ❌ Erro fetch {url}: {e}")
         if "CERTIFICATE_VERIFY_FAILED" in str(e):
             try:
+                try:
+                    import certifi
+                    ssl_ctx = ssl.create_default_context(cafile=certifi.where())
+                    async with session.get(url, headers=headers, timeout=timeout, allow_redirects=True, ssl=ssl_ctx) as resp:
+                        if resp.status == 200:
+                            return await resp.text()
+                        else:
+                            print(f"[sales] ❌ {url} retornou status {resp.status} (certifi)")
+                except Exception:
+                    pass
                 async with session.get(url, headers=headers, timeout=timeout, allow_redirects=True, ssl=False) as resp:
                     if resp.status == 200:
                         return await resp.text()
@@ -107,6 +118,17 @@ async def fetch_text_cf(session: aiohttp.ClientSession, url: str, timeout: int =
     base = await fetch_text(session, url, timeout)
     if base:
         return base
+    try:
+        from urllib.parse import urlsplit
+        parts = urlsplit(url)
+        proxy_url = f"https://r.jina.ai/http://{parts.netloc}{parts.path or ''}"
+        if parts.query:
+            proxy_url += f"?{parts.query}"
+        proxy_html = await fetch_text(session, proxy_url, timeout)
+        if proxy_html:
+            return proxy_html
+    except Exception:
+        pass
     def run_sync_cf() -> str:
         try:
             import importlib
@@ -127,7 +149,7 @@ async def fetch_text_cf(session: aiohttp.ClientSession, url: str, timeout: int =
                 "sec-fetch-user": "?1",
                 "sec-fetch-dest": "document",
             }
-            resp = scraper.get(url, headers=headers, timeout=timeout)
+            resp = scraper.get(url, headers=headers, timeout=timeout, verify=False)
             if getattr(resp, "status_code", None) == 200:
                 return resp.text
             return ""
@@ -137,16 +159,7 @@ async def fetch_text_cf(session: aiohttp.ClientSession, url: str, timeout: int =
         return await asyncio.to_thread(run_sync_cf)
     except Exception:
         pass
-    try:
-        from urllib.parse import urlsplit
-        parts = urlsplit(url)
-        proxy_url = f"https://r.jina.ai/http://{parts.netloc}{parts.path or ''}"
-        if parts.query:
-            proxy_url += f"?{parts.query}"
-        proxy_html = await fetch_text(session, proxy_url, timeout)
-        return proxy_html
-    except Exception:
-        return ""
+    return ""
 
 def extract_discount(text: str) -> int:
     try:
