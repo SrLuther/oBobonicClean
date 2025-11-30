@@ -9,6 +9,7 @@ import sys
 from io import StringIO
 import datetime
 import config
+import certifi
 
 # --------------------
 # 1. KEEP-ALIVE (FLASK)
@@ -32,6 +33,13 @@ def run_keep_alive():
 # 2. CONFIG E VARS
 # --------------------
 load_dotenv()
+
+try:
+    import os as _os
+    _os.environ.setdefault("SSL_CERT_FILE", certifi.where())
+    _os.environ.setdefault("REQUESTS_CA_BUNDLE", certifi.where())
+except Exception:
+    pass
 
 class LogBuffer:
     def __init__(self):
