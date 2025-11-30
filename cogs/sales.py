@@ -313,6 +313,8 @@ class Sales(commands.Cog):
         self.bot = bot
         self.channel_id = config.CANAL_PROMO_ID
         self.cache = load_cache()
+        self._rates: Dict[str, float] = {"USD": 0.0, "EUR": 0.0, "GBP": 0.0}
+        self._rates_ts: float = 0.0
         self.send_daily_promos.start()
 
     async def cog_unload(self) -> None:
@@ -345,6 +347,7 @@ class Sales(commands.Cog):
         channel = self.bot.get_channel(self.channel_id)
         if not isinstance(channel, discord.TextChannel):
             return 0
+        await self._ensure_rates()
         filtered = [x for x in promotions if int(x.get("discount", 0)) >= 50]
         filtered.sort(key=lambda x: int(x.get("discount", 0)), reverse=True)
         filtered = filtered[:20]
@@ -364,14 +367,17 @@ class Sales(commands.Cog):
             discount = int(p.get("discount", 0))
             image_url = p.get("image") or ""
             color = STORE_COLORS.get(loja, discord.Color.default())
-            if preco_original and preco_atual:
-                preco_line = f"De {preco_original} por {preco_atual}"
-            elif preco_atual:
-                preco_line = preco_atual
-            elif preco_original:
-                preco_line = f"Preço original: {preco_original}"
+            preco_atual_d = await self._to_brl_str(preco_atual)
+            preco_original_d = await self._to_brl_str(preco_original)
+            preco_d = await self._to_brl_str(preco)
+            if preco_original_d and preco_atual_d:
+                preco_line = f"De {preco_original_d} por {preco_atual_d}"
+            elif preco_atual_d:
+                preco_line = preco_atual_d
+            elif preco_original_d:
+                preco_line = f"Preço original: {preco_original_d}"
             else:
-                preco_line = preco
+                preco_line = preco_d
 
             desc = f"{preco_line}\nDesconto: {discount}%"
             if link:
@@ -398,6 +404,74 @@ class Sales(commands.Cog):
             except Exception:
                 continue
         return sent_count
+
+    async def _ensure_rates(self) -> None:
+        try:
+            now_ts = datetime.now().timestamp()
+            if self._rates_ts and (now_ts - self._rates_ts) < 10800:
+                return
+            timeout = aiohttp.ClientTimeout(total=10)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async def fetch_rate(base: str) -> float:
+                    url = f"https://api.exchangerate.host/latest?base={base}&symbols=BRL"
+                    try:
+                        async with session.get(url) as resp:
+                            if resp.status == 200:
+                                js = await resp.json()
+                                val = js.get("rates", {}).get("BRL")
+                                return float(val) if isinstance(val, (int, float)) else 0.0
+                    except Exception:
+                        return 0.0
+                    return 0.0
+                usd, eur, gbp = await asyncio.gather(
+                    fetch_rate("USD"), fetch_rate("EUR"), fetch_rate("GBP")
+                )
+            self._rates = {"USD": usd, "EUR": eur, "GBP": gbp}
+            self._rates_ts = now_ts
+        except Exception:
+            pass
+
+    async def _to_brl_str(self, s: str) -> str:
+        try:
+            import re
+            x = (s or "").strip()
+            if not x:
+                return ""
+            cur = "BRL"
+            if re.search(r"R\$", x):
+                cur = "BRL"
+            elif re.search(r"US\$|\$", x):
+                cur = "USD"
+            elif "€" in x:
+                cur = "EUR"
+            elif "£" in x:
+                cur = "GBP"
+            m = re.search(r"(\d+[\.,]?\d*)", x)
+            if not m:
+                return x
+            raw = m.group(1)
+            norm = raw.replace(".", "_").replace(",", ".").replace("_", "")
+            try:
+                val = float(norm)
+            except Exception:
+                return x
+            if cur == "BRL":
+                return f"R$ {self._fmt_brl(val)}"
+            rate = self._rates.get(cur, 0.0)
+            if rate and rate > 0:
+                brl = val * rate
+                return f"R$ {self._fmt_brl(brl)}"
+            return x
+        except Exception:
+            return s
+
+    def _fmt_brl(self, amount: float) -> str:
+        try:
+            s = f"{amount:,.2f}"
+            s = s.replace(",", "X").replace(".", ",").replace("X", ".")
+            return s
+        except Exception:
+            return f"{amount:.2f}"
 
     @commands.command(name="promo")
     async def promo(self, ctx: commands.Context[Any]) -> None:
