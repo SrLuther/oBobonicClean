@@ -106,6 +106,31 @@ async def fetch_text(session: aiohttp.ClientSession, url: str, timeout: int = 20
         print(f"[sales] ❌ Erro fetch {url}: {e}")
         return ""
 
+async def fetch_text_cf(session: aiohttp.ClientSession, url: str, timeout: int = 20) -> str:
+    base = await fetch_text(session, url, timeout)
+    if base:
+        return base
+    try:
+        async def run_sync() -> str:
+            try:
+                import cloudscraper
+                scraper = cloudscraper.create_scraper()
+                headers = {
+                    "User-Agent": USER_AGENT,
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+                    "Referer": "https://www.google.com/",
+                }
+                resp = scraper.get(url, headers=headers, timeout=timeout)
+                if getattr(resp, "status_code", None) == 200:
+                    return resp.text
+            except Exception:
+                return ""
+            return ""
+        return await asyncio.to_thread(lambda: asyncio.run(run_sync()))
+    except Exception:
+        return ""
+
 def extract_discount(text: str) -> int:
     try:
         import re
@@ -289,7 +314,7 @@ async def fetch_epic_promos(session: aiohttp.ClientSession) -> List[Dict[str, An
 
 async def fetch_ggdeals_promos(session: aiohttp.ClientSession) -> List[Dict[str, Any]]:
     url_main = "https://gg.deals/deals/"
-    html = await fetch_text(session, url_main)
+    html = await fetch_text_cf(session, url_main)
     if not html:
         return []
     soup: Any = BeautifulSoup(html, "html.parser")
