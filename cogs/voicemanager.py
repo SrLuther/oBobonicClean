@@ -2,14 +2,15 @@
 import discord
 from discord.ext import commands
 import config
+from typing import Dict, Mapping, Union
 
 class VoiceManager(commands.Cog):
 
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         # pega lobby do config
-        self.lobby_id = config.LOBBY_CHANNEL_ID
-        self.temp_channels = {}
+        self.lobby_id: int = config.LOBBY_CHANNEL_ID
+        self.temp_channels: Dict[int, int] = {}
 
         if self.lobby_id == 0:
             print("⚠️ [VoiceManager] LOBBY_CHANNEL_ID não configurado. O Cog não funcionará.")
@@ -29,8 +30,13 @@ class VoiceManager(commands.Cog):
 
             channel_name = f"Sala de 🗣️ {member.display_name}"
 
-            overwrites = {
-                member: discord.PermissionOverwrite(manage_channels=True)
+            overwrites: Mapping[Union[discord.Role, discord.Member, discord.Object], discord.PermissionOverwrite] = {
+                member: discord.PermissionOverwrite(
+                    manage_channels=True,
+                    move_members=True,
+                    mute_members=True,
+                    deafen_members=True,
+                )
             }
             new_channel = await category.create_voice_channel(
                 name=channel_name,
@@ -58,7 +64,7 @@ class VoiceManager(commands.Cog):
                     except Exception as e:
                         print(f"❌ [VoiceManager] Erro ao deletar canal: {e}")
 
-async def setup(bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(VoiceManager(bot))
 
 # ============================================================
