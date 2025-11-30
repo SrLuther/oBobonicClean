@@ -23,7 +23,13 @@ def gerar_view_ticket(controller):
 
         @discord.ui.button(label="Abrir Ticket", style=discord.ButtonStyle.green, custom_id="abrir_ticket")
         async def abrir_ticket_button(self, interaction: discord.Interaction, button: Button):
-            await interaction.response.send_modal(AbrirTicketModal())
+            try:
+                await interaction.response.send_modal(AbrirTicketModal())
+            except Exception:
+                try:
+                    await interaction.response.send_message("❌ Não foi possível abrir o modal de ticket.", ephemeral=True)
+                except Exception:
+                    pass
 
     return AbrirTicketButton()
 

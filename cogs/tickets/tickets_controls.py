@@ -8,6 +8,7 @@ import datetime
 import config
 
 from .tickets_utils import salvar_transcript, gerar_ticket_id, ler_ticket_ids
+from .tickets_views import gerar_view_ticket
 
 class TicketsController(commands.Cog):
     def __init__(self, bot):
@@ -20,6 +21,10 @@ class TicketsController(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         await self.criar_painel_ticket()
+        try:
+            self.bot.add_view(gerar_view_ticket(self))
+        except Exception:
+            pass
 
     async def criar_painel_ticket(self):
         canal = self.bot.get_channel(config.CANAL_PAINEL_ID)
