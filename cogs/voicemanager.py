@@ -29,9 +29,13 @@ class VoiceManager(commands.Cog):
 
             channel_name = f"Sala de 🗣️ {member.display_name}"
 
+            overwrites = {
+                member: discord.PermissionOverwrite(manage_channels=True)
+            }
             new_channel = await category.create_voice_channel(
                 name=channel_name,
-                user_limit=5,
+                user_limit=10,
+                overwrites=overwrites,
                 reason=f"Canal temporário criado por {member.display_name}"
             )
 
