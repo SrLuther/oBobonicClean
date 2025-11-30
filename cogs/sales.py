@@ -26,27 +26,14 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " \
 
 # cores por loja
 COR_LOJAS = {
-    "epic": discord.Color.purple(),
-    "nuuvem": discord.Color.teal(),
-    "steam": discord.Color.dark_blue()
+    "gmg": discord.Color.green()
 }
 
-ENABLE_EPIC = getattr(config, "ENABLE_EPIC", False)
-ENABLE_NUUVEM = getattr(config, "ENABLE_NUUVEM", True)
 DEBUG_PROMOS = getattr(config, "DEBUG_PROMOS", False)
 
-# endpoints (padrão) - podem ser alterados conforme necessidade
-STEAM_SEARCH_URL = "https://store.steampowered.com/search/?specials=1"
-NUUVEM_PROMO_URL = "https://www.nuuvem.com/br-en/promo/ofertas-nuuvem"
-EPIC_STORE_URL = "https://store.epicgames.com/pt-BR/browse?sortBy=currentPrice&sortDir=asc&discountType=ALL"
-NUUVEM_FALLBACK_URLS = [
-    "https://www.nuuvem.com/br-en/promo/ofertas-da-semana",
-    "https://www.nuuvem.com/br-en"
-]
-EPIC_FALLBACK_URLS = [
-    "https://store.epicgames.com/pt-BR/browse?sortBy=discount&category=Game&direction=DESC",
-    "https://store.epicgames.com/pt-BR/"
-]
+# endpoints de referência (apenas GMG)
+GMG_BASE_URL = "https://www.greenmangaming.com"
+GMG_HOME_PT = "https://www.greenmangaming.com/pt/"
 
 # ======================================================================
 # Utilitários: cache
@@ -182,227 +169,62 @@ def pick_image_url(elem: Any) -> Optional[str]:
     return None
 
 async def fetch_steam_promos(session: aiohttp.ClientSession) -> List[Dict[str, Any]]:
-    """Busca promoções na Steam (página de specials)."""
-    html = await fetch_text(session, STEAM_SEARCH_URL)
+    return []
+
+async def fetch_nuuvem_promos(session: aiohttp.ClientSession) -> List[Dict[str, Any]]:
+    return []
+
+async def fetch_epic_promos(session: aiohttp.ClientSession) -> List[Dict[str, Any]]:
+    return []
+
+async def fetch_ggdeals_promos(session: aiohttp.ClientSession) -> List[Dict[str, Any]]:
+    return []
+
+async def fetch_gmg_promos(session: aiohttp.ClientSession) -> List[Dict[str, Any]]:
+    html = await fetch_text_cf(session, GMG_HOME_PT)
     if not html:
         return []
-
     soup: Any = BeautifulSoup(html, "html.parser")
     results: List[Dict[str, Any]] = []
-    # Steam usa 'search_result_row' para itens
-    rows: Any = soup.select(".search_result_row")
-    for row in rows:
+    aitems: Any = soup.select("a[href]")
+    for a in aitems:
+        href: Any = a.get("href")
+        if not href:
+            continue
+        if "/pt/" not in href:
+            continue
         try:
-            # fallback para texto se data-ds-appid nao existir
-            name_tag: Any = row.select_one(".title")
-            name = name_tag.text.strip() if name_tag else row.get("data-ds-appid", "Jogo Steam")
-            link: Any = row.get("href")
-            # tenta pegar preço descontado
-            price_elem: Any = row.select_one(".search_price")
-            price_text = price_elem.text.strip() if price_elem else ""
-            # cria id unico por link
-            promo_id = link or (name + price_text)
-            # desconto
-            disc_elem: Any = row.select_one(".search_discount") or row.select_one(".search_discount span")
-            discount = extract_discount(disc_elem.text.strip() if disc_elem else "")
-            # imagem
-            image = pick_image_url(row)
+            name: Any = a.get("title") or a.text.strip()[:120]
+            link: Any = href if str(href).startswith("http") else f"{GMG_BASE_URL}{href}"
+            parent: Any = a.parent
+            price_text: Any = ""
+            disc_src: Any = ""
+            if parent:
+                txt: Any = parent.get_text(" ", strip=True)
+                disc_src = txt
+                price_tag: Any = parent.select_one(".price") or parent.select_one(".product-price")
+                if price_tag:
+                    price_text = price_tag.text.strip()
+            discount = extract_discount(str(disc_src))
+            image = pick_image_url(a) or (parent and pick_image_url(parent))
             results.append({
-                "id": str(promo_id),
-                "nome": name,
+                "id": link,
+                "nome": name or "Oferta GMG",
                 "link": link,
-                "preco": price_text,
-                "loja": "steam",
+                "preco": str(price_text),
+                "loja": "gmg",
                 "discount": discount,
                 "image": image or ""
             })
         except Exception:
             continue
-    return results
-
-async def fetch_nuuvem_promos(session: aiohttp.ClientSession) -> List[Dict[str, Any]]:
-    """Busca promoções na Nuuvem."""
-    html = await fetch_text(session, NUUVEM_PROMO_URL)
-    if not html:
-        for fb in NUUVEM_FALLBACK_URLS:
-            html = await fetch_text(session, fb)
-            if html:
-                break
-    if not html:
-        return []
-
-    soup: Any = BeautifulSoup(html, "html.parser")
-    results: List[Dict[str, Any]] = []
-
-    # A página da Nuuvem costuma ter cards - tentamos alguns seletores comuns
-    # Procura por links de produto
-    aitems: Any = soup.select("a[href]")
-    for a in aitems:
-        href: Any = a.get("href")
-        if href and ("/products/" in href or "/game" in href):
-            try:
-                name: Any = a.get("title") or (a.text.strip()[:80])
-                link: Any = href if str(href).startswith("http") else f"https://www.nuuvem.com{href}"
-                promo_id = link
-                # tenta extrair preço ou desconto próximo ao elemento
-                parent: Any = a.parent
-                price_text = ""
-                if parent:
-                    price_tag: Any = parent.select_one(".price") or parent.select_one(".product-price") or parent.select_one(".value")
-                    if price_tag:
-                        price_text = price_tag.text.strip()
-                # desconto
-                disc_src: Any = ""
-                if parent:
-                    disc_tag: Any = parent.select_one(".discount") or parent.select_one(".discount-tag") or parent.select_one(".badge-discount")
-                    disc_src = disc_tag.text.strip() if disc_tag else price_text
-                discount = extract_discount(str(disc_src))
-                # imagem
-                image = pick_image_url(a) or (parent and pick_image_url(parent))
-                if image and image.startswith("//"):
-                    image = f"https:{image}"
-                if image and image.startswith("/"):
-                    image = f"https://www.nuuvem.com{image}"
-                results.append({
-                    "id": promo_id,
-                    "nome": name,
-                    "link": link,
-                    "preco": price_text,
-                    "loja": "nuuvem",
-                    "discount": discount,
-                    "image": image or ""
-                })
-            except Exception:
-                continue
-    # Deduplicate by link
     uniq: Dict[str, Dict[str, Any]] = {}
     for r in results:
         uniq[r["link"]] = r
-    return list(uniq.values())[:60]
-
-async def fetch_epic_promos(session: aiohttp.ClientSession) -> List[Dict[str, Any]]:
-    """Tenta buscar promoções na Epic Store (melhor esforço)."""
-    html = await fetch_text(session, EPIC_STORE_URL)
-    if not html:
-        for fb in EPIC_FALLBACK_URLS:
-            html = await fetch_text(session, fb)
-            if html:
-                break
-    if not html:
-        return []
-
-    soup: Any = BeautifulSoup(html, "html.parser")
-    results: List[Dict[str, Any]] = []
-    # Epic tem muitos scripts - tentaremos achar links de produtos
-    aitems: Any = soup.select("a[href]")
-    for a in aitems:
-        href = a.get("href")
-        if not href:
-            continue
-        # heurística: links com '/p/' ou '/product/' ou '/store/p/' costumam ser produtos
-        if "/p/" in href or "/product/" in href or "/store/p/" in href:
-            try:
-                name: Any = a.get("aria-label") or a.get("title") or a.text.strip()[:80]
-                link: Any = href if str(href).startswith("http") else f"https://store.epicgames.com{href}"
-                promo_id = link
-                # tenta pegar desconto próximo
-                parent: Any = a.parent
-                disc_src: Any = ""
-                if parent:
-                    disc_tag: Any = parent.select_one(".discount") or parent.select_one(".PriceSaleBadge") or parent.select_one(".sale")
-                    disc_src = disc_tag.text.strip() if disc_tag else ""
-                discount = extract_discount(str(disc_src))
-                # imagem
-                image = pick_image_url(a) or (parent and pick_image_url(parent))
-                results.append({
-                    "id": promo_id,
-                    "nome": name or "Jogo Epic",
-                    "link": link,
-                    "preco": "",
-                    "loja": "epic",
-                    "discount": discount,
-                    "image": image or ""
-                })
-            except Exception:
-                continue
-    # Deduplicate
-    uniq: Dict[str, Dict[str, Any]] = {}
-    for r in results:
-        uniq[r["link"]] = r
-    list_values: List[Dict[str, Any]] = list(uniq.values())
-    return list_values[:60]
-
-async def fetch_ggdeals_promos(session: aiohttp.ClientSession) -> List[Dict[str, Any]]:
-    url_main = "https://gg.deals/deals/"
-    html = await fetch_text_cf(session, url_main)
-    if not html:
-        return []
-    soup: Any = BeautifulSoup(html, "html.parser")
-    results: List[Dict[str, Any]] = []
-    items: Any = soup.select("a[href]")
-    for a in items:
-        href: Any = a.get("href")
-        if not href:
-            continue
-        if "/game/" in href or "/deal/" in href:
-            try:
-                name: Any = a.get("title") or a.text.strip()[:120]
-                link: Any = href if str(href).startswith("http") else f"https://gg.deals{href}"
-                parent: Any = a.parent
-                disc_src: Any = ""
-                store_src: Any = ""
-                price_text: Any = ""
-                if parent:
-                    disc_tag: Any = parent.select_one(".discount") or parent.select_one(".badge") or parent.select_one(".label")
-                    disc_src = disc_tag.text.strip() if disc_tag else ""
-                    store_tag: Any = parent.select_one(".shop") or parent.select_one(".store") or parent.select_one(".shop-name")
-                    store_src = store_tag.text.strip() if store_tag else "gg.deals"
-                    price_tag: Any = parent.select_one(".price") or parent.select_one(".deal-price")
-                    price_text = price_tag.text.strip() if price_tag else ""
-                discount = extract_discount(str(disc_src))
-                image = pick_image_url(a) or (parent and pick_image_url(parent))
-                results.append({
-                    "id": link,
-                    "nome": name or "Oferta",
-                    "link": link,
-                    "preco": str(price_text),
-                    "loja": (store_src or "gg.deals").lower(),
-                    "discount": discount,
-                    "image": image or ""
-                })
-            except Exception:
-                continue
-    uniq: Dict[str, Dict[str, Any]] = {}
-    for r in results:
-        uniq[r["link"]] = r
-    if not uniq:
-        import re
-        try:
-            links = re.findall(r"href=\"(/(?:game|deal)/[^\"]+)\"", html)
-            discounts = re.findall(r"(-?\d+)\s*%", html)
-            for i, lnk in enumerate(links[:400]):
-                link = f"https://gg.deals{lnk}"
-                disc = 0
-                if i < len(discounts):
-                    try:
-                        disc = abs(int(discounts[i]))
-                    except Exception:
-                        disc = 0
-                results.append({
-                    "id": link,
-                    "nome": "Oferta GG.deals",
-                    "link": link,
-                    "preco": "",
-                    "loja": "gg.deals",
-                    "discount": disc,
-                    "image": ""
-                })
-        except Exception:
-            pass
-        uniq = {}
-        for r in results:
-            uniq[r["link"]] = r
     return list(uniq.values())[:200]
+
+async def fetch_itad_promos(session: aiohttp.ClientSession) -> List[Dict[str, Any]]:
+    return []
 
 # ======================================================================
 # View com botão "Ver Promoção"
@@ -442,7 +264,7 @@ class Sales(commands.Cog):
         async with aiohttp.ClientSession(timeout=timeout) as session:
             # paraleliza as chamadas
             tasks_fetch: List[Any] = [
-                fetch_ggdeals_promos(session)
+                fetch_gmg_promos(session)
             ]
             try:
                 results: List[Any] = await asyncio.gather(*tasks_fetch, return_exceptions=True)
