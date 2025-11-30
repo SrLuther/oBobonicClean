@@ -9,7 +9,7 @@ import os
 from datetime import datetime, timedelta
 import pytz
 import config
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional, cast
 
 # ======================================================================
 # Sales Cog — Radar Arcano de Promoções
@@ -75,7 +75,7 @@ def mark_promo_sent(cache: Dict[str, Any], promo_id: str):
 # Helpers de scraping (tenta extrair o máximo — robusto contra mudanças)
 # ======================================================================
 
-async def fetch_text(session: aiohttp.ClientSession, url: str, timeout=20) -> str:
+async def fetch_text(session: aiohttp.ClientSession, url: str, timeout: int = 20) -> str:
     headers = {"User-Agent": USER_AGENT}
     try:
         async with session.get(url, headers=headers, timeout=timeout) as resp:
@@ -88,110 +88,176 @@ async def fetch_text(session: aiohttp.ClientSession, url: str, timeout=20) -> st
         print(f"[sales] ❌ Erro fetch {url}: {e}")
         return ""
 
-async def fetch_steam_promos(session: aiohttp.ClientSession) -> List[Dict[str, str]]:
+def extract_discount(text: str) -> int:
+    try:
+        import re
+        m = re.search(r"(-?\d+)\s*%", text)
+        if not m:
+            return 0
+        val = int(m.group(1))
+        return abs(val)
+    except Exception:
+        return 0
+
+def pick_image_url(elem: Any) -> Optional[str]:
+    try:
+        # tenta achar <img> direto
+        img: Any = elem.select_one("img")
+        if img and (img.get("src") or img.get("data-src")):
+            return img.get("src") or img.get("data-src")
+        # procura em ancestrais próximos
+        parent: Any = elem.parent
+        for _ in range(3):
+            if not parent:
+                break
+            img = parent.select_one("img")
+            if img and (img.get("src") or img.get("data-src")):
+                return img.get("src") or img.get("data-src")
+            parent = parent.parent
+    except Exception:
+        return None
+    return None
+
+async def fetch_steam_promos(session: aiohttp.ClientSession) -> List[Dict[str, Any]]:
     """Busca promoções na Steam (página de specials)."""
     html = await fetch_text(session, STEAM_SEARCH_URL)
     if not html:
         return []
 
-    soup = BeautifulSoup(html, "html.parser")
-    results = []
+    soup: Any = BeautifulSoup(html, "html.parser")
+    results: List[Dict[str, Any]] = []
     # Steam usa 'search_result_row' para itens
-    for row in soup.select(".search_result_row"):
+    rows: Any = soup.select(".search_result_row")
+    for row in rows:
         try:
             # fallback para texto se data-ds-appid nao existir
-            name_tag = row.select_one(".title")
+            name_tag: Any = row.select_one(".title")
             name = name_tag.text.strip() if name_tag else row.get("data-ds-appid", "Jogo Steam")
-            link = row.get("href")
+            link: Any = row.get("href")
             # tenta pegar preço descontado
-            price_elem = row.select_one(".search_price")
+            price_elem: Any = row.select_one(".search_price")
             price_text = price_elem.text.strip() if price_elem else ""
             # cria id unico por link
             promo_id = link or (name + price_text)
+            # desconto
+            disc_elem: Any = row.select_one(".search_discount") or row.select_one(".search_discount span")
+            discount = extract_discount(disc_elem.text.strip() if disc_elem else "")
+            # imagem
+            image = pick_image_url(row)
             results.append({
                 "id": str(promo_id),
                 "nome": name,
                 "link": link,
                 "preco": price_text,
-                "loja": "steam"
+                "loja": "steam",
+                "discount": discount,
+                "image": image or ""
             })
         except Exception:
             continue
     return results
 
-async def fetch_nuuvem_promos(session: aiohttp.ClientSession) -> List[Dict[str, str]]:
+async def fetch_nuuvem_promos(session: aiohttp.ClientSession) -> List[Dict[str, Any]]:
     """Busca promoções na Nuuvem."""
     html = await fetch_text(session, NUUVEM_PROMO_URL)
     if not html:
         return []
 
-    soup = BeautifulSoup(html, "html.parser")
-    results = []
+    soup: Any = BeautifulSoup(html, "html.parser")
+    results: List[Dict[str, Any]] = []
 
     # A página da Nuuvem costuma ter cards - tentamos alguns seletores comuns
     # Procura por links de produto
-    for a in soup.select("a[href]"):
-        href = a.get("href")
+    aitems: Any = soup.select("a[href]")
+    for a in aitems:
+        href: Any = a.get("href")
         if href and "/products/" in href or "nuuvem.com" in href and "/game" in href:
             try:
-                name = a.get("title") or (a.text.strip()[:80])
-                link = href if href.startswith("http") else f"https://www.nuuvem.com{href}"
+                name: Any = a.get("title") or (a.text.strip()[:80])
+                link: Any = href if str(href).startswith("http") else f"https://www.nuuvem.com{href}"
                 promo_id = link
                 # tenta extrair preço ou desconto próximo ao elemento
-                parent = a.parent
+                parent: Any = a.parent
                 price_text = ""
                 if parent:
-                    price_tag = parent.select_one(".price") or parent.select_one(".product-price") or parent.select_one(".value")
+                    price_tag: Any = parent.select_one(".price") or parent.select_one(".product-price") or parent.select_one(".value")
                     if price_tag:
                         price_text = price_tag.text.strip()
+                # desconto
+                disc_src: Any = ""
+                if parent:
+                    disc_tag: Any = parent.select_one(".discount") or parent.select_one(".discount-tag") or parent.select_one(".badge-discount")
+                    disc_src = disc_tag.text.strip() if disc_tag else price_text
+                discount = extract_discount(str(disc_src))
+                # imagem
+                image = pick_image_url(a) or (parent and pick_image_url(parent))
+                if image and image.startswith("//"):
+                    image = f"https:{image}"
+                if image and image.startswith("/"):
+                    image = f"https://www.nuuvem.com{image}"
                 results.append({
                     "id": promo_id,
                     "nome": name,
                     "link": link,
                     "preco": price_text,
-                    "loja": "nuuvem"
+                    "loja": "nuuvem",
+                    "discount": discount,
+                    "image": image or ""
                 })
             except Exception:
                 continue
     # Deduplicate by link
-    uniq = {}
+    uniq: Dict[str, Dict[str, Any]] = {}
     for r in results:
         uniq[r["link"]] = r
     return list(uniq.values())[:60]
 
-async def fetch_epic_promos(session: aiohttp.ClientSession) -> List[Dict[str, str]]:
+async def fetch_epic_promos(session: aiohttp.ClientSession) -> List[Dict[str, Any]]:
     """Tenta buscar promoções na Epic Store (melhor esforço)."""
     html = await fetch_text(session, EPIC_STORE_URL)
     if not html:
         return []
 
-    soup = BeautifulSoup(html, "html.parser")
-    results = []
+    soup: Any = BeautifulSoup(html, "html.parser")
+    results: List[Dict[str, Any]] = []
     # Epic tem muitos scripts - tentaremos achar links de produtos
-    for a in soup.select("a[href]"):
+    aitems: Any = soup.select("a[href]")
+    for a in aitems:
         href = a.get("href")
         if not href:
             continue
         # heurística: links com '/p/' ou '/product/' ou '/store/p/' costumam ser produtos
         if "/p/" in href or "/product/" in href or "/store/p/" in href:
             try:
-                name = a.get("aria-label") or a.get("title") or a.text.strip()[:80]
-                link = href if href.startswith("http") else f"https://www.epicgames.com{href}"
+                name: Any = a.get("aria-label") or a.get("title") or a.text.strip()[:80]
+                link: Any = href if str(href).startswith("http") else f"https://www.epicgames.com{href}"
                 promo_id = link
+                # tenta pegar desconto próximo
+                parent: Any = a.parent
+                disc_src: Any = ""
+                if parent:
+                    disc_tag: Any = parent.select_one(".discount") or parent.select_one(".PriceSaleBadge") or parent.select_one(".sale")
+                    disc_src = disc_tag.text.strip() if disc_tag else ""
+                discount = extract_discount(str(disc_src))
+                # imagem
+                image = pick_image_url(a) or (parent and pick_image_url(parent))
                 results.append({
                     "id": promo_id,
                     "nome": name or "Jogo Epic",
                     "link": link,
                     "preco": "",
-                    "loja": "epic"
+                    "loja": "epic",
+                    "discount": discount,
+                    "image": image or ""
                 })
             except Exception:
                 continue
     # Deduplicate
-    uniq = {}
+    uniq: Dict[str, Dict[str, Any]] = {}
     for r in results:
         uniq[r["link"]] = r
-    return list(uniq.values())[:60]
+    list_values: List[Dict[str, Any]] = list(uniq.values())
+    return list_values[:60]
 
 # ======================================================================
 # View com botão "Ver Promoção"
@@ -207,24 +273,26 @@ class PromoView(discord.ui.View):
 # ======================================================================
 
 class Sales(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.canal_promo_id = config.CANAL_PROMO_ID
         self.cache = load_cache()
         # inicia a tarefa diária que aguarda até meia-noite e roda a cada 24h
-        self.send_daily_promos.start()
+        loop = cast(tasks.Loop[Any], self.send_daily_promos)
+        loop.start()
 
-    def cog_unload(self):
+    async def cog_unload(self) -> None:
         try:
-            self.send_daily_promos.cancel()
+            loop = cast(tasks.Loop[Any], self.send_daily_promos)
+            loop.cancel()
         except Exception:
             pass
 
     # ------------------------------------------------------------
     # Função central: coleta promos de todas as lojas e envia
     # ------------------------------------------------------------
-    async def collect_all_promos(self) -> List[Dict[str, str]]:
-        promos = []
+    async def collect_all_promos(self) -> List[Dict[str, Any]]:
+        promos: List[Dict[str, Any]] = []
         timeout = aiohttp.ClientTimeout(total=30)
         async with aiohttp.ClientSession(timeout=timeout) as session:
             # paraleliza as chamadas
@@ -234,7 +302,7 @@ class Sales(commands.Cog):
                 fetch_epic_promos(session)
             ]
             try:
-                results = await asyncio.gather(*tasks_fetch, return_exceptions=True)
+                results: List[Any] = await asyncio.gather(*tasks_fetch, return_exceptions=True)
             except Exception as e:
                 print(f"[sales] ❌ Erro ao rodar fetches: {e}")
                 results = []
@@ -242,20 +310,32 @@ class Sales(commands.Cog):
             for res in results:
                 if isinstance(res, Exception) or not res:
                     continue
-                promos.extend(res)
+                promos.extend(cast(List[Dict[str, Any]], res))
         return promos
 
     # ------------------------------------------------------------
     # Envia promoções — respeita cache para não reenviar repetidas
     # ------------------------------------------------------------
-    async def send_promotions(self, promotions: List[Dict[str, str]]):
-        canal = self.bot.get_channel(self.canal_promo_id)
-        if not canal:
+    async def send_promotions(self, promotions: List[Dict[str, Any]]):
+        canal: Optional[discord.TextChannel] = self.bot.get_channel(self.canal_promo_id)  # type: ignore[assignment]
+        if not isinstance(canal, discord.TextChannel):
             print(f"[sales] ❌ Canal de promoções não encontrado (ID: {self.canal_promo_id})")
             return
 
+        # agrupa por loja e filtra desconto >= 50; pega top-10 por loja
+        grouped: Dict[str, List[Dict[str, Any]]] = {}
+        for p in promotions:
+            loja = (p.get("loja") or "").lower()
+            grouped.setdefault(loja, []).append(p)
+
+        filtered: List[Dict[str, Any]] = []
+        for loja, items in grouped.items():
+            with_disc = [x for x in items if int(x.get("discount", 0)) >= 50]
+            with_disc.sort(key=lambda x: int(x.get("discount", 0)), reverse=True)
+            filtered.extend(with_disc[:10])
+
         sent_count = 0
-        for promo in promotions:
+        for promo in filtered:
             # identifica promo unicamente por link/id/nome
             promo_id = promo.get("id") or promo.get("link") or (promo.get("nome") + promo.get("loja", ""))
             if not promo_id:
@@ -269,16 +349,20 @@ class Sales(commands.Cog):
             link = promo.get("link", "")
             loja = (promo.get("loja") or "epic").lower()
             preco = promo.get("preco", "")
+            discount = int(promo.get("discount", 0))
+            image_url = promo.get("image") or ""
 
             cor = COR_LOJAS.get(loja, discord.Color.default())
 
             embed = discord.Embed(
                 title=f"🎮 {nome}",
-                description=f"{preco}\n\n[Ver oferta]({link})" if link else (preco or "Promoção disponível"),
+                description=f"{preco}\nDesconto: {discount}%\n\n[Ver oferta]({link})" if link else (preco or f"Desconto: {discount}%"),
                 color=cor,
                 url=link if link else None
             )
             embed.set_footer(text=f"Loja: {loja.capitalize()}")
+            if image_url:
+                embed.set_thumbnail(url=image_url)
 
             view = PromoView(link) if link else None
 
@@ -302,7 +386,7 @@ class Sales(commands.Cog):
     # Comando manual: !promo
     # ------------------------
     @commands.command(name="promo")
-    async def promo_command(self, ctx):
+    async def promo_command(self, ctx: commands.Context[Any]):
         """Força a checagem e envio de promoções agora."""
         await ctx.send("🔎 Buscando promoções... (isso pode levar alguns segundos)")
         try:
@@ -331,7 +415,7 @@ class Sales(commands.Cog):
         except Exception as e:
             print(f"[sales] ❌ Erro na rotina diária de promoções: {e}")
 
-    @send_daily_promos.before_loop
+    @cast(tasks.Loop[Any], send_daily_promos).before_loop
     async def before_send_daily_promos(self):
         # aguarda o bot ficar pronto
         await self.bot.wait_until_ready()
@@ -349,5 +433,5 @@ class Sales(commands.Cog):
 # ------------------------
 # Setup (modo oficial, sem kwargs)
 # ------------------------
-async def setup(bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(Sales(bot))
