@@ -153,12 +153,82 @@ def pick_name(elem: Any, parent: Any) -> Optional[str]:
         except Exception:
             pass
         for c in candidates:
-            c2 = norm(c)
-            if len(c2) >= 2:
+            c2 = re.sub(r"<!--[\s\S]*?-->", " ", c)
+            c2 = norm(c2)
+            if len(c2) >= 2 and c2.lower() != "icon":
                 return c2[:120]
     except Exception:
         return None
     return None
+
+def _parse_prices_from_text(text: str) -> tuple[str, str]:
+    try:
+        import re
+        patt = r"(?:R\$|US\$|\$|€|£)\s?\d+(?:[\.,]\d{2})?"
+        found = re.findall(patt, text)
+        if not found:
+            patt2 = r"\b\d+(?:[\.,]\d{2})\b"
+            found = re.findall(patt2, text)
+        def to_val(s: str) -> float:
+            s2 = re.sub(r"[^0-9,\.]", "", s)
+            s2 = s2.replace(".", "_").replace(",", ".").replace("_", "")
+            try:
+                return float(s2)
+            except Exception:
+                return 0.0
+        uniq: List[str] = []
+        for x in found:
+            if x not in uniq:
+                uniq.append(x)
+        if not uniq:
+            return "", ""
+        values = sorted([(to_val(x), x) for x in uniq], key=lambda y: y[0])
+        if len(values) >= 2:
+            cur = values[0][1]
+            orig = values[-1][1]
+            return cur, orig
+        return values[0][1], ""
+    except Exception:
+        return "", ""
+
+def extract_prices(parent: Any, parent_text: str) -> tuple[str, str]:
+    price_current = ""
+    price_original = ""
+    try:
+        selectors_cur = [
+            ".price", ".product-price", ".final-price", ".sale-price", ".current-price",
+            ".price--discount", ".price-new"
+        ]
+        selectors_old = [
+            ".rrp", ".was", ".was-price", ".old-price", ".list-price",
+            ".original-price", ".price-was", ".normal-price", ".price-old"
+        ]
+        if parent:
+            for sel in selectors_cur:
+                node = parent.select_one(sel)
+                if node:
+                    try:
+                        price_current = node.get_text(" ", strip=True)
+                        if price_current:
+                            break
+                    except Exception:
+                        pass
+            for sel in selectors_old:
+                node = parent.select_one(sel)
+                if node:
+                    try:
+                        price_original = node.get_text(" ", strip=True)
+                        if price_original:
+                            break
+                    except Exception:
+                        pass
+        if not price_current or not price_original:
+            cur2, orig2 = _parse_prices_from_text(parent_text)
+            price_current = price_current or cur2
+            price_original = price_original or orig2
+    except Exception:
+        pass
+    return price_current, price_original
 
 def pick_image(elem: Any, parent: Any, base: str) -> str:
     img = elem.select_one("img")
@@ -197,40 +267,7 @@ async def scrape_generic(session: aiohttp.ClientSession, base_url: str, store_ke
         parent = a.parent
         parent_text = parent.get_text(" ", strip=True) if parent else ""
         discount = extract_discount(parent_text)
-        price_current = ""
-        price_original = ""
-        if parent:
-            # preço atual
-            pt = (
-                parent.select_one(".price")
-                or parent.select_one(".product-price")
-                or parent.select_one(".final-price")
-                or parent.select_one(".sale-price")
-                or parent.select_one(".current-price")
-            )
-            if pt:
-                try:
-                    price_current = pt.get_text(" ", strip=True)
-                except Exception:
-                    price_current = ""
-            # preço original (anterior)
-            po = (
-                parent.select_one(".rrp")
-                or parent.select_one(".was")
-                or parent.select_one(".was-price")
-                or parent.select_one(".old-price")
-                or parent.select_one(".list-price")
-                or parent.select_one(".original-price")
-                or parent.select_one(".price-was")
-                or parent.select_one(".normal-price")
-            )
-            if not po:
-                po = parent.select_one("del") or parent.select_one("s")
-            if po:
-                try:
-                    price_original = po.get_text(" ", strip=True)
-                except Exception:
-                    price_original = ""
+        price_current, price_original = extract_prices(parent, parent_text)
         if discount <= 0 and not price_current:
             continue
         name = pick_name(a, parent) or "Oferta"
