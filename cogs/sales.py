@@ -33,8 +33,16 @@ COR_LOJAS = {
 
 # endpoints (padrão) - podem ser alterados conforme necessidade
 STEAM_SEARCH_URL = "https://store.steampowered.com/search/?specials=1"
-NUUVEM_PROMO_URL = "https://www.nuuvem.com/br-pt/promo"
+NUUVEM_PROMO_URL = "https://www.nuuvem.com/br-pt/deals/games"
 EPIC_STORE_URL = "https://store.epicgames.com/pt-BR/browse?sortBy=currentPrice&sortDir=asc&discountType=ALL"
+NUUVEM_FALLBACK_URLS = [
+    "https://www.nuuvem.com/br-pt/catalog?filter=promo&sort=discount",
+    "https://www.nuuvem.com/br-pt/catalog/platforms/pc/specials"
+]
+EPIC_FALLBACK_URLS = [
+    "https://store.epicgames.com/pt-BR/browse?sortBy=discount&category=Game&direction=DESC",
+    "https://store.epicgames.com/pt-BR/"
+]
 
 # ======================================================================
 # Utilitários: cache
@@ -76,9 +84,15 @@ def mark_promo_sent(cache: Dict[str, Any], promo_id: str):
 # ======================================================================
 
 async def fetch_text(session: aiohttp.ClientSession, url: str, timeout: int = 20) -> str:
-    headers = {"User-Agent": USER_AGENT}
+    headers = {
+        "User-Agent": USER_AGENT,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Referer": "https://www.google.com/",
+        "DNT": "1"
+    }
     try:
-        async with session.get(url, headers=headers, timeout=timeout) as resp:
+        async with session.get(url, headers=headers, timeout=timeout, allow_redirects=True) as resp:
             if resp.status == 200:
                 return await resp.text()
             else:
@@ -161,6 +175,11 @@ async def fetch_nuuvem_promos(session: aiohttp.ClientSession) -> List[Dict[str, 
     """Busca promoções na Nuuvem."""
     html = await fetch_text(session, NUUVEM_PROMO_URL)
     if not html:
+        for fb in NUUVEM_FALLBACK_URLS:
+            html = await fetch_text(session, fb)
+            if html:
+                break
+    if not html:
         return []
 
     soup: Any = BeautifulSoup(html, "html.parser")
@@ -171,7 +190,7 @@ async def fetch_nuuvem_promos(session: aiohttp.ClientSession) -> List[Dict[str, 
     aitems: Any = soup.select("a[href]")
     for a in aitems:
         href: Any = a.get("href")
-        if href and "/products/" in href or "nuuvem.com" in href and "/game" in href:
+        if href and ("/products/" in href or "/game" in href):
             try:
                 name: Any = a.get("title") or (a.text.strip()[:80])
                 link: Any = href if str(href).startswith("http") else f"https://www.nuuvem.com{href}"
@@ -216,6 +235,11 @@ async def fetch_epic_promos(session: aiohttp.ClientSession) -> List[Dict[str, An
     """Tenta buscar promoções na Epic Store (melhor esforço)."""
     html = await fetch_text(session, EPIC_STORE_URL)
     if not html:
+        for fb in EPIC_FALLBACK_URLS:
+            html = await fetch_text(session, fb)
+            if html:
+                break
+    if not html:
         return []
 
     soup: Any = BeautifulSoup(html, "html.parser")
@@ -230,7 +254,7 @@ async def fetch_epic_promos(session: aiohttp.ClientSession) -> List[Dict[str, An
         if "/p/" in href or "/product/" in href or "/store/p/" in href:
             try:
                 name: Any = a.get("aria-label") or a.get("title") or a.text.strip()[:80]
-                link: Any = href if str(href).startswith("http") else f"https://www.epicgames.com{href}"
+                link: Any = href if str(href).startswith("http") else f"https://store.epicgames.com{href}"
                 promo_id = link
                 # tenta pegar desconto próximo
                 parent: Any = a.parent
