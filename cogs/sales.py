@@ -197,15 +197,41 @@ async def scrape_generic(session: aiohttp.ClientSession, base_url: str, store_ke
         parent = a.parent
         parent_text = parent.get_text(" ", strip=True) if parent else ""
         discount = extract_discount(parent_text)
-        price_text = ""
+        price_current = ""
+        price_original = ""
         if parent:
-            pt = parent.select_one(".price") or parent.select_one(".product-price") or parent.select_one(".final-price")
+            # preço atual
+            pt = (
+                parent.select_one(".price")
+                or parent.select_one(".product-price")
+                or parent.select_one(".final-price")
+                or parent.select_one(".sale-price")
+                or parent.select_one(".current-price")
+            )
             if pt:
                 try:
-                    price_text = pt.get_text(" ", strip=True)
+                    price_current = pt.get_text(" ", strip=True)
                 except Exception:
-                    price_text = ""
-        if discount <= 0 and not price_text:
+                    price_current = ""
+            # preço original (anterior)
+            po = (
+                parent.select_one(".rrp")
+                or parent.select_one(".was")
+                or parent.select_one(".was-price")
+                or parent.select_one(".old-price")
+                or parent.select_one(".list-price")
+                or parent.select_one(".original-price")
+                or parent.select_one(".price-was")
+                or parent.select_one(".normal-price")
+            )
+            if not po:
+                po = parent.select_one("del") or parent.select_one("s")
+            if po:
+                try:
+                    price_original = po.get_text(" ", strip=True)
+                except Exception:
+                    price_original = ""
+        if discount <= 0 and not price_current:
             continue
         name = pick_name(a, parent) or "Oferta"
         image = pick_image(a, parent, base_url)
@@ -213,7 +239,9 @@ async def scrape_generic(session: aiohttp.ClientSession, base_url: str, store_ke
             "id": link,
             "nome": name,
             "link": link,
-            "preco": price_text,
+            "preco": price_current or "",
+            "preco_atual": price_current,
+            "preco_original": price_original,
             "loja": store_key,
             "discount": discount,
             "image": image,
@@ -294,12 +322,27 @@ class Sales(commands.Cog):
             link = p.get("link", "")
             loja = (p.get("loja") or "").lower()
             preco = p.get("preco", "")
+            preco_atual = p.get("preco_atual", "")
+            preco_original = p.get("preco_original", "")
             discount = int(p.get("discount", 0))
             image_url = p.get("image") or ""
             color = STORE_COLORS.get(loja, discord.Color.default())
+            if preco_original and preco_atual:
+                preco_line = f"De {preco_original} por {preco_atual}"
+            elif preco_atual:
+                preco_line = preco_atual
+            elif preco_original:
+                preco_line = f"Preço original: {preco_original}"
+            else:
+                preco_line = preco
+
+            desc = f"{preco_line}\nDesconto: {discount}%"
+            if link:
+                desc += f"\n\n[Ver oferta]({link})"
+
             embed = discord.Embed(
                 title=f"🎮 {nome}",
-                description=(f"{preco}\nDesconto: {discount}%\n\n[Ver oferta]({link})" if link else (preco or f"Desconto: {discount}%")),
+                description=desc,
                 color=color,
                 url=link or None,
             )
