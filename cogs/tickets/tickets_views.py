@@ -20,7 +20,6 @@ def gerar_view_ticket(controller):
     class AbrirTicketButton(View):
         def __init__(self):
             super().__init__(timeout=None)
-            self.add_item(Button(label="Abrir Ticket", style=discord.ButtonStyle.green, custom_id="abrir_ticket"))
 
         @discord.ui.button(label="Abrir Ticket", style=discord.ButtonStyle.green, custom_id="abrir_ticket")
         async def abrir_ticket_button(self, button: Button, interaction: discord.Interaction):
@@ -32,8 +31,6 @@ def gerar_ticket_view(controller, canal_ticket, usuario, ticket_id):
     class TicketView(View):
         def __init__(self):
             super().__init__(timeout=None)
-            self.add_item(Button(label="Fechar", style=discord.ButtonStyle.red, custom_id=f"fechar_{ticket_id}"))
-            self.add_item(Button(label="Assumir", style=discord.ButtonStyle.blurple, custom_id=f"assumir_{ticket_id}"))
 
         @discord.ui.button(label="Fechar", style=discord.ButtonStyle.red)
         async def fechar_button(self, button: Button, interaction: discord.Interaction):

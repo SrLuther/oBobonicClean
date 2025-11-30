@@ -1,6 +1,7 @@
 import os
 import datetime
 import config
+import discord
 
 TICKET_IDS_FILE = "tickets_ids.txt"
 

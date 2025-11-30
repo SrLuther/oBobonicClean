@@ -10,11 +10,9 @@ lxml==5.2.2
 # --- Ambiente / Utilidades ---
 python-dotenv==1.0.0
 pytz==2024.1
-py-cord==2.4.1
 
 # --- IA ---
 google-genai==1.15.0
-openai
 
 # --- Servidor Keep-Alive ---
 flask==3.0.3

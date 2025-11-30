@@ -5,7 +5,6 @@ import os
 from dotenv import load_dotenv
 import time
 import threading
-from flask import Flask
 import sys
 from io import StringIO
 import datetime
@@ -15,7 +14,11 @@ import config
 # 1. KEEP-ALIVE (FLASK)
 # --------------------
 def run_keep_alive():
-    app = Flask(__name__)
+    try:
+        flask_module = __import__('flask')
+    except Exception:
+        return
+    app = flask_module.Flask(__name__)
 
     @app.route('/')
     def home():
@@ -134,14 +137,18 @@ async def criar_painel_ticket():
         return
 
     # Checa se já existe uma mensagem fixada com painel
-    mensagens = await canal.history(limit=50).flatten()
+    mensagens = [msg async for msg in canal.history(limit=50)]
     for msg in mensagens:
         if msg.pinned:
             print("✅ Painel já fixado encontrado, pulando criação.")
             return
 
     from cogs.tickets.tickets_views import gerar_view_ticket
-    view = gerar_view_ticket()
+    controller = bot.get_cog('TicketsController')
+    if not controller:
+        print("⚠️ TicketsController não está carregado ainda; painel não será criado por bot.py.")
+        return
+    view = gerar_view_ticket(controller)
     painel_msg = await canal.send("🎫 Clique no botão abaixo para abrir um ticket:", view=view)
     await painel_msg.pin()
     print(f"✅ Painel persistente criado e fixado em {canal.name} ({canal.id})")

@@ -7,6 +7,7 @@ import os
 import textwrap
 import json
 import time
+from io import BytesIO
 
 from config import GEMINI_API_KEY, AI_CHANNEL_ID
 
@@ -146,7 +147,7 @@ class AIChat(commands.Cog):
 
                 image_bytes = result.generated_images[0].image.image_bytes
                 image_file = discord.File(
-                    fp=image_bytes,
+                    fp=BytesIO(image_bytes),
                     filename=f"imagem_{ctx.author.id}_{int(time.time())}.jpeg"
                 )
 
