@@ -41,7 +41,13 @@ class TicketsController(commands.Cog):
         from .tickets_views import gerar_view_ticket
         view = gerar_view_ticket(self)
         painel_msg = await canal.send(
-            "🎫 **Abra seu ticket abaixo!**\nPor favor, clique no botão e forneça uma breve descrição do seu problema.",
+            "🎫 **Abra seu ticket abaixo!**\n\n"
+            "Para abrir seu ticket:\n"
+            "• Clique no botão **Abrir Ticket**.\n"
+            "• Informe um **resumo objetivo** do problema (assunto + detalhes).\n"
+            "• Inclua **dados úteis** (IDs, links, imagens).\n"
+            "• Não compartilhe **senhas** ou dados sensíveis.\n\n"
+            "Após abrir, um canal exclusivo será criado para o seu atendimento.",
             view=view
         )
         await painel_msg.pin()
@@ -75,7 +81,17 @@ class TicketsController(commands.Cog):
         # Mensagem inicial
         from .tickets_views import gerar_ticket_view
         await canal_ticket.send(
-            f"📝 **Descrição:** {descricao}\n\nUse os botões abaixo para **assumir** ou **fechar** o ticket.",
+            (
+                f"📝 **Descrição:** {descricao}\n\n"
+                "Painel do ticket:\n"
+                "• **Assumir** (Equipe): Registra o responsável pelo atendimento e inicia a triagem.\n"
+                "• **Fechar**: Solicita um breve feedback e encerra o canal; um transcript é arquivado.\n\n"
+                "Antes de fechar:\n"
+                "• Confirme que o problema foi resolvido.\n"
+                "• Envie um **feedback curto** (obrigatório).\n\n"
+                "Reabertura:\n"
+                "• Caso precise reabrir, avise a equipe após o encerramento."
+            ),
             view=gerar_ticket_view(self, canal_ticket, membro, ticket_id)
         )
 
