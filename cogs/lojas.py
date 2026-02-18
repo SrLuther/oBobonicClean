@@ -18,6 +18,7 @@ PANEL_CHANNEL_ID = 1473763773805363414  # Canal onde o painel será enviado
 LOJAS_CATEGORY_ID = 1473763671485186239  # Categoria para criar os canais de lojas
 LOJAS_VIEWER_ROLE_ID = 1440828415103074356  # Cargo que pode visualizar todas as lojas
 COMMAND_CHANNEL_ID = 1440828497772679168  # Sala de comandos
+TIPS_CHANNEL_ID = 1473771157160460359  # Canal para dicas de formatação
 LOJAS_FILE = "data/lojas.json"          # Arquivo para armazenar dados das lojas
 
 # ============================================
@@ -63,7 +64,7 @@ def obter_loja_jogador(user_id: int) -> Optional[dict]:
 # ============================================
 
 class ModalCriarLoja(discord.ui.Modal):
-    """Modal para o jogador informar o nome da loja"""
+    """Modal para o jogador informar dados da loja"""
     
     title = "Criar Loja Pessoal"
     
@@ -72,6 +73,27 @@ class ModalCriarLoja(discord.ui.Modal):
         placeholder="Ex: Loja de Recursos, Dinossauros Premium...",
         required=True,
         max_length=100
+    )
+    
+    nome_tribo = discord.ui.TextInput(
+        label="Nome da Tribo",
+        placeholder="Ex: Phoenix Rising, Dark Kingdom...",
+        required=True,
+        max_length=100
+    )
+    
+    mapa_base = discord.ui.TextInput(
+        label="Mapa da Base Principal",
+        placeholder="Ex: The Island, Ragnarok, Crystal Isles...",
+        required=True,
+        max_length=100
+    )
+    
+    mapas_entrega = discord.ui.TextInput(
+        label="Mapas Onde Você Entrega",
+        placeholder="Ex: The Island, Ragnarok (separe por vírgula)",
+        required=True,
+        max_length=200
     )
     
     async def on_submit(self, interaction: discord.Interaction) -> None:
@@ -144,52 +166,19 @@ class ModalCriarLoja(discord.ui.Modal):
                 reason=f"Loja criada para {interaction.user.name}"
             )
             
-            # Enviar mensagem de boas-vindas
+            # Enviar mensagem de boas-vindas com informações da loja
             mensagem_inicial = (
                 f"🏪 **Bem-vindo à sua loja!**\n\n"
                 f"**Proprietário:** {interaction.user.mention}\n"
                 f"**Nome da Loja:** {self.nome_loja.value}\n"
+                f"**Tribo:** {self.nome_tribo.value}\n"
+                f"**Mapa da Base:** {self.mapa_base.value}\n"
+                f"**Mapas de Entrega:** {self.mapas_entrega.value}\n"
                 f"**Criada em:** <t:{int(datetime.now().timestamp())}:f>\n\n"
                 f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
                 f"Você pode publicar seus produtos e serviços aqui!\n"
-                f"Use `/fechar_loja` para encerrar sua loja quando desejar.\n\n"
-                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                f"📝 **DICAS DE FORMATAÇÃO DISCORD:**\n\n"
-                f"**Estilos de Texto:**\n"
-                f"• **Negrito** - `**texto**`\n"
-                f"• *Itálico* - `*texto*` ou `_texto_`\n"
-                f"• ***Negrito + Itálico*** - `***texto***`\n"
-                f"• ~~Tachado~~ - `~~texto~~`\n"
-                f"• __Sublinhado__ - `__texto__`\n"
-                f"• `Código inline` - `` `código` ``\n\n"
-                f"**Blocos de Código:**\n"
-                f"```\n"
-                f"```python\n"
-                f"Use três crases (`) antes e depois\n"
-                f"```\n"
-                f"(Útil para mostrar estatísticas formatadas)\n\n"
-                f"**Listas:**\n"
-                f"• Bullet com `•` ou `-`\n"
-                f"1. Numerada com número seguido de `.`\n\n"
-                f"**Citar Texto:**\n"
-                f"> Use `>` para criar uma citação\n"
-                f">> Use `>>` para citação aninhada\n\n"
-                f"**Spoilers:**\n"
-                f"• ||Texto escondido|| - `||texto||`\n\n"
-                f"**Links:**\n"
-                f"• [Texto](url) - `[Texto](https://link.com)`\n\n"
-                f"**Emojis:**\n"
-                f"• Use `:nome_emoji:` ou copie emojis do server\n"
-                f"• Exemplos: 🎯 💎 ✨ 🔥 ⭐ 🏆 📦\n\n"
-                f"**Exemplos de Loja Bem Formatada:**\n"
-                f"```\n"
-                f"🎯 RECURSO X - R$ 100\n"
-                f"├ Descrição detalhada\n"
-                f"├ 📊 Em estoque: 50\n"
-                f"└ 📞 Contato: MP\n"
-                f"```\n\n"
-                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                f"✨ **Dica:** Use criatividade com emojis e formatação para deixar sua loja atrativa!"
+                f"Use `!fecharloja` para encerrar sua loja quando desejar.\n\n"
+                f"✨ **Dica:** Confira o canal de dicas de formatação para deixar sua loja mais atrativa!"
             )
             
             await canal_loja.send(mensagem_inicial)
@@ -200,6 +189,9 @@ class ModalCriarLoja(discord.ui.Modal):
             
             lojas[user_id_str] = {
                 "nome": self.nome_loja.value,
+                "tribo": self.nome_tribo.value,
+                "mapa_base": self.mapa_base.value,
+                "mapas_entrega": self.mapas_entrega.value,
                 "channel_id": canal_loja.id,
                 "owner_id": interaction.user.id,
                 "owner_name": interaction.user.name,
@@ -209,6 +201,67 @@ class ModalCriarLoja(discord.ui.Modal):
             }
             
             salvar_lojas(lojas)
+            
+            # Enviar dicas de formatação no canal específico
+            try:
+                canal_tips = interaction.guild.get_channel(TIPS_CHANNEL_ID)
+                if canal_tips:
+                    embed_tips = discord.Embed(
+                        title=f"📝 Dicas de Formatação - {self.nome_loja.value}",
+                        description=f"Loja do(a) {interaction.user.mention}",
+                        color=discord.Color.gold()
+                    )
+                    embed_tips.add_field(
+                        name="Estilos de Texto",
+                        value="• **Negrito** - `**texto**`\n"
+                              "• *Itálico* - `*texto*` ou `_texto_`\n"
+                              "• ***Negrito + Itálico*** - `***texto***`\n"
+                              "• ~~Tachado~~ - `~~texto~~`\n"
+                              "• __Sublinhado__ - `__texto__`\n"
+                              "• `Código inline` - `` `código` ``",
+                        inline=False
+                    )
+                    embed_tips.add_field(
+                        name="Blocos de Código",
+                        value="```\nCod aqui\n```\n"
+                              "(Útil para mostrar estatísticas formatadas)",
+                        inline=False
+                    )
+                    embed_tips.add_field(
+                        name="Listas",
+                        value="• Bullet com `•` ou `-`\n"
+                              "1. Numerada com número seguido de `.`",
+                        inline=False
+                    )
+                    embed_tips.add_field(
+                        name="Citar Texto",
+                        value="> Use `>` para criar uma citação\n"
+                              ">> Use `>>` para citação aninhada",
+                        inline=False
+                    )
+                    embed_tips.add_field(
+                        name="Spoilers & Links",
+                        value="• ||Texto escondido|| - `||texto||`\n"
+                              "• [Texto](url) - `[Texto](https://link.com)`",
+                        inline=False
+                    )
+                    embed_tips.add_field(
+                        name="Emojis Úteis",
+                        value="🎯 💎 ✨ 🔥 ⭐ 🏆 📦 🛍️ 💰 📊",
+                        inline=False
+                    )
+                    embed_tips.add_field(
+                        name="Exemplo de Produto",
+                        value="```\n🎯 RECURSO X - 100 unidades\n"
+                              "├ Descrição detalhada aqui\n"
+                              "├ 📊 Em estoque: 50\n"
+                              "└ 📞 Contato: MP\n```",
+                        inline=False
+                    )
+                    embed_tips.set_footer(text="Use criatividade! 🎨")
+                    await canal_tips.send(embed=embed_tips)
+            except Exception as e:
+                print(f"⚠️ [LOJAS] Erro ao enviar dicas: {e}")
             
             # Confirmar ao usuário
             await interaction.followup.send(
