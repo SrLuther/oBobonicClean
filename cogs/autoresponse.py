@@ -20,8 +20,9 @@ def get_datetime_pt_br():
     return data_extenso, hora, now.timestamp()
 
 def load_data():
+    """Carrega dados do bot de forma otimizada."""
     try:
-        with open(DATA_FILE, 'r') as f:
+        with open(DATA_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         return {
@@ -31,8 +32,12 @@ def load_data():
         }
 
 def save_data(data):
-    with open(DATA_FILE, 'w') as f:
-        json.dump(data, f, indent=4)
+    """Salva dados do bot de forma otimizada."""
+    try:
+        with open(DATA_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+    except (IOError, OSError) as e:
+        print(f"❌ ERRO ao salvar dados: {e}")
 
 class AutoResponse(commands.Cog):
     def __init__(self, bot):
@@ -63,16 +68,24 @@ class AutoResponse(commands.Cog):
         ]
 
     async def update_member_list_message(self, guild):
+        """Atualiza mensagem da lista de membros de forma otimizada."""
+        try:
+            from utils.cache import channel_cache
+            list_channel = channel_cache.get(self.bot, TARGET_CHANNEL_ID) if channel_cache else guild.get_channel(TARGET_CHANNEL_ID)
+        except ImportError:
+            list_channel = guild.get_channel(TARGET_CHANNEL_ID)
+        
         data_extenso, hora, _ = get_datetime_pt_br()
-
-        list_channel = guild.get_channel(TARGET_CHANNEL_ID)
-        if not list_channel:
+        
+        if not isinstance(list_channel, discord.TextChannel):
             print(f"ERRO: Canal de lista com ID {TARGET_CHANNEL_ID} não encontrado.")
             return
 
         member_list_text = ""
+        # Otimizado: evita múltiplas buscas de membros, filtra None antes
+        member_items = [(num, guild.get_member(int(mid))) for mid, num in self.member_data.items()]
         sorted_members = sorted(
-            [(num, guild.get_member(int(mid))) for mid, num in self.member_data.items()],
+            [(num, mem) for num, mem in member_items if mem is not None],
             key=lambda x: x[0]
         )
 
@@ -150,7 +163,12 @@ class AutoResponse(commands.Cog):
         self.member_data[str(member.id)] = member_number
 
         try:
-            role = member.guild.get_role(MEMBER_ROLE_ID)
+            try:
+                from utils.cache import role_cache
+                role = role_cache.get(member.guild, MEMBER_ROLE_ID) if role_cache else member.guild.get_role(MEMBER_ROLE_ID)
+            except ImportError:
+                role = member.guild.get_role(MEMBER_ROLE_ID)
+            
             if role:
                 await member.add_roles(role)
                 print(f"[CARGO] Concedido '{role.name}' a {member.name}")
@@ -159,7 +177,11 @@ class AutoResponse(commands.Cog):
         except Exception as e:
             print(f"[ERRO CARGO] Falha ao adicionar cargo a {member.name}: {e}")
 
-        canal_boas_vindas = member.guild.get_channel(TARGET_CHANNEL_ID)
+        try:
+            from utils.cache import channel_cache
+            canal_boas_vindas = channel_cache.get(self.bot, TARGET_CHANNEL_ID) if channel_cache else member.guild.get_channel(TARGET_CHANNEL_ID)
+        except ImportError:
+            canal_boas_vindas = member.guild.get_channel(TARGET_CHANNEL_ID)
 
         if canal_boas_vindas:
             data_extenso, hora, _ = get_datetime_pt_br()

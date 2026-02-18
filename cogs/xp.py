@@ -6,6 +6,33 @@ import os
 from operator import itemgetter
 import config
 from typing import Optional, Any, Dict, Tuple, List
+import asyncio
+try:
+    from utils.json_utils import load_json_async, save_json_async, load_json_sync, save_json_sync
+except ImportError:
+    # Fallback caso utils não esteja disponível
+    def load_json_sync(file_path: str, default: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        if not os.path.exists(file_path):
+            return default or {}
+        try:
+            with open(file_path, 'r') as f:
+                return json.load(f)
+        except Exception:
+            return default or {}
+    
+    async def load_json_async(file_path: str, default: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        return load_json_sync(file_path, default)
+    
+    def save_json_sync(file_path: str, data: Dict[str, Any], ensure_dir: bool = True) -> bool:
+        try:
+            with open(file_path, 'w') as f:
+                json.dump(data, f, indent=2)
+            return True
+        except Exception:
+            return False
+    
+    async def save_json_async(file_path: str, data: Dict[str, Any], ensure_dir: bool = True) -> bool:
+        return save_json_sync(file_path, data, ensure_dir)
 
 LEADERBOARD_CHANNEL_ID = config.LEADERBOARD_CHANNEL_ID
 XP_MIN = config.XP_MIN
@@ -15,18 +42,45 @@ LEVEL_REWARDS = config.LEVEL_REWARDS
 
 XP_FILE = "xp.json"
 
+# Cache em memória para dados de XP (evita múltiplas leituras)
+_xp_data_cache: Optional[Dict[str, Any]] = None
+_xp_dirty = False
+_xp_lock = asyncio.Lock()
+
 def load_xp_data(file_path: str) -> Dict[str, Any]:
-    if not os.path.exists(file_path):
-        return {}
-    try:
-        with open(file_path, "r") as f:
-            return json.load(f)
-    except json.JSONDecodeError:
-        return {}
+    """Versão síncrona para uso em thread executor."""
+    global _xp_data_cache
+    if _xp_data_cache is not None:
+        return _xp_data_cache
+    
+    _xp_data_cache = load_json_sync(file_path, {})
+    return _xp_data_cache
+
+async def load_xp_data_async(file_path: str) -> Dict[str, Any]:
+    """Versão assíncrona otimizada."""
+    global _xp_data_cache
+    if _xp_data_cache is not None:
+        return _xp_data_cache
+    
+    _xp_data_cache = await load_json_async(file_path, {})
+    return _xp_data_cache
+
+async def save_xp_data_async(file_path: str, data: Dict[str, Any]) -> None:
+    """Salva dados de XP de forma assíncrona com cache."""
+    global _xp_data_cache, _xp_dirty
+    async with _xp_lock:
+        _xp_data_cache = data.copy()
+        _xp_dirty = True
+        await save_json_async(file_path, data)
+        _xp_dirty = False
 
 def save_xp_data(file_path: str, data: Dict[str, Any]) -> None:
-    with open(file_path, "w") as f:
-        json.dump(data, f, indent=4)
+    """Versão síncrona para uso em thread executor."""
+    global _xp_data_cache, _xp_dirty
+    _xp_data_cache = data.copy()
+    _xp_dirty = True
+    save_json_sync(file_path, data)
+    _xp_dirty = False
 def get_level_xp_needed(level: int) -> int:
     return 5 * level**2 + 50 * level + 100
 
@@ -37,16 +91,56 @@ class XPSystem(commands.Cog):
         self.LEADERBOARD_CHANNEL_ID: int = LEADERBOARD_CHANNEL_ID
         self.rewards: Dict[int, int] = {int(k): int(v) for k, v in LEVEL_REWARDS.items()}
         self.cooldowns: Dict[int, float] = {}
+        # Batch save para evitar escritas excessivas
+        self._pending_saves: Dict[str, Dict[str, Any]] = {}
+        self._save_task: Optional[asyncio.Task] = None
 
     async def cog_unload(self) -> None:
+        """Cleanup ao descarregar o cog."""
         if hasattr(self, "update_leaderboard_task") and self.update_leaderboard_task.is_running():
             self.update_leaderboard_task.cancel()
+        # Salva dados pendentes
+        if self._pending_saves:
+            await self._flush_pending_saves()
+        if self._save_task and not self._save_task.done():
+            self._save_task.cancel()
+            try:
+                await self._save_task
+            except asyncio.CancelledError:
+                pass
+    
+    async def _flush_pending_saves(self) -> None:
+        """Salva todos os dados pendentes."""
+        if not self._pending_saves:
+            return
+        
+        data = await load_xp_data_async(self.xp_file)
+        data.update(self._pending_saves)
+        await save_xp_data_async(self.xp_file, data)
+        self._pending_saves.clear()
+    
+    async def _auto_save_task(self) -> None:
+        """Task para salvar periodicamente os dados pendentes."""
+        while True:
+            try:
+                await asyncio.sleep(60)  # Salva a cada minuto
+                await self._flush_pending_saves()
+            except asyncio.CancelledError:
+                await self._flush_pending_saves()
+                break
+            except Exception as e:
+                print(f"[xp] Erro no auto-save: {e}")
 
     @commands.Cog.listener()
     async def on_ready(self):
+        """Inicia tasks ao bot ficar pronto."""
         if not hasattr(self, "update_leaderboard_task") or not self.update_leaderboard_task.is_running():
             print("[xp] Tarefa de ranking iniciada.")
             self.update_leaderboard_task.start()
+        
+        # Inicia task de auto-save
+        if not self._save_task or self._save_task.done():
+            self._save_task = asyncio.create_task(self._auto_save_task())
 
     @tasks.loop(hours=1)
     async def update_leaderboard_task(self) -> None:
@@ -72,12 +166,14 @@ class XPSystem(commands.Cog):
             print(f"[xp] ❌ ERRO CRÍTICO na tarefa de ranking: {e}. O bot continua rodando.")
 
     async def get_user_data(self, user_id: int) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-        data: Dict[str, Any] = await self.bot.loop.run_in_executor(None, load_xp_data, self.xp_file)
+        """Obtém dados do usuário com cache otimizado."""
+        data: Dict[str, Any] = await load_xp_data_async(self.xp_file)
         user_data: Dict[str, Any] = data.get(str(user_id), {"xp": 0, "level": 0})
         return data, user_data
 
     async def save_user_data(self, data: Dict[str, Any]) -> None:
-        await self.bot.loop.run_in_executor(None, save_xp_data, self.xp_file, data)
+        """Salva dados do usuário de forma assíncrona otimizada."""
+        await save_xp_data_async(self.xp_file, data)
 
     async def add_xp_and_check_level(self, member: discord.Member, amount: int) -> Tuple[int, bool]:
         user_id = member.id
@@ -92,8 +188,11 @@ class XPSystem(commands.Cog):
             leveled_up = True
         new_level = user_data["level"]
         all_data[str(user_id)] = user_data
-        await self.save_user_data(all_data)
+        # Usa save pendente para melhor performance
+        self._pending_saves[str(user_id)] = user_data
+        # Salva imediatamente apenas se subiu de nível (importante)
         if old_level < new_level:
+            await self.save_user_data(all_data)
             await self.check_and_assign_rewards(member, old_level, new_level)
         return new_level, leveled_up
 
@@ -109,7 +208,8 @@ class XPSystem(commands.Cog):
                         print(f"❌ ERRO: Não consegui adicionar o cargo {role.name}. Permissões/Hierarquia insuficientes.")
 
     async def generate_leaderboard_embed(self, guild: discord.Guild, auto_update: bool = False) -> discord.Embed:
-        all_data: Dict[str, Any] = await self.bot.loop.run_in_executor(None, load_xp_data, self.xp_file)
+        """Gera embed do leaderboard com cache otimizado."""
+        all_data: Dict[str, Any] = await load_xp_data_async(self.xp_file)
         leaderboard: List[Tuple[int, int, int, int]] = []
         for user_id_str, data in all_data.items():
             uid = int(user_id_str)

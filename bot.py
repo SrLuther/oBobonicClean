@@ -139,18 +139,23 @@ async def criar_painel_ticket():
     """
     Cria um painel persistente na sala CANAL_PAINEL_ID com o botão
     para abrir ticket. Se já existir uma mensagem fixa, não cria outra.
+    Otimizado: verifica apenas mensagens fixadas.
     """
-    canal = bot.get_channel(CANAL_PAINEL_ID)
+    try:
+        from utils.cache import channel_cache
+        canal = channel_cache.get(bot, CANAL_PAINEL_ID) if channel_cache else bot.get_channel(CANAL_PAINEL_ID)
+    except ImportError:
+        canal = bot.get_channel(CANAL_PAINEL_ID)
+    
     if not isinstance(canal, discord.TextChannel):
         print(f"❌ Canal do painel ({CANAL_PAINEL_ID}) não encontrado.")
         return
 
-    # Checa se já existe uma mensagem fixada com painel
-    mensagens = [msg async for msg in canal.history(limit=50)]
-    for msg in mensagens:
-        if msg.pinned:
-            print("✅ Painel já fixado encontrado, pulando criação.")
-            return
+    # Checa apenas mensagens fixadas (mais eficiente)
+    pinned_messages = [msg async for msg in canal.history(limit=50) if msg.pinned]
+    if pinned_messages:
+        print("✅ Painel já fixado encontrado, pulando criação.")
+        return
 
     from cogs.tickets.tickets_views import gerar_view_ticket
     try:

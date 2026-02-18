@@ -5,20 +5,48 @@ import re
 from datetime import datetime
 from typing import Optional, List, Any, cast
 from config import CANAL_LOGS_ID, QUARANTINE_ROLE_ID
+try:
+    from utils.cache import channel_cache
+except ImportError:
+    # Fallback se utils não estiver disponível
+    channel_cache = None
 
 class Moderation(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot: commands.Bot = bot
+        self._compile_badwords()
+        # Regex pré-compilada para convites (melhor performance)
+        self.invite_regex = re.compile(r"(discord\.gg/|discord\.com/invite/)", re.IGNORECASE)
+    
+    def _compile_badwords(self) -> None:
+        """Carrega e compila lista de palavrões em regex otimizada."""
         try:
             with open("palavroes.txt", "r", encoding="utf8") as f:
-                self.badwords: List[str] = [w.strip().lower() for w in f.readlines()]
+                words = [w.strip().lower() for w in f.readlines() if w.strip()]
+            
+            if words:
+                # Cria regex com word boundaries para melhor performance
+                pattern = "|".join(re.escape(word) for word in words)
+                self.badwords_regex = re.compile(r"\b(" + pattern + r")\b", re.IGNORECASE)
+                self.badwords_count = len(words)
+            else:
+                self.badwords_regex = None
+                self.badwords_count = 0
+                
+            print(f"✅ Filtro de palavrões carregado: {self.badwords_count} palavras.")
         except FileNotFoundError:
             print("⚠️ Arquivo palavroes.txt não encontrado. Filtro de palavrões desativado.")
-            self.badwords = []
+            self.badwords_regex = None
+            self.badwords_count = 0
 
     def get_log_channel(self, guild: Optional[discord.Guild]) -> Optional[discord.TextChannel]:
-        channel = self.bot.get_channel(CANAL_LOGS_ID)
-        return cast(Optional[discord.TextChannel], channel)
+        """Obtém canal de logs com cache."""
+        if channel_cache:
+            channel = channel_cache.get(self.bot, CANAL_LOGS_ID)
+            return cast(Optional[discord.TextChannel], channel) if isinstance(channel, discord.TextChannel) else None
+        else:
+            channel = self.bot.get_channel(CANAL_LOGS_ID)
+            return cast(Optional[discord.TextChannel], channel)
 
     @commands.command(name="faxina", aliases=['purgeall'])
     @commands.has_permissions(manage_messages=True)
@@ -111,7 +139,11 @@ class Moderation(commands.Cog):
         mensagens_apagadas: int = 0
 
         guild: discord.Guild = ctx.guild
-        quarantine_role: Optional[discord.Role] = guild.get_role(QUARANTINE_ROLE_ID)
+        try:
+            from utils.cache import role_cache
+            quarantine_role: Optional[discord.Role] = role_cache.get(guild, QUARANTINE_ROLE_ID) if role_cache else guild.get_role(QUARANTINE_ROLE_ID)
+        except ImportError:
+            quarantine_role: Optional[discord.Role] = guild.get_role(QUARANTINE_ROLE_ID)
         if quarantine_role:
             try:
                 await usuario.edit(roles=[quarantine_role], reason="Conta comprometida/Raid - Quarentena.")
@@ -164,15 +196,16 @@ class Moderation(commands.Cog):
         log_channel: Optional[discord.TextChannel] = self.get_log_channel(message.guild)
         now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
-        convite_regex = r"(discord\.gg/|discord\.com/invite/)"
-        if re.search(convite_regex, message.content.lower()):
+        # Verifica convites (regex pré-compilada para melhor performance)
+        if self.invite_regex.search(message.content):
             await message.delete()
             if log_channel:
                 await log_channel.send(f"🚫 Convite bloqueado ({now}) de {message.author.mention}:\n`{message.content}`")
             await message.channel.send(f"{message.author.mention}, enviar convites é proibido.", delete_after=5)
             return
 
-        if any(bad in message.content.lower() for bad in self.badwords):
+        # Verifica palavrões (regex compilada para melhor performance)
+        if self.badwords_regex and self.badwords_regex.search(message.content):
             await message.delete()
             if log_channel:
                 await log_channel.send(f"⚠ Palavrão detectado ({now}) de {message.author.mention}:\n`{message.content}`")

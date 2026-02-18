@@ -37,18 +37,30 @@ def ensure_data_dir() -> None:
         os.makedirs("data")
 
 def load_cache() -> Dict[str, Any]:
+    """Carrega cache com fallback otimizado."""
     ensure_data_dir()
     if not os.path.exists(CACHE_FILE):
         return {"sent": []}
     try:
         with open(CACHE_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+            # Limpa cache muito grande na memória
+            sent_list = data.get("sent", [])
+            if len(sent_list) > 500:
+                data["sent"] = sent_list[-500:]
+            return data
     except Exception:
         return {"sent": []}
 
 def save_cache(cache: Dict[str, Any]) -> None:
+    """Salva cache de forma otimizada."""
     ensure_data_dir()
     try:
+        # Limita tamanho antes de salvar
+        sent_list = cache.get("sent", [])
+        if len(sent_list) > 500:
+            cache["sent"] = sent_list[-500:]
+        
         with open(CACHE_FILE, "w", encoding="utf-8") as f:
             json.dump(cache, f, ensure_ascii=False, indent=2)
     except Exception:
@@ -58,10 +70,11 @@ def is_new(cache: Dict[str, Any], pid: str) -> bool:
     return pid not in cache.get("sent", [])
 
 def mark(cache: Dict[str, Any], pid: str) -> None:
+    """Marca promoção como enviada (otimizado para evitar escritas excessivas)."""
     cache.setdefault("sent", []).append(pid)
-    if len(cache["sent"]) > 500:
-        cache["sent"] = cache["sent"][-500:]
-    save_cache(cache)
+    # Limita tamanho, mas não salva toda vez (save_cache é chamado periodicamente)
+    if len(cache["sent"]) > 1000:  # Limite maior em memória
+        cache["sent"] = cache["sent"][-500:]  # Mantém apenas os últimos 500
 
 def extract_discount(text: str) -> int:
     try:
@@ -399,13 +412,23 @@ class Sales(commands.Cog):
         return out
 
     async def send(self, promotions: List[Dict[str, Any]]) -> int:
-        channel = self.bot.get_channel(self.channel_id)
+        """Envia promoções filtradas e ordenadas."""
+        try:
+            from utils.cache import channel_cache
+            channel = channel_cache.get(self.bot, self.channel_id) if channel_cache else self.bot.get_channel(self.channel_id)
+        except ImportError:
+            channel = self.bot.get_channel(self.channel_id)
+        
         if not isinstance(channel, discord.TextChannel):
             return 0
+        
         await self._ensure_rates()
+        
+        # Filtra e ordena de forma otimizada
         filtered = [x for x in promotions if int(x.get("discount", 0)) >= 50]
         filtered.sort(key=lambda x: (0 if x.get("steam") else 1, -int(x.get("discount", 0))))
         filtered = filtered[:20]
+        
         sent_count = 0
         for p in filtered:
             pid = p.get("id") or p.get("link") or (p.get("nome", "") + p.get("loja", ""))
@@ -462,6 +485,11 @@ class Sales(commands.Cog):
                 await asyncio.sleep(0.8)
             except Exception:
                 continue
+        
+        # Salva cache apenas uma vez ao final (otimização)
+        if sent_count > 0:
+            save_cache(self.cache)
+        
         return sent_count
 
     async def _ensure_rates(self) -> None:
