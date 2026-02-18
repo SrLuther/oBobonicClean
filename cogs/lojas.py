@@ -387,26 +387,21 @@ class Lojas(commands.Cog):
                 ephemeral=True
             )
     
-    @app_commands.command(name="verificar_painel_lojas", description="Verifica e cria o painel de lojas se necessário")
-    async def verificar_painel_lojas(self, interaction: discord.Interaction) -> None:
+    @commands.command(name="lojastart", description="Verifica e cria o painel de lojas se necessário")
+    async def lojastart(self, ctx: commands.Context) -> None:
         """Verifica se o painel existe e o cria se necessário"""
-        await interaction.response.defer(ephemeral=True)
         
         try:
-            guild = interaction.guild
+            guild = ctx.guild
             if not guild:
-                await interaction.followup.send(
-                    "❌ Erro: Não foi possível identificar o servidor.",
-                    ephemeral=True
-                )
+                await ctx.send("❌ Erro: Não foi possível identificar o servidor.")
                 return
             
             # Obter o canal do painel
             canal_painel = guild.get_channel(PANEL_CHANNEL_ID)
             if not isinstance(canal_painel, discord.TextChannel):
-                await interaction.followup.send(
-                    f"❌ Erro: Canal de painel ({PANEL_CHANNEL_ID}) não encontrado ou inválido.",
-                    ephemeral=True
+                await ctx.send(
+                    f"❌ Erro: Canal de painel ({PANEL_CHANNEL_ID}) não encontrado ou inválido."
                 )
                 return
             
@@ -414,11 +409,10 @@ class Lojas(commands.Cog):
             try:
                 mensagens_fixadas = [msg async for msg in canal_painel.history() if msg.pinned]
                 if mensagens_fixadas:
-                    await interaction.followup.send(
+                    await ctx.send(
                         f"✅ **Painel já existe!**\n\n"
                         f"O painel de lojas está disponível em {canal_painel.mention}\n"
-                        f"Mensagens fixadas encontradas: {len(mensagens_fixadas)}",
-                        ephemeral=True
+                        f"Mensagens fixadas encontradas: {len(mensagens_fixadas)}"
                     )
                     print(f"✅ [LOJAS] Painel verificado - já existe no canal {PANEL_CHANNEL_ID}")
                     return
@@ -452,19 +446,17 @@ class Lojas(commands.Cog):
             # Fixar a mensagem
             await painel_msg.pin()
             
-            await interaction.followup.send(
+            await ctx.send(
                 f"✅ **Painel criado e fixado com sucesso!**\n\n"
-                f"O painel de lojas está disponível em {canal_painel.mention}",
-                ephemeral=True
+                f"O painel de lojas está disponível em {canal_painel.mention}"
             )
             
             print(f"✅ [LOJAS] Painel criado e fixado no canal {PANEL_CHANNEL_ID}")
             
         except Exception as e:
             print(f"❌ [LOJAS] Erro ao verificar/criar painel: {e}")
-            await interaction.followup.send(
-                f"❌ Erro ao verificar/criar painel: {str(e)}",
-                ephemeral=True
+            await ctx.send(
+                f"❌ Erro ao verificar/criar painel: {str(e)}"
             )
 
 # ============================================
