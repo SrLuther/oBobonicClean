@@ -75,8 +75,10 @@ class TicketsController(commands.Cog):
     # CRIAR TICKET
     # ------------------------
     async def criar_ticket(self, interaction: discord.Interaction, descricao: str) -> None:
+        print(f"🔍 [TICKETS] Iniciando criação de ticket...")
         guild: Optional[discord.Guild] = interaction.guild
         if guild is None:
+            print(f"❌ [TICKETS] Guild é None")
             try:
                 await interaction.followup.send("❌ Esta ação só pode ser usada dentro de um servidor.", ephemeral=True)
             except Exception:
@@ -84,7 +86,10 @@ class TicketsController(commands.Cog):
             return
         
         try:
+            print(f"🔍 [TICKETS] Guild encontrada: {guild.name} ({guild.id})")
             ticket_id = gerar_ticket_id()
+            print(f"🔍 [TICKETS] Ticket ID gerado: {ticket_id}")
+            
             usuario = interaction.user
             membro: Optional[discord.Member]
             if isinstance(usuario, discord.Member):
@@ -92,7 +97,9 @@ class TicketsController(commands.Cog):
             else:
                 membro = guild.get_member(usuario.id)
             
+            print(f"🔍 [TICKETS] Membro: {membro}")
             if membro is None:
+                print(f"❌ [TICKETS] Membro é None")
                 try:
                     await interaction.followup.send("❌ Não foi possível identificar o membro do servidor.", ephemeral=True)
                 except Exception:
@@ -100,13 +107,17 @@ class TicketsController(commands.Cog):
                 return
             
             nome_canal = f"TICKET {ticket_id} - {membro.name}"
+            print(f"🔍 [TICKETS] Nome do canal: {nome_canal}")
+            
             categoria = guild.get_channel(config.TICKET_CATEGORY_ID)
+            print(f"🔍 [TICKETS] Categoria encontrada: {categoria}")
+            
             if not isinstance(categoria, discord.CategoryChannel):
-                print(f"❌ Categoria de tickets inválida ({config.TICKET_CATEGORY_ID}).")
+                print(f"❌ [TICKETS] Categoria inválida ou não encontrada ({config.TICKET_CATEGORY_ID}).")
                 try:
-                    await interaction.followup.send("❌ Categoria de tickets não encontrada. Avise a equipe.", ephemeral=True)
-                except Exception:
-                    pass
+                    await interaction.followup.send(f"❌ Categoria de tickets não encontrada (ID: {config.TICKET_CATEGORY_ID}).", ephemeral=True)
+                except Exception as e:
+                    print(f"❌ Erro ao enviar mensagem de followup: {e}")
                 return
 
             overwrites: Mapping[Union[discord.Role, discord.Member, discord.Object], discord.PermissionOverwrite] = {
@@ -123,9 +134,11 @@ class TicketsController(commands.Cog):
                 if role:
                     overwrites[role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
 
+            print(f"🔍 [TICKETS] Criando canal de texto...")
             canal_ticket = await guild.create_text_channel(
                 nome_canal, category=categoria, overwrites=overwrites
             )
+            print(f"✅ [TICKETS] Canal criado: {canal_ticket.mention}")
 
             # Mensagem inicial
             from .tickets_views import gerar_ticket_view
@@ -148,11 +161,13 @@ class TicketsController(commands.Cog):
             print(f"✅ Ticket #{ticket_id} criado por {membro.name}")
         
         except Exception as e:
+            import traceback
             print(f"❌ Erro ao criar ticket: {type(e).__name__}: {e}")
+            print(traceback.format_exc())
             try:
-                await interaction.followup.send(f"❌ Erro ao criar ticket: {type(e).__name__}", ephemeral=True)
-            except Exception:
-                pass
+                await interaction.followup.send(f"❌ Erro ao criar ticket: {type(e).__name__}: {e}", ephemeral=True)
+            except Exception as e2:
+                print(f"❌ Erro ao enviar mensagem de erro: {e2}")
 
     # ------------------------
     # FECHAR TICKET

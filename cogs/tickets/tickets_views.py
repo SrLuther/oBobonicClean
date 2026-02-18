@@ -19,9 +19,22 @@ def gerar_view_ticket(controller: 'TicketsController') -> View:
             self.add_item(self.descricao)
 
         async def on_submit(self, interaction: discord.Interaction):
-            # Defer para dar tempo de processar
-            await interaction.response.defer(ephemeral=True)
-            await controller.criar_ticket(interaction, self.descricao.value)
+            try:
+                # Responde imediatamente
+                await interaction.response.defer(ephemeral=True)
+            except Exception as e:
+                print(f"❌ Erro ao fazer defer: {e}")
+                return
+            
+            # Processa em background
+            try:
+                await controller.criar_ticket(interaction, self.descricao.value)
+            except Exception as e:
+                print(f"❌ Erro ao criar ticket (background): {e}")
+                try:
+                    await interaction.followup.send(f"❌ Erro ao processar: {e}", ephemeral=True)
+                except Exception:
+                    pass
 
     class AbrirTicketButton(View):
         def __init__(self):
