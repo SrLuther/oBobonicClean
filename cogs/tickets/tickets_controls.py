@@ -30,6 +30,38 @@ class TicketsController(commands.Cog):
         except Exception as e:
             print(f"⚠️ Erro ao registrar view de tickets: {e}")
 
+    async def criar_painel_ticket(self) -> None:
+        """Cria painel de tickets com cache otimizado."""
+        if channel_cache:
+            canal = channel_cache.get(self.bot, config.CANAL_PAINEL_ID)
+        else:
+            canal = self.bot.get_channel(config.CANAL_PAINEL_ID)
+        
+        if not isinstance(canal, discord.TextChannel):
+            print(f"❌ Canal do painel ({config.CANAL_PAINEL_ID}) não encontrado.")
+            return
+
+        mensagens = [msg async for msg in canal.history(limit=50)]
+        for msg in mensagens:
+            if msg.pinned:
+                print("✅ Painel já fixado encontrado, pulando criação.")
+                return
+
+        from .tickets_views import gerar_view_ticket
+        view = gerar_view_ticket(self)
+        painel_msg = await canal.send(
+            "🎫 **Abra seu ticket abaixo!**\n\n"
+            "Para abrir seu ticket:\n"
+            "• Clique no botão **Abrir Ticket**.\n"
+            "• Informe um **resumo objetivo** do problema (assunto + detalhes).\n"
+            "• Inclua **dados úteis** (IDs, links, imagens).\n"
+            "• Não compartilhe **senhas** ou dados sensíveis.\n\n"
+            "Após abrir, um canal exclusivo será criado para o seu atendimento.",
+            view=view
+        )
+        await painel_msg.pin()
+        print(f"✅ Painel persistente criado em {canal.name} ({canal.id})")
+
     @commands.command(name="ticketpanel", aliases=["paineltickets", "painel"])
     @commands.has_permissions(administrator=True)
     async def ticketpanel(self, ctx: commands.Context[Any]) -> None:
