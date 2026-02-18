@@ -386,6 +386,86 @@ class Lojas(commands.Cog):
                 f"❌ Erro ao buscar suas lojas: {str(e)}",
                 ephemeral=True
             )
+    
+    @app_commands.command(name="verificar_painel_lojas", description="Verifica e cria o painel de lojas se necessário")
+    async def verificar_painel_lojas(self, interaction: discord.Interaction) -> None:
+        """Verifica se o painel existe e o cria se necessário"""
+        await interaction.response.defer(ephemeral=True)
+        
+        try:
+            guild = interaction.guild
+            if not guild:
+                await interaction.followup.send(
+                    "❌ Erro: Não foi possível identificar o servidor.",
+                    ephemeral=True
+                )
+                return
+            
+            # Obter o canal do painel
+            canal_painel = guild.get_channel(PANEL_CHANNEL_ID)
+            if not isinstance(canal_painel, discord.TextChannel):
+                await interaction.followup.send(
+                    f"❌ Erro: Canal de painel ({PANEL_CHANNEL_ID}) não encontrado ou inválido.",
+                    ephemeral=True
+                )
+                return
+            
+            # Verificar se já existe mensagem fixada
+            try:
+                mensagens_fixadas = [msg async for msg in canal_painel.history() if msg.pinned]
+                if mensagens_fixadas:
+                    await interaction.followup.send(
+                        f"✅ **Painel já existe!**\n\n"
+                        f"O painel de lojas está disponível em {canal_painel.mention}\n"
+                        f"Mensagens fixadas encontradas: {len(mensagens_fixadas)}",
+                        ephemeral=True
+                    )
+                    print(f"✅ [LOJAS] Painel verificado - já existe no canal {PANEL_CHANNEL_ID}")
+                    return
+            except Exception as e:
+                print(f"⚠️ [LOJAS] Erro ao verificar mensagens fixadas: {e}")
+            
+            # Criar o painel se não existir
+            painel_msg = await canal_painel.send(
+                "🏪 **SISTEMA DE LOJAS PESSOAIS**\n\n"
+                "═══════════════════════════════════════\n\n"
+                "**Bem-vindo ao sistema de lojas!**\n\n"
+                "Clique no botão abaixo para criar sua própria loja "
+                "e começar a vender seus recursos, dinossauros e serviços.\n\n"
+                "**✨ Como Funciona:**\n"
+                "1️⃣ Clique em \"Criar Minha Loja\"\n"
+                "2️⃣ Defina um nome para sua loja\n"
+                "3️⃣ Um canal exclusivo será criado para você\n"
+                "4️⃣ Publique seus produtos!\n\n"
+                "**⚙️ Gerenciamento:**\n"
+                "• Use `/fechar_loja` para encerrar sua loja\n"
+                "• Você é o único que pode postar em sua loja\n"
+                "• Lojas inativas podem ser reabertas\n\n"
+                "**💡 Dicas:**\n"
+                "• Descreva bem seus produtos\n"
+                "• Inclua preços e disponibilidade\n"
+                "• Seja claro na comunicação\n\n"
+                "═══════════════════════════════════════",
+                view=ViewCriarLoja(self.bot)
+            )
+            
+            # Fixar a mensagem
+            await painel_msg.pin()
+            
+            await interaction.followup.send(
+                f"✅ **Painel criado e fixado com sucesso!**\n\n"
+                f"O painel de lojas está disponível em {canal_painel.mention}",
+                ephemeral=True
+            )
+            
+            print(f"✅ [LOJAS] Painel criado e fixado no canal {PANEL_CHANNEL_ID}")
+            
+        except Exception as e:
+            print(f"❌ [LOJAS] Erro ao verificar/criar painel: {e}")
+            await interaction.followup.send(
+                f"❌ Erro ao verificar/criar painel: {str(e)}",
+                ephemeral=True
+            )
 
 # ============================================
 # SETUP
