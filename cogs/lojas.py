@@ -16,6 +16,7 @@ from typing import Optional, Any
 # ============================================
 PANEL_CHANNEL_ID = 1473763773805363414  # Canal onde o painel será enviado
 LOJAS_CATEGORY_ID = 1473763671485186239  # Categoria para criar os canais de lojas
+LOJAS_VIEWER_ROLE_ID = 1440828415103074356  # Cargo que pode visualizar todas as lojas
 LOJAS_FILE = "data/lojas.json"          # Arquivo para armazenar dados das lojas
 
 # ============================================
@@ -111,7 +112,10 @@ class ModalCriarLoja(discord.ui.Modal):
             # Criar o canal para a loja
             nome_canal = f"🦖-loja-{interaction.user.name}".replace(' ', '-').lower()[:32]
             
-            # Configurar permissões: apenas o dono e admins podem ver e escrever
+            # Obter o cargo visualizador
+            cargo_viewer = guild.get_role(LOJAS_VIEWER_ROLE_ID)
+            
+            # Configurar permissões: dono (total), cargo viewer (leitura), others (nada)
             permissoes = {
                 guild.default_role: discord.PermissionOverwrite(view_channel=False),
                 interaction.user: discord.PermissionOverwrite(
@@ -121,6 +125,14 @@ class ModalCriarLoja(discord.ui.Modal):
                     manage_webhooks=False
                 )
             }
+            
+            # Adicionar permissões para o cargo viewer se existir
+            if cargo_viewer:
+                permissoes[cargo_viewer] = discord.PermissionOverwrite(
+                    view_channel=True,
+                    send_messages=False,
+                    read_messages=True
+                )
             
             # Criar o canal
             canal_loja = await guild.create_text_channel(
