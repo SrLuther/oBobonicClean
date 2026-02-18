@@ -31,6 +31,84 @@ class TicketsController(commands.Cog):
             print(f"⚠️ Erro ao registrar view de tickets: {e}")
 
     # ------------------------
+    # COMANDO PARA ENVIAR PAINEL DE TICKETS
+    # ------------------------
+    @commands.command(name="ticketstart", description="Cria e envia o painel de tickets")
+    async def ticketstart(self, ctx: commands.Context) -> None:
+        """Envia o painel de tickets (botão para abrir ticket) no canal"""
+        
+        try:
+            guild = ctx.guild
+            if not guild:
+                await ctx.send("❌ Erro: Não foi possível identificar o servidor.", delete_after=5)
+                return
+            
+            # Verificar se já existe mensagem com painel de tickets
+            try:
+                mensagens_fixadas = [msg async for msg in ctx.channel.history() if msg.pinned]
+                if mensagens_fixadas:
+                    for msg in mensagens_fixadas:
+                        # Verificar se tem botão de "Abrir Ticket"
+                        if msg.components:
+                            for component in msg.components:
+                                if hasattr(component, 'children'):
+                                    for child in component.children:
+                                        if hasattr(child, 'custom_id') and child.custom_id == "abrir_ticket":
+                                            await ctx.send(
+                                                f"✅ **Painel já existe!**\n\n"
+                                                f"O painel de tickets está disponível em {ctx.channel.mention}\n"
+                                                f"Mensagem fixada encontrada.",
+                                                delete_after=10
+                                            )
+                                            print(f"✅ [TICKETS] Painel verificado - já existe no canal {ctx.channel.id}")
+                                            return
+            except Exception as e:
+                print(f"⚠️ [TICKETS] Erro ao verificar painel existente: {e}")
+            
+            # Criar o painel de tickets
+            painel_msg = await ctx.send(
+                "🎟️ **SISTEMA DE TICKETS DE SUPORTE**\n\n"
+                "═══════════════════════════════════════\n\n"
+                "**Bem-vindo ao sistema de suporte!**\n\n"
+                "Clique no botão abaixo para abrir um ticket "
+                "e solicitar ajuda com dúvidas ou problemas.\n\n"
+                "**✨ Como Funciona:**\n"
+                "1️⃣ Clique em \"Abrir Ticket\"\n"
+                "2️⃣ Descreva seu problema ou dúvida\n"
+                "3️⃣ Um canal privado será criado para você\n"
+                "4️⃣ Um membro da equipe irá ajudá-lo!\n\n"
+                "**⚙️ Gerenciamento do Ticket:**\n"
+                "• Um responsável irá **Assumir** seu atendimento\n"
+                "• Você pode enviar mensagens normalmente no canal\n"
+                "• Quando resolvido, clique **Fechar**\n"
+                "• Forneça feedback sobre o atendimento\n\n"
+                "**💡 Dicas:**\n"
+                "• Descreva seu problema com detalhes\n"
+                "• Seja paciente - a equipe está trabalhando\n"
+                "• Tickets inativos são automaticamente encerrados\n\n"
+                "═══════════════════════════════════════",
+                view=gerar_view_ticket(self)
+            )
+            
+            # Fixar a mensagem
+            await painel_msg.pin()
+            
+            await ctx.send(
+                f"✅ **Painel de tickets criado e fixado com sucesso!**\n\n"
+                f"O painel está disponível em {ctx.channel.mention}",
+                delete_after=10
+            )
+            
+            print(f"✅ [TICKETS] Painel criado e fixado no canal {ctx.channel.id}")
+            
+        except Exception as e:
+            print(f"❌ [TICKETS] Erro ao criar/verificar painel: {e}")
+            await ctx.send(
+                f"❌ Erro ao criar painel: {str(e)}",
+                delete_after=5
+            )
+
+    # ------------------------
     # CRIAR TICKET
     # ------------------------
     async def criar_ticket(self, interaction: discord.Interaction, descricao: str) -> None:
