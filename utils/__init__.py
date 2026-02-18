@@ -1,0 +1,2 @@
+# Utilitários compartilhados do bot
+
