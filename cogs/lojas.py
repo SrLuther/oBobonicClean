@@ -131,7 +131,7 @@ class ModalCriarLoja(discord.ui.Modal):
                 permissoes[cargo_viewer] = discord.PermissionOverwrite(
                     view_channel=True,
                     send_messages=False,
-                    read_messages=True
+                    read_message_history=True
                 )
             
             # Criar o canal
