@@ -19,6 +19,8 @@ def gerar_view_ticket(controller: 'TicketsController') -> View:
             self.add_item(self.descricao)
 
         async def on_submit(self, interaction: discord.Interaction):
+            # Defer para dar tempo de processar
+            await interaction.response.defer(ephemeral=True)
             await controller.criar_ticket(interaction, self.descricao.value)
 
     class AbrirTicketButton(View):
@@ -29,11 +31,14 @@ def gerar_view_ticket(controller: 'TicketsController') -> View:
         async def abrir_ticket_button(self, interaction: discord.Interaction, button: discord.ui.Button[Any]):
             try:
                 await interaction.response.send_modal(AbrirTicketModal())
-            except Exception:
+            except discord.errors.InteractionResponded:
+                pass
+            except Exception as e:
+                print(f"❌ Erro ao abrir modal de ticket: {type(e).__name__}: {e}")
                 try:
-                    await interaction.response.send_message("❌ Não foi possível abrir o modal de ticket.", ephemeral=True)
-                except Exception:
-                    pass
+                    await interaction.response.send_message(f"❌ Erro ao abrir ticket: {type(e).__name__}", ephemeral=True)
+                except Exception as e2:
+                    print(f"❌ Erro ao enviar mensagem de erro: {e2}")
 
     return AbrirTicketButton()
 
