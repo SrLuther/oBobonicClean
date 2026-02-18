@@ -169,7 +169,33 @@ async def criar_painel_ticket():
         print("⚠️ TicketsController não encontrado ou tipo inválido; painel não será criado por bot.py.")
         return
     view = gerar_view_ticket(controller)
-    painel_msg = await canal.send("🎫 Clique no botão abaixo para abrir um ticket:", view=view)
+    painel_msg = await canal.send(
+        "🎫 **SISTEMA DE SUPORTE - ABRA SEU TICKET**\n\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        "**📝 Como Abrir um Ticket:**\n"
+        "1️⃣ Clique no botão **Abrir Ticket** abaixo\n"
+        "2️⃣ Preencha a descrição do seu problema\n"
+        "3️⃣ Um canal privado será criado automaticamente\n"
+        "4️⃣ A equipe respondará em breve\n\n"
+        "**📋 Dicas Importantes:**\n"
+        "✅ **Seja específico:** Descreva o problema com detalhes\n"
+        "✅ **Inclua contexto:** O que você estava fazendo quando o problema ocorreu?\n"
+        "✅ **Dados úteis:** Screenshots, IDs, links (se aplicável)\n"
+        "✅ **Paciência:** Nossa equipe está trabalhando para resolver sua solicitação\n\n"
+        "**⚠️ Importante:**\n"
+        "❌ Não compartilhe senhas ou dados sensíveis\n"
+        "❌ Não mencione membros em tickets (pode bloquear o atendimento)\n"
+        "❌ Um ticket por assunto (melhor organização)\n\n"
+        "**⏱️ Tempo de Resposta:**\n"
+        "⚡ Prioridade Alta: 1-2 horas\n"
+        "⚡ Prioridade Normal: 2-4 horas\n"
+        "⚡ Prioridade Baixa: Até 24 horas\n\n"
+        "**📚 Categorias Comuns:**\n"
+        "🐛 Bug Report | 💡 Sugestão | ❓ Dúvida\n"
+        "🎮 Acesso | 💰 Pagamento | 📱 Técnico\n\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n",
+        view=view
+    )
     await painel_msg.pin()
     print(f"✅ Painel persistente criado e fixado em {canal.name} ({canal.id})")
 

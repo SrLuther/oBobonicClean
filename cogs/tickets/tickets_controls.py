@@ -103,15 +103,27 @@ class TicketsController(commands.Cog):
             from .tickets_views import gerar_ticket_view
             await canal_ticket.send(
                 (
-                    f"📝 **Descrição:** {descricao}\n\n"
-                    "Painel do ticket:\n"
-                    "• **Assumir** (Equipe): Registra o responsável pelo atendimento e inicia a triagem.\n"
-                    "• **Fechar**: Solicita um breve feedback e encerra o canal; um transcript é arquivado.\n\n"
-                    "Antes de fechar:\n"
-                    "• Confirme que o problema foi resolvido.\n"
-                    "• Envie um **feedback curto** (obrigatório).\n\n"
-                    "Reabertura:\n"
-                    "• Caso precise reabrir, avise a equipe após o encerramento."
+                    f"� **Olá {membro.mention}!**\n\n"
+                    f"**Ticket ID:** `#{ticket_id}`\n"
+                    f"**Status:** 🟡 Em Aberto\n"
+                    f"**Criado em:** <t:{int(__import__('time').time())}:f>\n\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                    f"**📝 Sua Descrição:**\n```\n{descricao}\n```\n\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                    f"**⏳ O que Acontece Agora?**\n"
+                    f"1. A equipe será notificada sobre seu ticket\n"
+                    f"2. Um responsável irá **Assumir** o atendimento\n"
+                    f"3. Você receberá respostas neste canal\n"
+                    f"4. Quando resolvido, o ticket será **Fechado**\n\n"
+                    f"**🛠️ Ações Disponíveis:**\n\n"
+                    f"Press os botões abaixo:\n"
+                    f"• **Assumir** (Equipe): Registra o responsável pelo atendimento\n"
+                    f"• **Fechar**: Finaliza o ticket (com feedback)\n\n"
+                    f"**💬 Como Proceder:**\n"
+                    f"• Envie mensagens normalmente neste canal\n"
+                    f"• Forneça informações adicionais conforme solicitado\n"
+                    f"• Seja paciente - estamos trabalhando para resolver!\n\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
                 ),
                 view=gerar_ticket_view(self, canal_ticket, membro, ticket_id)
             )
