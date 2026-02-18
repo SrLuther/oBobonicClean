@@ -17,6 +17,7 @@ from typing import Optional, Any
 PANEL_CHANNEL_ID = 1473763773805363414  # Canal onde o painel será enviado
 LOJAS_CATEGORY_ID = 1473763671485186239  # Categoria para criar os canais de lojas
 LOJAS_VIEWER_ROLE_ID = 1440828415103074356  # Cargo que pode visualizar todas as lojas
+COMMAND_CHANNEL_ID = 1440828497772679168  # Sala de comandos
 LOJAS_FILE = "data/lojas.json"          # Arquivo para armazenar dados das lojas
 
 # ============================================
@@ -314,7 +315,7 @@ class Lojas(commands.Cog):
                 "3️⃣ Um tópico exclusivo será criado para você\n"
                 "4️⃣ Publique seus produtos!\n\n"
                 "**⚙️ Gerenciamento:**\n"
-                "• Use `/fechar_loja` para encerrar sua loja\n"
+                "• Use `!fecharloja` para encerrar sua loja\n"
                 "• Você é o único que pode postar em sua loja\n"
                 "• Lojas inativas podem ser reabertas\n\n"
                 "**💡 Dicas:**\n"
@@ -332,32 +333,43 @@ class Lojas(commands.Cog):
         except Exception as e:
             print(f"❌ [LOJAS] Erro ao atualizar painel: {e}")
     
-    @app_commands.command(name="fechar_loja", description="Fecha sua loja pessoal")
-    async def fechar_loja(self, interaction: discord.Interaction) -> None:
-        """Fecha a loja do jogador"""
-        await interaction.response.defer(ephemeral=True)
+    @commands.command(name="fecharloja", description="Fecha sua loja pessoal")
+    async def fecharloja(self, ctx: commands.Context) -> None:
+        """Fecha a loja do jogador - funciona apenas na sala de comandos ou no canal da loja"""
+        
+        # Verificar se o comando está sendo executado no canal correto
+        if ctx.channel.id != COMMAND_CHANNEL_ID:
+            # Verificar se está no canal de uma loja do usuário
+            loja = obter_loja_jogador(ctx.author.id)
+            if not loja or loja.get("channel_id") != ctx.channel.id:
+                await ctx.send(
+                    f"❌ Este comando só pode ser usado na sala de comandos ({ctx.guild.get_channel(COMMAND_CHANNEL_ID).mention}) "
+                    f"ou no canal da sua loja.",
+                    delete_after=5
+                )
+                return
         
         try:
             # Obter loja do jogador
-            loja = obter_loja_jogador(interaction.user.id)
+            loja = obter_loja_jogador(ctx.author.id)
             
             if not loja:
-                await interaction.followup.send(
+                await ctx.send(
                     "❌ Você não possui uma loja ativa.",
-                    ephemeral=True
+                    delete_after=5
                 )
                 return
             
             # Atualizar status
             lojas = carregar_lojas()
-            user_id_str = str(interaction.user.id)
+            user_id_str = str(ctx.author.id)
             lojas[user_id_str]["ativa"] = False
             lojas[user_id_str]["fechada_em"] = datetime.now().isoformat()
             salvar_lojas(lojas)
             
-            # Tentar deletar o canal ou renomear para indicar fechamento
+            # Tentar renomear o canal para indicar fechamento
             try:
-                guild = interaction.guild
+                guild = ctx.guild
                 if guild:
                     canal = guild.get_channel(loja["channel_id"])
                     if canal and isinstance(canal, discord.TextChannel):
@@ -365,20 +377,20 @@ class Lojas(commands.Cog):
             except Exception as e:
                 print(f"⚠️ [LOJAS] Erro ao fechar canal: {e}")
             
-            await interaction.followup.send(
+            await ctx.send(
                 f"✅ **Loja Fechada**\n\n"
                 f"Sua loja **{loja['nome']}** foi arquivada.\n"
                 f"Você pode criar uma nova loja a qualquer momento!",
-                ephemeral=True
+                delete_after=10
             )
             
-            print(f"✅ [LOJAS] Loja fechada para {interaction.user.name} ({interaction.user.id})")
+            print(f"✅ [LOJAS] Loja fechada para {ctx.author.name} ({ctx.author.id})")
             
         except Exception as e:
             print(f"❌ [LOJAS] Erro ao fechar loja: {e}")
-            await interaction.followup.send(
+            await ctx.send(
                 f"❌ Erro ao fechar a loja: {str(e)}",
-                ephemeral=True
+                delete_after=5
             )
     
     @app_commands.command(name="minhas_lojas", description="Mostra informações sobre suas lojas")
