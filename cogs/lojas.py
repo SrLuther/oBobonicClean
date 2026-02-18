@@ -63,6 +63,8 @@ def obter_loja_jogador(user_id: int) -> Optional[dict]:
 class ModalCriarLoja(discord.ui.Modal):
     """Modal para o jogador informar o nome da loja"""
     
+    title = "Criar Loja Pessoal"
+    
     nome_loja = discord.ui.TextInput(
         label="Nome da Loja",
         placeholder="Ex: Loja de Recursos, Dinossauros Premium...",
