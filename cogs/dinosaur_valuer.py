@@ -422,32 +422,44 @@ class DinosaurValuerCog(commands.Cog):
             return
         
         self.painel_criado = True
+        print("[PAINEL DINOSAURO] on_ready foi acionado!")
         
         try:
+            print("[PAINEL DINOSAURO] Carregando configuração do painel...")
             config = carregar_painel_config()
+            print(f"[PAINEL DINOSAURO] Config carregada: {config}")
+            
             guild = self.bot.get_guild(1440802112601854159)
+            print(f"[PAINEL DINOSAURO] Guild obtida: {guild}")
             
             if not guild:
-                print("[PAINEL] Guild não encontrada")
+                print("[PAINEL] ❌ Guild não encontrada")
                 return
             
             canal = guild.get_channel(VALUATION_CHANNEL_ID)
+            print(f"[PAINEL DINOSAURO] Canal obtido: {canal}")
+            
             if not canal:
-                print("[PAINEL] Canal não encontrado")
+                print(f"[PAINEL] ❌ Canal {VALUATION_CHANNEL_ID} não encontrado")
                 return
             
             # Verificar se o painel já existe
             painel_msg_id = config.get("painel_message_id")
+            print(f"[PAINEL DINOSAURO] ID do painel na config: {painel_msg_id}")
+            
             if painel_msg_id:
                 try:
                     msg = await canal.fetch_message(painel_msg_id)
-                    print(f"✅ Painel de dinossauros já existe (ID: {painel_msg_id})")
+                    print(f"✅ [PAINEL] Painel de dinossauros já existe (ID: {painel_msg_id})")
                     self.bot.add_view(ValuationPanelView(self.bot, self.dados))
                     return
                 except discord.NotFound:
-                    print("[PAINEL] Painel anterior não encontrado, criando novo...")
+                    print("[PAINEL] ❌ Painel anterior não encontrado, criando novo...")
+            else:
+                print("[PAINEL] Nenhum painel na config, criando novo...")
             
             # Criar novo painel
+            print("[PAINEL DINOSAURO] Criando novo painel...")
             embed = discord.Embed(
                 title="🦖 CALCULADORA DE VALOR DE DINOSSAUROS",
                 description=(
@@ -479,10 +491,12 @@ class DinosaurValuerCog(commands.Cog):
             
             # Salvar ID do painel
             salvar_painel_config({"painel_message_id": msg.id})
-            print(f"✅ Painel de dinossauros criado automaticamente (ID: {msg.id})")
+            print(f"✅ [PAINEL] Painel de dinossauros criado automaticamente (ID: {msg.id})")
         
         except Exception as e:
-            print(f"❌ Erro ao criar painel: {e}")
+            print(f"❌ [PAINEL] Erro ao criar painel: {e}")
+            import traceback
+            traceback.print_exc()
     
     @commands.command(name="criarcalc", aliases=["criarpainel"])
     @commands.has_permissions(administrator=True)
