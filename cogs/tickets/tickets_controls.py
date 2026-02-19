@@ -55,7 +55,7 @@ class TicketsController(commands.Cog):
             
             # Verificar e deletar mensagem anterior fixada
             try:
-                mensagens_fixadas = [msg async for msg in canal.history(limit=100) if msg.pinned and msg.author.id == self.bot.user.id]
+                mensagens_fixadas = [msg async for msg in canal.history(limit=50) if msg.pinned and msg.author.id == self.bot.user.id]
                 if mensagens_fixadas:
                     for msg_antiga in mensagens_fixadas:
                         try:
@@ -64,9 +64,13 @@ class TicketsController(commands.Cog):
                             print(f"✅ [TICKETS] Painel anterior deletado e despinado")
                         except Exception as e:
                             print(f"⚠️ [TICKETS] Erro ao deletar painel anterior: {e}")
+                            pass
             except Exception as e:
                 print(f"⚠️ [TICKETS] Erro ao verificar mensagens fixadas: {e}")
                 return
+            
+            # Aguardar um pouco para evitar rate limit
+            await asyncio.sleep(1)
             
             # Criar NOVO painel com View recém-registrada
             painel_msg = await canal.send(

@@ -348,7 +348,7 @@ class Lojas(commands.Cog):
             
             # Verificar e deletar mensagem antiga fixada
             try:
-                mensagens_fixadas = [msg async for msg in canal.history(limit=100) if msg.pinned and msg.author.id == self.bot.user.id]
+                mensagens_fixadas = [msg async for msg in canal.history(limit=50) if msg.pinned and msg.author.id == self.bot.user.id]
                 if mensagens_fixadas:
                     for msg_antiga in mensagens_fixadas:
                         try:
@@ -357,8 +357,13 @@ class Lojas(commands.Cog):
                             print(f"✅ [LOJAS] Painel anterior deletado e despinado")
                         except Exception as e:
                             print(f"⚠️ [LOJAS] Erro ao deletar painel anterior: {e}")
+                            pass
             except Exception as e:
                 print(f"⚠️ [LOJAS] Erro ao verificar mensagens fixadas: {e}")
+            
+            # Aguardar um pouco para evitar rate limit
+            import asyncio
+            await asyncio.sleep(1)
             
             # Criar NOVO painel com View recém-registrada
             painel_msg = await canal.send(
