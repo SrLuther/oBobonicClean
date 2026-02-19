@@ -93,6 +93,11 @@ def formatar_moeda(valor: int) -> str:
     return f"{valor} {moeda}"
 
 
+def arredondar_valor_comercial(valor: int, multiplo: int = 500) -> int:
+    """Arredonda valor para o múltiplo mais próximo (padrão: 500)"""
+    return round(valor / multiplo) * multiplo
+
+
 def encontrar_dino(nome_procurado: str, dados: dict) -> Optional[Tuple[str, dict]]:
     """Encontra dinossauro por nome (fuzzy matching)"""
     nome_procurado = nome_procurado.lower().strip()
@@ -279,6 +284,9 @@ class StatsModal(ui.Modal):
         # Calcular valor
         resultado = calcular_valor_dino(self.dino_id, stats, None, self.dados, eh_castrado)
         
+        # Calcular valor comercial sugerido
+        valor_comercial = arredondar_valor_comercial(resultado['valor_total'])
+        
         # Enviar resultado
         embed = discord.Embed(
             title=f"💎 {resultado['especie']}",
@@ -289,9 +297,17 @@ class StatsModal(ui.Modal):
         # Adicionar status de castrado se aplicável
         status_castrado = " 🔪 **(CASTRADO - 50% OFF)**" if eh_castrado else ""
         
+        # Mostrar valor exato e sugerido
+        if valor_comercial != resultado['valor_total']:
+            valor_field = f"**Exato:** `{formatar_moeda(resultado['valor_total'])}` Arkiums\n"
+            valor_field += f"**Sugerido:** `{formatar_moeda(valor_comercial)}` Arkiums *(comercial)*\n"
+            valor_field += f"{resultado['tier']}{status_castrado}"
+        else:
+            valor_field = f"`{formatar_moeda(resultado['valor_total'])}` {resultado['tier']}{status_castrado}"
+        
         embed.add_field(
             name="💰 Valor Total",
-            value=f"`{formatar_moeda(resultado['valor_total'])}` {resultado['tier']}{status_castrado}",
+            value=valor_field,
             inline=False
         )
         
