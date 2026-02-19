@@ -229,8 +229,54 @@ def calcular_valor_dino(
 # ============================================
 
 
+class CastradoSelect(ui.Select):
+    """Select para escolher se dinossauro é castrado ou não"""
+    
+    def __init__(self, dados: dict, dino_id: str):
+        self.dados = dados
+        self.dino_id = dino_id
+        
+        opcoes = [
+            discord.SelectOption(label="✅ Não Castrado", value="nao", emoji="✅"),
+            discord.SelectOption(label="🔪 Castrado (-50%)", value="sim", emoji="⚠️")
+        ]
+        
+        super().__init__(
+            placeholder="É castrado?",
+            min_values=1,
+            max_values=1,
+            options=opcoes
+        )
+    
+    async def callback(self, interaction: discord.Interaction) -> None:
+        """Callback quando castrado é selecionado"""
+        try:
+            eh_castrado = self.values[0] == "sim"
+            # castrado = 50% penalty, não castrado = 0% penalty
+            discount = 0.5 if eh_castrado else 0.0
+            modal = StatsModal(self.dino_id, self.dados, discount_percent=discount)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            print(f"[DINOSAUR] ❌ Erro no callback do CastradoSelect: {type(e).__name__}: {e}")
+            await interaction.response.send_message(f"❌ Erro: {str(e)}", ephemeral=True)
+
+
+class CastradoSelectView(ui.View):
+    """View para o select de castrado"""
+    
+    def __init__(self, dados: dict, dino_id: str):
+        super().__init__()
+        self.dados = dados
+        self.dino_id = dino_id
+        self.add_item(CastradoSelect(dados, dino_id))
+    
+    async def on_timeout(self) -> None:
+        """Chamado quando o view expira"""
+        pass
+
+
 class SaddleSelect(ui.Select):
-    """Select para escolher qual broca é usada"""
+    """Select para escolher qual broca é usada (exclusivo Stryder)"""
     
     def __init__(self, dados: dict, dino_id: str):
         self.dados = dados
@@ -337,11 +383,14 @@ class StatsModal(ui.Modal):
         )
         
         # Adicionar status de desconto se aplicável
-        if self.discount_percent > 0:
-            desconto_pct = int(self.discount_percent * 100)
+        if self.discount_percent == 0.25:
+            desconto_pct = 25
             status_desconto = f" 🪟 **({desconto_pct}% OFF - Broca)**"
+        elif self.discount_percent == 0.5:
+            desconto_pct = 50
+            status_desconto = f" 🔪 **({desconto_pct}% OFF - Castrado)**"
         else:
-            status_desconto = " 💼 **(Broca + Bolsa - Melhor opção)**"
+            status_desconto = " ✅ **(Sem penalidade - Melhor!)**"
         
         # Mostrar valor exato e sugerido
         if valor_comercial != resultado['valor_total']:
@@ -364,9 +413,10 @@ class StatsModal(ui.Modal):
                 if stats.get(stat_name, 0) > 0:
                     breakdown_text += f"{stat_name.capitalize()}: `+{formatar_moeda(valor_stat)}`\n"
         
-        if self.discount_percent > 0 and "desconto_broca" in resultado["breakdown"]:
-            desconto_pct = int(self.discount_percent * 100)
-            breakdown_text += f"**Desconto Broca: `-{desconto_pct}%`**\n"
+        if self.discount_percent == 0.25 and "desconto_broca" in resultado["breakdown"]:
+            breakdown_text += f"**Desconto Broca: `-25%`**\n"
+        elif self.discount_percent == 0.5 and "desconto_broca" in resultado["breakdown"]:
+            breakdown_text += f"**Desconto Castrado: `-50%`**\n"
         
         embed.add_field(name="📊 Breakdown", value=breakdown_text, inline=False)
         
@@ -441,27 +491,33 @@ class SearchDinoModal(ui.Modal):
             await interaction.followup.send(embed=embed, ephemeral=True)
             return
         
-        # Se encontrou apenas 1, vai para seleção de castrado (ou direto para stats se asexuado)
+        # Se encontrou apenas 1, vai para seleção de castrado ou broca
         if len(resultados) == 1:
             dino_id = list(resultados.keys())[0]
             dino_data = resultados[dino_id]
             
-            # Se é asexuado (ex: Stryder), vai direto para o Stats Modal
+            # Se é Stryder (asexuado), pergunta qual tipo de broca
             if dino_data.get("asexual", False):
-                print(f"[DINOSAUR] {dino_id} é asexuado, abrindo StatsModal direto...")
-                modal = StatsModal(dino_id, self.dados, discount_percent=0.0)
-                await interaction.response.send_modal(modal)
-                return
-            
-            # Caso contrário, pergunta qual tipo de broca
-            select_view = SaddleSelectView(self.dados, dino_id)
-            
-            embed = discord.Embed(
-                title="🦖 Dinossauro Selecionado",
-                description=f"**{resultados[dino_id].get('name')}**\n\n"
-                           f"Qual tipo de broca?",
-                color=discord.Color.blue()
-            )
+                print(f"[DINOSAUR] {dino_id} é Stryder, mostrando SaddleSelectView...")
+                select_view = SaddleSelectView(self.dados, dino_id)
+                
+                embed = discord.Embed(
+                    title="🦖 Stryder Selecionado",
+                    description=f"**{resultados[dino_id].get('name')}**\n\n"
+                               f"Qual tipo de broca?",
+                    color=discord.Color.blue()
+                )
+            else:
+                # Para outros dinossauros, pergunta se é castrado
+                print(f"[DINOSAUR] {dino_id} é outro dino, mostrando CastradoSelectView...")
+                select_view = CastradoSelectView(self.dados, dino_id)
+                
+                embed = discord.Embed(
+                    title="🦖 Dinossauro Selecionado",
+                    description=f"**{resultados[dino_id].get('name')}**\n\n"
+                               f"É castrado?",
+                    color=discord.Color.blue()
+                )
             
             await interaction.followup.send(embed=embed, view=select_view, ephemeral=True)
             return
@@ -524,21 +580,27 @@ class DinoSearchSelect(ui.Select):
             
             dino_data = dinos[dino_id]
             
-            # Se é asexuado, vai direto para o Stats Modal
+            # Se é Stryder (asexuado), pergunta qual tipo de broca
             if dino_data.get("asexual", False):
-                print(f"[DINOSAUR] {dino_id} é asexuado, abrindo StatsModal direto...")
-                modal = StatsModal(dino_id, self.dados, discount_percent=0.0)
-                await interaction.response.send_modal(modal)
-                return
+                print(f"[DINOSAUR] {dino_id} é Stryder, mostrando SaddleSelectView...")
+                select_view = SaddleSelectView(self.dados, dino_id)
+                
+                embed = discord.Embed(
+                    title="🦖 Qual tipo de broca?",
+                    description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** usa qual broca?",
+                    color=discord.Color.blue()
+                )
+            else:
+                # Para outros dinossauros, pergunta se é castrado
+                print(f"[DINOSAUR] {dino_id} é outro dino, mostrando CastradoSelectView...")
+                select_view = CastradoSelectView(self.dados, dino_id)
+                
+                embed = discord.Embed(
+                    title="🦖 É castrado?",
+                    description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** é castrado?",
+                    color=discord.Color.blue()
+                )
             
-            print(f"[DINOSAUR] Criando SaddleSelectView para {dino_id}...")
-            select_view = SaddleSelectView(self.dados, dino_id)
-            print(f"[DINOSAUR] View criada, enviando...")
-            embed = discord.Embed(
-                title="🦖 Qual tipo de broca?",
-                description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** usa qual broca?",
-                color=discord.Color.blue()
-            )
             await interaction.response.send_message(embed=embed, view=select_view, ephemeral=True)
             print(f"[DINOSAUR] ✅ View enviada com sucesso!")
         except Exception as e:
@@ -613,21 +675,27 @@ class DinoSelect(ui.Select):
             
             dino_data = dinos[dino_id]
             
-            # Se é asexuado, vai direto para o Stats Modal
+            # Se é Stryder (asexuado), pergunta qual tipo de broca
             if dino_data.get("asexual", False):
-                print(f"[DINOSAUR] {dino_id} é asexuado, abrindo StatsModal direto...")
-                modal = StatsModal(dino_id, self.dados, discount_percent=0.0)
-                await interaction.response.send_modal(modal)
-                return
+                print(f"[DINOSAUR] {dino_id} é Stryder, mostrando SaddleSelectView...")
+                select_view = SaddleSelectView(self.dados, dino_id)
+                
+                embed = discord.Embed(
+                    title="🦖 Qual tipo de broca?",
+                    description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** usa qual broca?",
+                    color=discord.Color.blue()
+                )
+            else:
+                # Para outros dinossauros, pergunta se é castrado
+                print(f"[DINOSAUR] {dino_id} é outro dino, mostrando CastradoSelectView...")
+                select_view = CastradoSelectView(self.dados, dino_id)
+                
+                embed = discord.Embed(
+                    title="🦖 É castrado?",
+                    description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** é castrado?",
+                    color=discord.Color.blue()
+                )
             
-            print(f"[DINOSAUR] Criando SaddleSelectView para {dino_id}...")
-            select_view = SaddleSelectView(self.dados, dino_id)
-            print(f"[DINOSAUR] View criada, enviando...")
-            embed = discord.Embed(
-                title="🦖 Qual tipo de broca?",
-                description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** usa qual broca?",
-                color=discord.Color.blue()
-            )
             await interaction.response.send_message(embed=embed, view=select_view, ephemeral=True)
             print(f"[DINOSAUR] ✅ View enviada com sucesso!")
         except Exception as e:
