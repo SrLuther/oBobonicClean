@@ -407,12 +407,14 @@ class ValuationPanelView(ui.View):
 
 class DinosaurValuerCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
+        print("[DINOSAUR] ✅ DinosaurValuerCog INICIALIZADO!")
         self.bot = bot
         self.dados = carregar_dados_dinos()
         self.painel_criado = False
     
     async def cog_load(self):
         """Ajusta a persistência do painel"""
+        print("[DINOSAUR] ✅ cog_load() foi chamado!")
         self.bot.add_view(ValuationPanelView(self.bot, self.dados))
     
     @commands.Cog.listener()
