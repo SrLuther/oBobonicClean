@@ -133,6 +133,38 @@ async def load_cogs(bot: commands.Bot) -> bool:
     return all_cogs_loaded
 
 # --------------------
+# 4. FUNÇÃO PARA RECRIAR TODOS OS PAINEIS
+# --------------------
+async def recriar_todos_os_painels():
+    """
+    Recriar painels de lojas e tickets após restart para garantir Views funcionem
+    """
+    try:
+        import asyncio
+        await asyncio.sleep(2)  # Aguarda cogs serem carregados
+        
+        # Recriar painel de tickets
+        try:
+            cog_tickets = bot.get_cog('TicketsController')
+            if cog_tickets and hasattr(cog_tickets, 'recriar_painel_tickets'):
+                await cog_tickets.recriar_painel_tickets()
+                print("✅ Painels de tickets recriados via bot.py")
+        except Exception as e:
+            print(f"⚠️ Erro ao recriar painel de tickets: {e}")
+        
+        # Recriar painel de lojas
+        try:
+            cog_lojas = bot.get_cog('Lojas')
+            if cog_lojas and hasattr(cog_lojas, 'atualizar_painel_lojas'):
+                await cog_lojas.atualizar_painel_lojas()
+                print("✅ Painels de lojas recriados via bot.py")
+        except Exception as e:
+            print(f"⚠️ Erro ao recriar painel de lojas: {e}")
+            
+    except Exception as e:
+        print(f"❌ Erro geral ao recriar painels: {e}")
+
+# --------------------
 # 4. FUNÇÃO PARA CRIAR O PAINEL PERSISTENTE
 # --------------------
 async def criar_painel_ticket():
@@ -221,11 +253,11 @@ async def on_ready():
     except Exception as e:
         print(f"❌ ERRO Sincronização: {e}")
 
-    # cria painel persistente
+    # recriar todos os painels para garantir Views funcionem
     try:
-        await criar_painel_ticket()
+        await recriar_todos_os_painels()
     except Exception as e:
-        print(f"❌ ERRO ao criar painel persistente: {e}")
+        print(f"⚠️ ERRO ao recriar painels: {e}")
 
     # finaliza captura e envia log
     try:
