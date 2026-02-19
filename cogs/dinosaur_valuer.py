@@ -426,9 +426,37 @@ class DinoSearchSelect(ui.Select):
     
     async def callback(self, interaction: discord.Interaction) -> None:
         """Callback quando o dinossauro é selecionado"""
-        dino_id = self.values[0]
-        modal = StatsModal(dino_id, self.dados)
-        await interaction.response.send_modal(modal)
+        try:
+            print(f"[DINOSAUR] DinoSearchSelect callback acionado! Valores: {self.values}")
+            dino_id = self.values[0]
+            print(f"[DINOSAUR] Dino ID selecionado: {dino_id}")
+            
+            # Verificar se dino existe
+            dinos = self.dados.get("dinosaurs", {})
+            if dino_id not in dinos:
+                print(f"[DINOSAUR] ❌ Dinossauro {dino_id} não encontrado!")
+                await interaction.response.send_message(
+                    f"❌ Dinossauro não encontrado: {dino_id}",
+                    ephemeral=True
+                )
+                return
+            
+            print(f"[DINOSAUR] Criando StatsModal para {dino_id}...")
+            modal = StatsModal(dino_id, self.dados)
+            print(f"[DINOSAUR] Modal criado, enviando...")
+            await interaction.response.send_modal(modal)
+            print(f"[DINOSAUR] ✅ Modal enviado com sucesso!")
+        except Exception as e:
+            print(f"[DINOSAUR] ❌ Erro no callback do DinoSearchSelect: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
+            try:
+                await interaction.response.send_message(
+                    f"❌ Erro ao abrir o modal: {str(e)}",
+                    ephemeral=True
+                )
+            except:
+                pass
 
 
 class DinoSearchSelectView(ui.View):
@@ -473,9 +501,37 @@ class DinoSelect(ui.Select):
     
     async def callback(self, interaction: discord.Interaction) -> None:
         """Callback quando o dinossauro é selecionado"""
-        dino_id = self.values[0]
-        modal = StatsModal(dino_id, self.dados)
-        await interaction.response.send_modal(modal)
+        try:
+            print(f"[DINOSAUR] DinoSelect callback acionado! Valores: {self.values}")
+            dino_id = self.values[0]
+            print(f"[DINOSAUR] Dino ID selecionado: {dino_id}")
+            
+            # Verificar se dino existe
+            dinos = self.dados.get("dinosaurs", {})
+            if dino_id not in dinos:
+                print(f"[DINOSAUR] ❌ Dinossauro {dino_id} não encontrado!")
+                await interaction.response.send_message(
+                    f"❌ Dinossauro não encontrado: {dino_id}",
+                    ephemeral=True
+                )
+                return
+            
+            print(f"[DINOSAUR] Criando StatsModal para {dino_id}...")
+            modal = StatsModal(dino_id, self.dados)
+            print(f"[DINOSAUR] Modal criado, enviando...")
+            await interaction.response.send_modal(modal)
+            print(f"[DINOSAUR] ✅ Modal enviado com sucesso!")
+        except Exception as e:
+            print(f"[DINOSAUR] ❌ Erro no callback do DinoSelect: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
+            try:
+                await interaction.response.send_message(
+                    f"❌ Erro ao abrir o modal: {str(e)}",
+                    ephemeral=True
+                )
+            except:
+                pass
 
 
 class DinoSelectView(ui.View):
