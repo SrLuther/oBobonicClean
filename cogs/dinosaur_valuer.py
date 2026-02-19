@@ -309,6 +309,35 @@ class SaddleSelect(ui.Select):
             await interaction.response.send_message(f"❌ Erro: {str(e)}", ephemeral=True)
 
 
+class ReaperKingSelect(ui.Select):
+    """Select para abrir avaliação de Reaper King (sempre valor total, sem penalidades)"""
+    
+    def __init__(self, dados: dict, dino_id: str):
+        self.dados = dados
+        self.dino_id = dino_id
+        
+        opcoes = [
+            discord.SelectOption(label="🦖 Iniciar Avaliação", value="start", emoji="✨")
+        ]
+        
+        super().__init__(
+            placeholder="Valuar Reaper King...",
+            min_values=1,
+            max_values=1,
+            options=opcoes
+        )
+    
+    async def callback(self, interaction: discord.Interaction) -> None:
+        """Callback para abrir modal de stats do Reaper King"""
+        try:
+            # Reaper King sempre tem valor total (sem desconto)
+            modal = StatsModal(self.dino_id, self.dados, discount_percent=0.0)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            print(f"[DINOSAUR] ❌ Erro no callback do ReaperKingSelect: {type(e).__name__}: {e}")
+            await interaction.response.send_message(f"❌ Erro: {str(e)}", ephemeral=True)
+
+
 class SaddleSelectView(ui.View):
     """View para o select de broca"""
     
@@ -317,6 +346,16 @@ class SaddleSelectView(ui.View):
         self.dados = dados
         self.dino_id = dino_id
         self.add_item(SaddleSelect(dados, dino_id))
+
+
+class ReaperKingSelectView(ui.View):
+    """View para abrir avaliação de Reaper King"""
+    
+    def __init__(self, dados: dict, dino_id: str):
+        super().__init__()
+        self.dados = dados
+        self.dino_id = dino_id
+        self.add_item(ReaperKingSelect(dados, dino_id))
     
     async def on_timeout(self) -> None:
         """Chamado quando o view expira"""
@@ -616,8 +655,8 @@ class SearchDinoModal(ui.Modal):
             dino_id = list(resultados.keys())[0]
             dino_data = resultados[dino_id]
             
-            # Se é Stryder (asexuado), pergunta qual tipo de broca
-            if dino_data.get("asexual", False):
+            # Se é Stryder (asexuado com broca), pergunta qual tipo de broca
+            if dino_data.get("asexual", False) and dino_data.get("has_broca", False):
                 print(f"[DINOSAUR] {dino_id} é Stryder, mostrando SaddleSelectView...")
                 select_view = SaddleSelectView(self.dados, dino_id)
                 
@@ -625,6 +664,17 @@ class SearchDinoModal(ui.Modal):
                     title="🦖 Stryder Selecionado",
                     description=f"**{resultados[dino_id].get('name')}**\n\n"
                                f"Qual tipo de broca?",
+                    color=discord.Color.blue()
+                )
+            # Se é Reaper King (asexuado sem broca), abre avaliação diretamente
+            elif dino_data.get("asexual", False):
+                print(f"[DINOSAUR] {dino_id} é Reaper King, mostrando ReaperKingSelectView...")
+                select_view = ReaperKingSelectView(self.dados, dino_id)
+                
+                embed = discord.Embed(
+                    title="🦖 Reaper King Selecionado",
+                    description=f"**{resultados[dino_id].get('name')}**\n\n"
+                               f"Valor total sempre aplicado (sem penalidades)",
                     color=discord.Color.blue()
                 )
             else:
@@ -700,14 +750,24 @@ class DinoSearchSelect(ui.Select):
             
             dino_data = dinos[dino_id]
             
-            # Se é Stryder (asexuado), pergunta qual tipo de broca
-            if dino_data.get("asexual", False):
+            # Se é Stryder (asexuado com broca), pergunta qual tipo de broca
+            if dino_data.get("asexual", False) and dino_data.get("has_broca", False):
                 print(f"[DINOSAUR] {dino_id} é Stryder, mostrando SaddleSelectView...")
                 select_view = SaddleSelectView(self.dados, dino_id)
                 
                 embed = discord.Embed(
                     title="🦖 Qual tipo de broca?",
                     description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** usa qual broca?",
+                    color=discord.Color.blue()
+                )
+            # Se é Reaper King (asexuado sem broca), abre avaliação diretamente
+            elif dino_data.get("asexual", False):
+                print(f"[DINOSAUR] {dino_id} é Reaper King, mostrando ReaperKingSelectView...")
+                select_view = ReaperKingSelectView(self.dados, dino_id)
+                
+                embed = discord.Embed(
+                    title="🦖 Reaper King",
+                    description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** sempre vale seu valor total (sem penalidades)",
                     color=discord.Color.blue()
                 )
             else:
@@ -795,14 +855,24 @@ class DinoSelect(ui.Select):
             
             dino_data = dinos[dino_id]
             
-            # Se é Stryder (asexuado), pergunta qual tipo de broca
-            if dino_data.get("asexual", False):
+            # Se é Stryder (asexuado com broca), pergunta qual tipo de broca
+            if dino_data.get("asexual", False) and dino_data.get("has_broca", False):
                 print(f"[DINOSAUR] {dino_id} é Stryder, mostrando SaddleSelectView...")
                 select_view = SaddleSelectView(self.dados, dino_id)
                 
                 embed = discord.Embed(
                     title="🦖 Qual tipo de broca?",
                     description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** usa qual broca?",
+                    color=discord.Color.blue()
+                )
+            # Se é Reaper King (asexuado sem broca), abre avaliação diretamente
+            elif dino_data.get("asexual", False):
+                print(f"[DINOSAUR] {dino_id} é Reaper King, mostrando ReaperKingSelectView...")
+                select_view = ReaperKingSelectView(self.dados, dino_id)
+                
+                embed = discord.Embed(
+                    title="🦖 Reaper King",
+                    description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** sempre vale seu valor total (sem penalidades)",
                     color=discord.Color.blue()
                 )
             else:
