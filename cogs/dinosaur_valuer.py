@@ -269,7 +269,7 @@ class StatsModal(ui.Modal):
                 description="Um ou mais valores não são números válidos!",
                 color=discord.Color.red()
             )
-            await interaction.followup.send(embed=embed)
+            await interaction.followup.send(embed=embed, ephemeral=True)
             return
         
         if not stats:
@@ -278,7 +278,7 @@ class StatsModal(ui.Modal):
                 description="Você precisa preencher pelo menos um stat!",
                 color=discord.Color.red()
             )
-            await interaction.followup.send(embed=embed)
+            await interaction.followup.send(embed=embed, ephemeral=True)
             return
         
         # Calcular valor
@@ -330,7 +330,7 @@ class StatsModal(ui.Modal):
         if resultado.get("recomendacoes"):
             embed.add_field(name="💡 Recomendações", value="\n".join(resultado["recomendacoes"]), inline=False)
         
-        await interaction.followup.send(embed=embed)
+        await interaction.followup.send(embed=embed, ephemeral=True)
     
     @staticmethod
     def _get_tier_color(tier: str) -> discord.Color:
