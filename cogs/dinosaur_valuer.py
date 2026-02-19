@@ -337,6 +337,114 @@ class StatsModal(ui.Modal):
             return discord.Color.gold()
 
 
+class SearchDinoModal(ui.Modal):
+    """Modal para buscar dinossauro por nome"""
+    
+    search_input = ui.TextInput(
+        label="Digite o nome do dinossauro",
+        placeholder="Ex: carc, rex, trike, allo...",
+        min_length=1,
+        max_length=100,
+        required=True,
+        style=discord.TextStyle.short
+    )
+    
+    def __init__(self, dados: dict):
+        super().__init__(title="🔍 Buscar Dinossauro")
+        self.dados = dados
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        """Processa a busca"""
+        await interaction.response.defer()
+        
+        search_text = str(self.search_input).lower().strip()
+        dinos = self.dados.get("dinosaurs", {})
+        
+        # Filtrar dinossauros que correspondem ao search
+        resultados = {}
+        for key, dino in dinos.items():
+            nome = dino.get("name", key).lower()
+            if search_text in nome:
+                resultados[key] = dino
+        
+        # Resultado da busca
+        if not resultados:
+            embed = discord.Embed(
+                title="❌ Nenhum Dinossauro Encontrado",
+                description=f"Nenhum dinossauro contém '{search_text}' no nome.\n\n"
+                           f"Tente: T-Rex, Trike, Allosaurus, Carcharino...",
+                color=discord.Color.red()
+            )
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            return
+        
+        # Se encontrou apenas 1, vai direto para stats
+        if len(resultados) == 1:
+            dino_id = list(resultados.keys())[0]
+            modal = StatsModal(dino_id, self.dados)
+            await interaction.response.send_modal(modal)
+            return
+        
+        # Se encontrou múltiplos, mostra um Select
+        select_view = DinoSearchSelectView(self.dados, resultados)
+        
+        embed = discord.Embed(
+            title="🦖 Dinossauros Encontrados",
+            description=f"Encontrei {len(resultados)} dinossauro(s) que correspondem a '{search_text}'.\n"
+                       f"Escolha um abaixo:",
+            color=discord.Color.blue()
+        )
+        
+        await interaction.followup.send(embed=embed, view=select_view, ephemeral=True)
+
+
+class DinoSearchSelect(ui.Select):
+    """Select para escolher entre dinossauros encontrados"""
+    
+    def __init__(self, dados: dict, resultados: dict):
+        self.dados = dados
+        self.todos_dinos = resultados
+        
+        opcoes = []
+        for key, dino in list(resultados.items())[:25]:
+            nome = dino.get("name", key)
+            valor_base = dino.get("base_value", 0)
+            opcoes.append(
+                discord.SelectOption(
+                    label=f"{nome}",
+                    value=key,
+                    description=f"Base: {valor_base} Arkiums"
+                )
+            )
+        
+        super().__init__(
+            placeholder="Selecione um dinossauro...",
+            min_values=1,
+            max_values=1,
+            options=opcoes if opcoes else [discord.SelectOption(label="Nenhum", value="none")]
+        )
+    
+    async def callback(self, interaction: discord.Interaction) -> None:
+        """Callback quando o dinossauro é selecionado"""
+        dino_id = self.values[0]
+        modal = StatsModal(dino_id, self.dados)
+        await interaction.response.send_modal(modal)
+
+
+class DinoSearchSelectView(ui.View):
+    """View para o select de dinossauros encontrados"""
+    
+    def __init__(self, dados: dict, resultados: dict):
+        super().__init__()
+        self.dados = dados
+        self.resultados = resultados
+        self.add_item(DinoSearchSelect(dados, resultados))
+    
+    async def on_timeout(self) -> None:
+        """Chamado quando o view expira"""
+        pass
+
+
 class DinoSelect(ui.Select):
     """Select para escolher o dinossauro"""
     
@@ -393,16 +501,9 @@ class ValuationPanelView(ui.View):
     
     @ui.button(label="💎 Avaliar Dinossauro", style=discord.ButtonStyle.primary, custom_id="avaliar_dino_btn")
     async def avaliar_button(self, interaction: discord.Interaction, button: ui.Button):
-        """Abre o painel de seleção de dinossauro"""
-        select_view = DinoSelectView(self.dados)
-        
-        embed = discord.Embed(
-            title="🦖 Selecione um Dinossauro",
-            description="Escolha na lista abaixo qual dinossauro deseja avaliar:",
-            color=discord.Color.blue()
-        )
-        
-        await interaction.response.send_message(embed=embed, view=select_view, ephemeral=True)
+        """Abre o modal de busca de dinossauro"""
+        modal = SearchDinoModal(self.dados)
+        await interaction.response.send_modal(modal)
 
 
 class DinosaurValuerCog(commands.Cog):
