@@ -815,18 +815,20 @@ async def setup(bot: commands.Bot):
                 config = carregar_painel_config()
                 painel_msg_id = config.get("painel_message_id")
                 
+                # SEMPRE deletar o painel anterior se existir
                 if painel_msg_id:
                     try:
                         msg = await canal.fetch_message(painel_msg_id)
-                        print(f"[DINOSAUR] ✅ Painel já existe (ID: {painel_msg_id})")
+                        await msg.delete()
+                        print(f"[DINOSAUR] 🗑️ Painel anterior deletado (ID: {painel_msg_id})")
                     except discord.NotFound:
-                        print("[DINOSAUR] Painel anterior não encontrado, criando novo...")
-                        # Criar novo painel
-                        await criar_painel_automatico(bot, canal, cog.dados)
-                else:
-                    print("[DINOSAUR] Nenhum painel na config, criando novo...")
-                    # Criar novo painel
-                    await criar_painel_automatico(bot, canal, cog.dados)
+                        print("[DINOSAUR] Painel anterior não encontrado no Discord")
+                    except Exception as e:
+                        print(f"[DINOSAUR] ⚠️ Erro ao deletar painel anterior: {e}")
+                
+                # Criar novo painel
+                print("[DINOSAUR] 🆕 Criando novo painel...")
+                await criar_painel_automatico(bot, canal, cog.dados)
         else:
             print("[DINOSAUR] ❌ Guild não encontrada")
     except Exception as e:
