@@ -235,8 +235,6 @@ class StatsModal(ui.Modal):
     health = ui.TextInput(label="Health/Saúde", required=False, placeholder="0", min_length=0)
     stamina = ui.TextInput(label="Stamina", required=False, placeholder="0", min_length=0)
     weight = ui.TextInput(label="Weight/Peso", required=False, placeholder="0", min_length=0)
-    oxygen = ui.TextInput(label="Oxygen/Oxigênio", required=False, placeholder="0", min_length=0)
-    food = ui.TextInput(label="Food/Comida", required=False, placeholder="0", min_length=0)
     castrado = ui.TextInput(label="Castrado? (sim/não)", required=False, placeholder="não", min_length=0)
     
     async def on_submit(self, interaction: discord.Interaction) -> None:
@@ -256,10 +254,6 @@ class StatsModal(ui.Modal):
                 stats["stamina"] = int(self.stamina.value)
             if self.weight.value and self.weight.value != "0":
                 stats["weight"] = int(self.weight.value)
-            if self.oxygen.value and self.oxygen.value != "0":
-                stats["oxygen"] = int(self.oxygen.value)
-            if self.food.value and self.food.value != "0":
-                stats["food"] = int(self.food.value)
             
             # Verificar se é castrado
             if self.castrado.value.lower() in ["sim", "yes", "s", "y", "1", "true"]:
