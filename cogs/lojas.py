@@ -333,7 +333,7 @@ class Lojas(commands.Cog):
             print(f"⚠️ [LOJAS] Erro ao inicializar: {e}")
     
     async def atualizar_painel_lojas(self) -> None:
-        """Cria ou atualiza o painel de lojas no canal"""
+        """Cria ou atualiza o painel de lojas no canal - recriar ao reiniciar para garantir Views funcionem"""
         try:
             guild = self.bot.get_guild(1440802112601854159)  # GUILD_ID do config
             if not guild:
@@ -346,16 +346,21 @@ class Lojas(commands.Cog):
                 print(f"⚠️ [LOJAS] Canal {PANEL_CHANNEL_ID} não é um canal de texto")
                 return
             
-            # Verificar se já existe mensagem fixada
+            # Verificar e deletar mensagem antiga fixada
             try:
-                mensagens_fixadas = [msg async for msg in canal.history() if msg.pinned]
+                mensagens_fixadas = [msg async for msg in canal.history(limit=100) if msg.pinned and msg.author.id == self.bot.user.id]
                 if mensagens_fixadas:
-                    print("✅ [LOJAS] Painel já existe")
-                    return
-            except:
-                pass
+                    for msg_antiga in mensagens_fixadas:
+                        try:
+                            await msg_antiga.unpin()
+                            await msg_antiga.delete()
+                            print(f"✅ [LOJAS] Painel anterior deletado e despinado")
+                        except Exception as e:
+                            print(f"⚠️ [LOJAS] Erro ao deletar painel anterior: {e}")
+            except Exception as e:
+                print(f"⚠️ [LOJAS] Erro ao verificar mensagens fixadas: {e}")
             
-            # Criar mensagem do painel
+            # Criar NOVO painel com View recém-registrada
             painel_msg = await canal.send(
                 "🏪 **SISTEMA DE LOJAS PESSOAIS**\n\n"
                 "═══════════════════════════════════════\n\n"
@@ -365,7 +370,7 @@ class Lojas(commands.Cog):
                 "**✨ Como Funciona:**\n"
                 "1️⃣ Clique em \"Criar Minha Loja\"\n"
                 "2️⃣ Defina um nome para sua loja\n"
-                "3️⃣ Um tópico exclusivo será criado para você\n"
+                "3️⃣ Um canal exclusivo será criado para você\n"
                 "4️⃣ Publique seus produtos!\n\n"
                 "**⚙️ Gerenciamento:**\n"
                 "• Use `!fecharloja` para encerrar sua loja\n"
@@ -381,7 +386,7 @@ class Lojas(commands.Cog):
             
             # Fixar a mensagem
             await painel_msg.pin()
-            print(f"✅ [LOJAS] Painel criado e fixado no canal {PANEL_CHANNEL_ID}")
+            print(f"✅ [LOJAS] Painel recriado e fixado no canal {PANEL_CHANNEL_ID}")
             
         except Exception as e:
             print(f"❌ [LOJAS] Erro ao atualizar painel: {e}")
