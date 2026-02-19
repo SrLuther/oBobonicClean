@@ -20,6 +20,7 @@ LOJAS_VIEWER_ROLE_ID = 1440828415103074356  # Cargo que pode visualizar todas as
 COMMAND_CHANNEL_ID = 1440828497772679168  # Sala de comandos
 TIPS_CHANNEL_ID = 1473771157160460359  # Canal para dicas de formatação
 LOJAS_FILE = "data/lojas.json"          # Arquivo para armazenar dados das lojas
+TIPS_SENT_FILE = "data/tips_sent.json"  # Arquivo de controle para dicas
 
 # ============================================
 # FUNÇÕES AUXILIARES
@@ -58,6 +59,26 @@ def obter_loja_jogador(user_id: int) -> Optional[dict]:
         return lojas[user_id_str]
     
     return None
+
+def dicas_ja_foram_enviadas() -> bool:
+    """Verifica se as dicas de formatação já foram enviadas"""
+    if not os.path.exists(TIPS_SENT_FILE):
+        return False
+    
+    try:
+        with open(TIPS_SENT_FILE, "r") as f:
+            data = json.load(f)
+            return data.get("enviado", False)
+    except:
+        return False
+
+def marcar_dicas_como_enviadas() -> None:
+    """Marca as dicas como já envidas"""
+    if not os.path.exists("data"):
+        os.makedirs("data")
+    
+    with open(TIPS_SENT_FILE, "w") as f:
+        json.dump({"enviado": True, "timestamp": datetime.now().isoformat()}, f, indent=2)
 
 # ============================================
 # VIEWS (BOTÕES E MODAIS)
@@ -202,64 +223,67 @@ class ModalCriarLoja(discord.ui.Modal):
             
             salvar_lojas(lojas)
             
-            # Enviar dicas de formatação no canal específico
+            # Enviar dicas de formatação no canal específico (apenas uma vez)
             try:
-                canal_tips = interaction.guild.get_channel(TIPS_CHANNEL_ID)
-                if canal_tips:
-                    embed_tips = discord.Embed(
-                        title=f"📝 Dicas de Formatação - {self.nome_loja.value}",
-                        description=f"Loja do(a) {interaction.user.mention}",
-                        color=discord.Color.gold()
-                    )
-                    embed_tips.add_field(
-                        name="Estilos de Texto",
-                        value="• **Negrito** - `**texto**`\n"
-                              "• *Itálico* - `*texto*` ou `_texto_`\n"
-                              "• ***Negrito + Itálico*** - `***texto***`\n"
-                              "• ~~Tachado~~ - `~~texto~~`\n"
-                              "• __Sublinhado__ - `__texto__`\n"
-                              "• `Código inline` - `` `código` ``",
-                        inline=False
-                    )
-                    embed_tips.add_field(
-                        name="Blocos de Código",
-                        value="```\nCod aqui\n```\n"
-                              "(Útil para mostrar estatísticas formatadas)",
-                        inline=False
-                    )
-                    embed_tips.add_field(
-                        name="Listas",
-                        value="• Bullet com `•` ou `-`\n"
-                              "1. Numerada com número seguido de `.`",
-                        inline=False
-                    )
-                    embed_tips.add_field(
-                        name="Citar Texto",
-                        value="> Use `>` para criar uma citação\n"
-                              ">> Use `>>` para citação aninhada",
-                        inline=False
-                    )
-                    embed_tips.add_field(
-                        name="Spoilers & Links",
-                        value="• ||Texto escondido|| - `||texto||`\n"
-                              "• [Texto](url) - `[Texto](https://link.com)`",
-                        inline=False
-                    )
-                    embed_tips.add_field(
-                        name="Emojis Úteis",
-                        value="🎯 💎 ✨ 🔥 ⭐ 🏆 📦 🛍️ 💰 📊",
-                        inline=False
-                    )
-                    embed_tips.add_field(
-                        name="Exemplo de Produto",
-                        value="```\n🎯 RECURSO X - 100 unidades\n"
-                              "├ Descrição detalhada aqui\n"
-                              "├ 📊 Em estoque: 50\n"
-                              "└ 📞 Contato: MP\n```",
-                        inline=False
-                    )
-                    embed_tips.set_footer(text="Use criatividade! 🎨")
-                    await canal_tips.send(embed=embed_tips)
+                if not dicas_ja_foram_enviadas():
+                    canal_tips = interaction.guild.get_channel(TIPS_CHANNEL_ID)
+                    if canal_tips:
+                        embed_tips = discord.Embed(
+                            title=f"📝 Dicas de Formatação - CianoStore",
+                            description=f"Guia de formatação para deixar suas lojas mais atrativas!",
+                            color=discord.Color.gold()
+                        )
+                        embed_tips.add_field(
+                            name="Estilos de Texto",
+                            value="• **Negrito** - `**texto**`\n"
+                                  "• *Itálico* - `*texto*` ou `_texto_`\n"
+                                  "• ***Negrito + Itálico*** - `***texto***`\n"
+                                  "• ~~Tachado~~ - `~~texto~~`\n"
+                                  "• __Sublinhado__ - `__texto__`\n"
+                                  "• `Código inline` - `` `código` ``",
+                            inline=False
+                        )
+                        embed_tips.add_field(
+                            name="Blocos de Código",
+                            value="```\nCod aqui\n```\n"
+                                  "(Útil para mostrar estatísticas formatadas)",
+                            inline=False
+                        )
+                        embed_tips.add_field(
+                            name="Listas",
+                            value="• Bullet com `•` ou `-`\n"
+                                  "1. Numerada com número seguido de `.`",
+                            inline=False
+                        )
+                        embed_tips.add_field(
+                            name="Citar Texto",
+                            value="> Use `>` para criar uma citação\n"
+                                  ">> Use `>>` para citação aninhada",
+                            inline=False
+                        )
+                        embed_tips.add_field(
+                            name="Spoilers & Links",
+                            value="• ||Texto escondido|| - `||texto||`\n"
+                                  "• [Texto](url) - `[Texto](https://link.com)`",
+                            inline=False
+                        )
+                        embed_tips.add_field(
+                            name="Emojis Úteis",
+                            value="🎯 💎 ✨ 🔥 ⭐ 🏆 📦 🛍️ 💰 📊",
+                            inline=False
+                        )
+                        embed_tips.add_field(
+                            name="Exemplo de Produto",
+                            value="```\n🎯 RECURSO X - 100 unidades\n"
+                                  "├ Descrição detalhada aqui\n"
+                                  "├ 📊 Em estoque: 50\n"
+                                  "└ 📞 Contato: MP\n```",
+                            inline=False
+                        )
+                        embed_tips.set_footer(text="Use criatividade! 🎨")
+                        await canal_tips.send(embed=embed_tips)
+                        marcar_dicas_como_enviadas()
+                        print(f"✅ [LOJAS] Dicas de formatação enviadas no canal {TIPS_CHANNEL_ID}")
             except Exception as e:
                 print(f"⚠️ [LOJAS] Erro ao enviar dicas: {e}")
             
