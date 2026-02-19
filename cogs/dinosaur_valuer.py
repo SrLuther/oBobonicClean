@@ -691,7 +691,85 @@ class DinosaurValuerCog(commands.Cog):
 
 
 async def setup(bot: commands.Bot):
+    print("[DINOSAUR] 🦖 setup() INICIADO!")
     cog = DinosaurValuerCog(bot)
     await bot.add_cog(cog)
+    print("[DINOSAUR] 🦖 Cog adicionado!")
+    
     # Adicionar persistência do painel
     bot.add_view(ValuationPanelView(bot, cog.dados))
+    print("[DINOSAUR] 🦖 View adicionada!")
+    
+    # Criar painel automaticamente
+    print("[DINOSAUR] 🦖 Iniciando criação do painel...")
+    try:
+        guild = bot.get_guild(1440802112601854159)
+        print(f"[DINOSAUR] Guild obtida: {guild}")
+        
+        if guild:
+            canal = guild.get_channel(VALUATION_CHANNEL_ID)
+            print(f"[DINOSAUR] Canal obtido: {canal}")
+            
+            if canal:
+                config = carregar_painel_config()
+                painel_msg_id = config.get("painel_message_id")
+                
+                if painel_msg_id:
+                    try:
+                        msg = await canal.fetch_message(painel_msg_id)
+                        print(f"[DINOSAUR] ✅ Painel já existe (ID: {painel_msg_id})")
+                    except discord.NotFound:
+                        print("[DINOSAUR] Painel anterior não encontrado, criando novo...")
+                        # Criar novo painel
+                        await criar_painel_automatico(bot, canal, cog.dados)
+                else:
+                    print("[DINOSAUR] Nenhum painel na config, criando novo...")
+                    # Criar novo painel
+                    await criar_painel_automatico(bot, canal, cog.dados)
+        else:
+            print("[DINOSAUR] ❌ Guild não encontrada")
+    except Exception as e:
+        print(f"[DINOSAUR] ❌ Erro ao criar painel no setup: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+async def criar_painel_automatico(bot: commands.Bot, canal: discord.TextChannel, dados: dict):
+    """Cria o painel automaticamente"""
+    try:
+        print("[DINOSAUR] Criando painel...")
+        embed = discord.Embed(
+            title="🦖 CALCULADORA DE VALOR DE DINOSSAUROS",
+            description=(
+                "Bem-vindo ao sistema de avaliação de dinossauros!\n\n"
+                "**Como usar:**\n"
+                "1. Clique no botão abaixo\n"
+                "2. Selecione o tipo de dinossauro\n"
+                "3. Preencha os stats (Melee, Health, Stamina, etc)\n"
+                "4. Receba a avaliação detalhada\n\n"
+                "**Nossas Categorias:**\n"
+                "⚔️ **PvP Combat** - Dinossauros de combate PvP (bonus x1.3)\n"
+                "🐉 **PvE Combat** - Para derrotar bosses (bonus x1.2)\n"
+                "⛏️ **Farming** - Para coletar recursos (bonus x1.15)\n"
+                "🚚 **Transporte** - Para carregar/voar (bonus x1.25)\n"
+                "🥚 **Criação** - Para reprodução (bonus x1.4)\n"
+                "🔧 **Utilidade** - Funções especiais (bonus x1.1)\n\n"
+                f"**Dinossauros Disponíveis:** {len(dados.get('dinosaurs', {}))} espécies diferentes!\n\n"
+                "═══════════════════════════════════════"
+            ),
+            color=discord.Color.gold()
+        )
+        
+        embed.set_footer(text="Sistema de Avaliação ARK | Clique no botão para começar!")
+        
+        view = ValuationPanelView(bot, dados)
+        msg = await canal.send(embed=embed, view=view)
+        await msg.pin()
+        
+        # Salvar ID do painel
+        salvar_painel_config({"painel_message_id": msg.id})
+        print(f"[DINOSAUR] ✅ Painel criado automaticamente (ID: {msg.id})")
+    except Exception as e:
+        print(f"[DINOSAUR] ❌ Erro ao criar painel: {e}")
+        import traceback
+        traceback.print_exc()
