@@ -300,7 +300,9 @@ class SaddleSelect(ui.Select):
             saddle_type = self.values[0]
             # broca normal = 25% penalty, broca+bolsa = 0% penalty
             discount = 0.25 if saddle_type == "broca" else 0.0
-            modal = StatsModal(self.dino_id, self.dados, discount_percent=discount)
+            
+            # Para Stryder, usar modal especializado
+            modal = StryderStatsModal(self.dino_id, self.dados, discount_percent=discount)
             await interaction.response.send_modal(modal)
         except Exception as e:
             print(f"[DINOSAUR] ❌ Erro no callback do SaddleSelect: {type(e).__name__}: {e}")
@@ -319,6 +321,124 @@ class SaddleSelectView(ui.View):
     async def on_timeout(self) -> None:
         """Chamado quando o view expira"""
         pass
+
+
+class StryderStatsModal(ui.Modal):
+    """Modal especializado para Stryder (usa Oxigênio, Stamina, Peso, Velocidade)"""
+    
+    def __init__(self, dino_id: str, dados: dict, discount_percent: float = 0.0):
+        super().__init__(title="Stats do Stryder")
+        self.dino_id = dino_id
+        self.dados = dados
+        self.discount_percent = discount_percent
+    
+    oxygen = ui.TextInput(label="Oxygen/Oxigênio", required=False, placeholder="0", min_length=0)
+    stamina = ui.TextInput(label="Stamina", required=False, placeholder="0", min_length=0)
+    weight = ui.TextInput(label="Weight/Peso", required=False, placeholder="0", min_length=0)
+    velocity = ui.TextInput(label="Velocidade", required=False, placeholder="0", min_length=0)
+    
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        """Processa o envio do modal"""
+        await interaction.response.defer()
+        
+        # Extrair dados do modal
+        stats = {}
+        
+        try:
+            if self.oxygen.value and self.oxygen.value != "0":
+                stats["oxygen"] = int(self.oxygen.value)
+            if self.stamina.value and self.stamina.value != "0":
+                stats["stamina"] = int(self.stamina.value)
+            if self.weight.value and self.weight.value != "0":
+                stats["weight"] = int(self.weight.value)
+            if self.velocity.value and self.velocity.value != "0":
+                stats["velocity"] = int(self.velocity.value)
+        except ValueError:
+            embed = discord.Embed(
+                title="❌ Erro",
+                description="Um ou mais valores não são números válidos!",
+                color=discord.Color.red()
+            )
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            return
+        
+        if not stats:
+            embed = discord.Embed(
+                title="❌ Erro",
+                description="Você precisa preencher pelo menos um stat!",
+                color=discord.Color.red()
+            )
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            return
+        
+        # Calcular valor
+        resultado = calcular_valor_dino(self.dino_id, stats, None, self.dados, self.discount_percent)
+        
+        # Calcular valor comercial sugerido
+        valor_comercial = arredondar_valor_comercial(resultado['valor_total'])
+        
+        # Enviar resultado
+        embed = discord.Embed(
+            title=f"💎 {resultado['especie']}",
+            description=resultado.get("tipo_uso", ""),
+            color=self._get_tier_color(resultado["tier"])
+        )
+        
+        # Adicionar status de desconto se aplicável
+        if self.discount_percent == 0.25:
+            desconto_pct = 25
+            status_desconto = f" 🪟 **({desconto_pct}% OFF - Broca)**"
+        else:
+            status_desconto = " ✅ **(Sem penalidade - Melhor!)**"
+        
+        # Mostrar valor exato e sugerido
+        if valor_comercial != resultado['valor_total']:
+            valor_field = f"**Exato:** `{formatar_moeda(resultado['valor_total'])}` Arkiums\n"
+            valor_field += f"**Sugerido:** `{formatar_moeda(valor_comercial)}` Arkiums *(comercial)*\n"
+            valor_field += f"{resultado['tier']}{status_desconto}"
+        else:
+            valor_field = f"`{formatar_moeda(resultado['valor_total'])}` {resultado['tier']}{status_desconto}"
+        
+        embed.add_field(
+            name="💰 Valor Total",
+            value=valor_field,
+            inline=False
+        )
+        
+        breakdown_text = f"Base: `{formatar_moeda(resultado['breakdown'].get('valor_base', 0))}`\n"
+        for stat_name in ["oxygen", "stamina", "weight", "velocity"]:
+            if f"{stat_name}_value" in resultado["breakdown"]:
+                valor_stat = resultado["breakdown"][f"{stat_name}_value"]
+                if stats.get(stat_name, 0) > 0:
+                    breakdown_text += f"{stat_name.capitalize()}: `+{formatar_moeda(valor_stat)}`\n"
+        
+        if self.discount_percent == 0.25 and "desconto_broca" in resultado["breakdown"]:
+            breakdown_text += f"**Desconto Broca: `-25%`**\n"
+        
+        embed.add_field(name="📊 Breakdown", value=breakdown_text, inline=False)
+        
+        if resultado.get("analise_stats"):
+            analise_text = "\n".join(resultado["analise_stats"])
+            embed.add_field(name="📈 Análise de Stats", value=analise_text, inline=False)
+        
+        if resultado.get("recomendacoes"):
+            embed.add_field(name="💡 Recomendações", value="\n".join(resultado["recomendacoes"]), inline=False)
+        
+        await interaction.followup.send(embed=embed, ephemeral=True)
+    
+    @staticmethod
+    def _get_tier_color(tier: str) -> discord.Color:
+        """Retorna a cor baseada no tier"""
+        if "Comum" in tier:
+            return discord.Color.from_rgb(139, 69, 19)
+        elif "Raro" in tier:
+            return discord.Color.green()
+        elif "Épico" in tier:
+            return discord.Color.blue()
+        elif "Lendário" in tier:
+            return discord.Color.purple()
+        else:
+            return discord.Color.gold()
 
 
 class StatsModal(ui.Modal):

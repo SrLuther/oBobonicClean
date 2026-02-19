@@ -143,7 +143,7 @@
     "troodon": {"name": "Troodon", "base_value": 1600, "stat_multipliers": {"melee": 62, "health": 45, "stamina": 30, "weight": 6, "oxygen": 5, "food": 8}, "optimal_stats": {"melee": 230, "stamina": 1900}},
     "tropeognathus": {"name": "Tropeognathus", "base_value": 2700, "stat_multipliers": {"melee": 98, "health": 62, "stamina": 42, "weight": 14, "oxygen": 5, "food": 11}, "optimal_stats": {"stamina": 2700, "melee": 275}},
     "tusoteuthis": {"name": "Tusoteuthis", "base_value": 4000, "stat_multipliers": {"melee": 120, "health": 70, "stamina": 40, "weight": 50, "oxygen": 80, "food": 12}, "optimal_stats": {"weight": 30000, "melee": 300}},
-    "stryder": {"name": "Stryder", "base_value": 4800, "asexual": true, "stat_multipliers": {"melee": 95, "health": 65, "stamina": 50, "weight": 70, "oxygen": 5, "food": 18}, "optimal_stats": {"weight": 30000, "stamina": 3500}},
+    "stryder": {"name": "Stryder", "base_value": 4800, "asexual": true, "stat_multipliers": {"oxygen": 80, "stamina": 50, "weight": 70, "velocity": 40}, "optimal_stats": {"weight": 30000, "stamina": 3500, "oxygen": 8000, "velocity": 200}},
     "velonasaur": {"name": "Velonasaur", "base_value": 3600, "stat_multipliers": {"melee": 120, "health": 70, "stamina": 36, "weight": 16, "oxygen": 5, "food": 12}, "optimal_stats": {"melee": 305, "stamina": 2600}},
     "vulture": {"name": "Vulture", "base_value": 1700, "stat_multipliers": {"melee": 64, "health": 47, "stamina": 38, "weight": 8, "oxygen": 5, "food": 10}, "optimal_stats": {"stamina": 2100, "melee": 235}},
     "woolly_rhino": {"name": "Woolly Rhino", "base_value": 2800, "stat_multipliers": {"melee": 100, "health": 63, "stamina": 28, "weight": 40, "oxygen": 5, "food": 16}, "optimal_stats": {"weight": 18000, "health": 11000}},
