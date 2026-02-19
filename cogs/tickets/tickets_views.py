@@ -1,34 +1,48 @@
 import discord
-from discord.ui import View, Modal, TextInput
+from discord.ui import View, Modal, TextInput, Select
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .tickets_controls import TicketsController
 
+CATEGORIAS_SUPORTE = {
+    "geral": "📋 Geral",
+    "financeiro": "💰 Financeiro",
+    "kit": "📦 Problemas com Kit",
+    "bug": "🐛 Bug",
+    "denuncia": "⚠️ Denúncia",
+    "sugestao": "💡 Sugestão",
+    "reclamacao": "😠 Reclamação",
+    "outro": "❓ Outro"
+}
+
 def gerar_view_ticket(controller: 'TicketsController') -> View:
-    class AbrirTicketModal(Modal):
-        def __init__(self):
-            super().__init__(title="Abrir Ticket")
-            self.descricao: Any = TextInput(
-                label="Descrição breve do problema",
+    class SelecionarCategoriaModal(Modal):
+        """Modal com aviso e campo de resumo"""
+        def __init__(self, categoria: str):
+            super().__init__(title="Abrir Ticket - Resumo")
+            self.categoria = categoria
+            
+            self.resumo: Any = TextInput(
+                label="Resumo do Problema/Solicitação",
                 style=discord.TextStyle.paragraph,
-                placeholder="Digite aqui...",
+                placeholder="Descreva brevemente o que você precisa...",
                 required=True,
                 max_length=500
             )
-            self.add_item(self.descricao)
+            self.add_item(self.resumo)
 
         async def on_submit(self, interaction: discord.Interaction):
             try:
-                # Responde imediatamente
                 await interaction.response.defer(ephemeral=True)
             except Exception as e:
                 print(f"❌ Erro ao fazer defer: {e}")
                 return
             
-            # Processa em background
             try:
-                await controller.criar_ticket(interaction, self.descricao.value)
+                categoria_nome = CATEGORIAS_SUPORTE.get(self.categoria, "Outro")
+                descricao = f"**Categoria:** {categoria_nome}\n\n**Resumo:**\n{self.resumo.value}"
+                await controller.criar_ticket(interaction, descricao)
             except Exception as e:
                 print(f"❌ Erro ao criar ticket (background): {e}")
                 try:
@@ -36,20 +50,68 @@ def gerar_view_ticket(controller: 'TicketsController') -> View:
                 except Exception:
                     pass
 
+    class SelecionarCategoriaView(View):
+        """View com Select para escolher categoria de suporte"""
+        def __init__(self):
+            super().__init__(timeout=300)
+
+        @discord.ui.select(
+            placeholder="Escolha o tipo de suporte...",
+            min_values=1,
+            max_values=1,
+            options=[
+                discord.SelectOption(label="Geral", value="geral", emoji="📋"),
+                discord.SelectOption(label="Financeiro", value="financeiro", emoji="💰"),
+                discord.SelectOption(label="Problemas com Kit", value="kit", emoji="📦"),
+                discord.SelectOption(label="Bug", value="bug", emoji="🐛"),
+                discord.SelectOption(label="Denúncia", value="denuncia", emoji="⚠️"),
+                discord.SelectOption(label="Sugestão", value="sugestao", emoji="💡"),
+                discord.SelectOption(label="Reclamação", value="reclamacao", emoji="😠"),
+                discord.SelectOption(label="Outro", value="outro", emoji="❓"),
+            ]
+        )
+        async def selecionar_categoria(self, interaction: discord.Interaction, select: Select):
+            categoria = select.values[0]
+            
+            try:
+                await interaction.response.send_modal(SelecionarCategoriaModal(categoria))
+            except Exception as e:
+                print(f"❌ Erro ao abrir modal de categoria: {type(e).__name__}: {e}")
+                try:
+                    await interaction.response.send_message(
+                        f"❌ Erro ao processar: {type(e).__name__}",
+                        ephemeral=True
+                    )
+                except Exception as e2:
+                    print(f"❌ Erro ao enviar mensagem de erro: {e2}")
+
     class AbrirTicketButton(View):
         def __init__(self):
             super().__init__(timeout=None)
 
-        @discord.ui.button(label="Abrir Ticket", style=discord.ButtonStyle.green, custom_id="abrir_ticket")
+        @discord.ui.button(
+            label="Abrir Ticket",
+            style=discord.ButtonStyle.green,
+            custom_id="abrir_ticket",
+            emoji="🎟️"
+        )
         async def abrir_ticket_button(self, interaction: discord.Interaction, button: discord.ui.Button[Any]):
             try:
-                await interaction.response.send_modal(AbrirTicketModal())
+                await interaction.response.send_message(
+                    "📋 **Selecione o tipo de suporte que você precisa:**\n\n"
+                    "Escolha a categoria mais apropriada para sua solicitação.",
+                    view=SelecionarCategoriaView(),
+                    ephemeral=True
+                )
             except discord.errors.InteractionResponded:
                 pass
             except Exception as e:
-                print(f"❌ Erro ao abrir modal de ticket: {type(e).__name__}: {e}")
+                print(f"❌ Erro ao abrir seletor de categoria: {type(e).__name__}: {e}")
                 try:
-                    await interaction.response.send_message(f"❌ Erro ao abrir ticket: {type(e).__name__}", ephemeral=True)
+                    await interaction.response.send_message(
+                        f"❌ Erro ao abrir ticket: {type(e).__name__}",
+                        ephemeral=True
+                    )
                 except Exception as e2:
                     print(f"❌ Erro ao enviar mensagem de erro: {e2}")
 
