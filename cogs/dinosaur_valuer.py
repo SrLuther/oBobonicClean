@@ -228,19 +228,64 @@ def calcular_valor_dino(
 # VIEWS E MODALS
 # ============================================
 
+
+class CastradoSelect(ui.Select):
+    """Select para escolher se dinossauro é castrado ou não"""
+    
+    def __init__(self, dados: dict, dino_id: str):
+        self.dados = dados
+        self.dino_id = dino_id
+        
+        opcoes = [
+            discord.SelectOption(label="❌ Não Castrado", value="nao", emoji="✅"),
+            discord.SelectOption(label="🔪 Castrado (-50%)", value="sim", emoji="⚠️")
+        ]
+        
+        super().__init__(
+            placeholder="É castrado?",
+            min_values=1,
+            max_values=1,
+            options=opcoes
+        )
+    
+    async def callback(self, interaction: discord.Interaction) -> None:
+        """Callback quando castrado é selecionado"""
+        try:
+            eh_castrado = self.values[0] == "sim"
+            modal = StatsModal(self.dino_id, self.dados, eh_castrado)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            print(f"[DINOSAUR] ❌ Erro no callback do CastradoSelect: {type(e).__name__}: {e}")
+            await interaction.response.send_message(f"❌ Erro: {str(e)}", ephemeral=True)
+
+
+class CastradoSelectView(ui.View):
+    """View para o select de castrado"""
+    
+    def __init__(self, dados: dict, dino_id: str):
+        super().__init__()
+        self.dados = dados
+        self.dino_id = dino_id
+        self.add_item(CastradoSelect(dados, dino_id))
+    
+    async def on_timeout(self) -> None:
+        """Chamado quando o view expira"""
+        pass
+
+
 class StatsModal(ui.Modal):
     """Modal para inserir os stats do dinossauro"""
     
-    def __init__(self, dino_id: str, dados: dict):
+    def __init__(self, dino_id: str, dados: dict, eh_castrado: bool = False):
         super().__init__(title="Inserir Stats do Dinossauro")
         self.dino_id = dino_id
         self.dados = dados
+        self.eh_castrado = eh_castrado
     
     melee = ui.TextInput(label="Melee Damage", required=False, placeholder="0", min_length=0)
     health = ui.TextInput(label="Health/Saúde", required=False, placeholder="0", min_length=0)
     stamina = ui.TextInput(label="Stamina", required=False, placeholder="0", min_length=0)
     weight = ui.TextInput(label="Weight/Peso", required=False, placeholder="0", min_length=0)
-    castrado = ui.TextInput(label="Castrado? (sim/não)", required=False, placeholder="não", min_length=0)
     
     async def on_submit(self, interaction: discord.Interaction) -> None:
         """Processa o envio do modal"""
@@ -248,7 +293,6 @@ class StatsModal(ui.Modal):
         
         # Extrair dados do modal
         stats = {}
-        eh_castrado = False
         
         try:
             if self.melee.value and self.melee.value != "0":
@@ -259,10 +303,6 @@ class StatsModal(ui.Modal):
                 stats["stamina"] = int(self.stamina.value)
             if self.weight.value and self.weight.value != "0":
                 stats["weight"] = int(self.weight.value)
-            
-            # Verificar se é castrado
-            if self.castrado.value.lower() in ["sim", "yes", "s", "y", "1", "true"]:
-                eh_castrado = True
         except ValueError:
             embed = discord.Embed(
                 title="❌ Erro",
@@ -282,7 +322,7 @@ class StatsModal(ui.Modal):
             return
         
         # Calcular valor
-        resultado = calcular_valor_dino(self.dino_id, stats, None, self.dados, eh_castrado)
+        resultado = calcular_valor_dino(self.dino_id, stats, None, self.dados, self.eh_castrado)
         
         # Calcular valor comercial sugerido
         valor_comercial = arredondar_valor_comercial(resultado['valor_total'])
@@ -295,7 +335,7 @@ class StatsModal(ui.Modal):
         )
         
         # Adicionar status de castrado se aplicável
-        status_castrado = " 🔪 **(CASTRADO - 50% OFF)**" if eh_castrado else ""
+        status_castrado = " 🔪 **(CASTRADO - 50% OFF)**" if self.eh_castrado else ""
         
         # Mostrar valor exato e sugerido
         if valor_comercial != resultado['valor_total']:
@@ -318,7 +358,7 @@ class StatsModal(ui.Modal):
                 if stats.get(stat_name, 0) > 0:
                     breakdown_text += f"{stat_name.capitalize()}: `+{formatar_moeda(valor_stat)}`\n"
         
-        if eh_castrado and "desconto_castrado" in resultado["breakdown"]:
+        if self.eh_castrado and "desconto_castrado" in resultado["breakdown"]:
             breakdown_text += f"**Desconto Castrado: `-50%`**\n"
         
         embed.add_field(name="📊 Breakdown", value=breakdown_text, inline=False)
@@ -370,11 +410,17 @@ class SearchDinoModal(ui.Modal):
         search_text = str(self.search_input).lower().strip()
         dinos = self.dados.get("dinosaurs", {})
         
-        # Filtrar dinossauros que correspondem ao search
+        # Filtrar dinossauros que correspondem ao search (exato ou parcial)
         resultados = {}
+        
+        # 1. Busca exata por chave
+        if search_text in dinos:
+            resultados[search_text] = dinos[search_text]
+        
+        # 2. Busca por substring na chave ou nome
         for key, dino in dinos.items():
-            nome = dino.get("name", key).lower()
-            if search_text in nome:
+            nome = dino.get("name", "").lower()
+            if search_text in key or search_text in nome:
                 resultados[key] = dino
         
         # Resultado da busca
@@ -388,11 +434,19 @@ class SearchDinoModal(ui.Modal):
             await interaction.followup.send(embed=embed, ephemeral=True)
             return
         
-        # Se encontrou apenas 1, vai direto para stats
+        # Se encontrou apenas 1, vai para seleção de castrado
         if len(resultados) == 1:
             dino_id = list(resultados.keys())[0]
-            modal = StatsModal(dino_id, self.dados)
-            await interaction.response.send_modal(modal)
+            select_view = CastradoSelectView(self.dados, dino_id)
+            
+            embed = discord.Embed(
+                title="🦖 Dinossauro Selecionado",
+                description=f"**{resultados[dino_id].get('name')}**\n\n"
+                           f"Este dinossauro é castrado?",
+                color=discord.Color.blue()
+            )
+            
+            await interaction.followup.send(embed=embed, view=select_view, ephemeral=True)
             return
         
         # Se encontrou múltiplos, mostra um Select
@@ -451,11 +505,16 @@ class DinoSearchSelect(ui.Select):
                 )
                 return
             
-            print(f"[DINOSAUR] Criando StatsModal para {dino_id}...")
-            modal = StatsModal(dino_id, self.dados)
-            print(f"[DINOSAUR] Modal criado, enviando...")
-            await interaction.response.send_modal(modal)
-            print(f"[DINOSAUR] ✅ Modal enviado com sucesso!")
+            print(f"[DINOSAUR] Criando CastradoSelectView para {dino_id}...")
+            select_view = CastradoSelectView(self.dados, dino_id)
+            print(f"[DINOSAUR] View criada, enviando...")
+            embed = discord.Embed(
+                title="🔪 Castrado?",
+                description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** é castrado?",
+                color=discord.Color.blue()
+            )
+            await interaction.response.send(embed=embed, view=select_view, ephemeral=True)
+            print(f"[DINOSAUR] ✅ View enviada com sucesso!")
         except Exception as e:
             print(f"[DINOSAUR] ❌ Erro no callback do DinoSearchSelect: {type(e).__name__}: {e}")
             import traceback
@@ -526,11 +585,16 @@ class DinoSelect(ui.Select):
                 )
                 return
             
-            print(f"[DINOSAUR] Criando StatsModal para {dino_id}...")
-            modal = StatsModal(dino_id, self.dados)
-            print(f"[DINOSAUR] Modal criado, enviando...")
-            await interaction.response.send_modal(modal)
-            print(f"[DINOSAUR] ✅ Modal enviado com sucesso!")
+            print(f"[DINOSAUR] Criando CastradoSelectView para {dino_id}...")
+            select_view = CastradoSelectView(self.dados, dino_id)
+            print(f"[DINOSAUR] View criada, enviando...")
+            embed = discord.Embed(
+                title="🔪 Castrado?",
+                description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** é castrado?",
+                color=discord.Color.blue()
+            )
+            await interaction.response.send(embed=embed, view=select_view, ephemeral=True)
+            print(f"[DINOSAUR] ✅ View enviada com sucesso!")
         except Exception as e:
             print(f"[DINOSAUR] ❌ Erro no callback do DinoSelect: {type(e).__name__}: {e}")
             import traceback
