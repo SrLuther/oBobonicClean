@@ -434,9 +434,19 @@ class SearchDinoModal(ui.Modal):
             await interaction.followup.send(embed=embed, ephemeral=True)
             return
         
-        # Se encontrou apenas 1, vai para seleção de castrado
+        # Se encontrou apenas 1, vai para seleção de castrado (ou direto para stats se asexuado)
         if len(resultados) == 1:
             dino_id = list(resultados.keys())[0]
+            dino_data = resultados[dino_id]
+            
+            # Se é asexuado (ex: Stryder), vai direto para o Stats Modal
+            if dino_data.get("asexual", False):
+                print(f"[DINOSAUR] {dino_id} é asexuado, abrindo StatsModal direto...")
+                modal = StatsModal(dino_id, self.dados, eh_castrado=False)
+                await interaction.response.send_modal(modal)
+                return
+            
+            # Caso contrário, pergunta se é castrado
             select_view = CastradoSelectView(self.dados, dino_id)
             
             embed = discord.Embed(
@@ -503,6 +513,15 @@ class DinoSearchSelect(ui.Select):
                     f"❌ Dinossauro não encontrado: {dino_id}",
                     ephemeral=True
                 )
+                return
+            
+            dino_data = dinos[dino_id]
+            
+            # Se é asexuado, vai direto para o Stats Modal
+            if dino_data.get("asexual", False):
+                print(f"[DINOSAUR] {dino_id} é asexuado, abrindo StatsModal direto...")
+                modal = StatsModal(dino_id, self.dados, eh_castrado=False)
+                await interaction.response.send_modal(modal)
                 return
             
             print(f"[DINOSAUR] Criando CastradoSelectView para {dino_id}...")
@@ -583,6 +602,15 @@ class DinoSelect(ui.Select):
                     f"❌ Dinossauro não encontrado: {dino_id}",
                     ephemeral=True
                 )
+                return
+            
+            dino_data = dinos[dino_id]
+            
+            # Se é asexuado, vai direto para o Stats Modal
+            if dino_data.get("asexual", False):
+                print(f"[DINOSAUR] {dino_id} é asexuado, abrindo StatsModal direto...")
+                modal = StatsModal(dino_id, self.dados, eh_castrado=False)
+                await interaction.response.send_modal(modal)
                 return
             
             print(f"[DINOSAUR] Criando CastradoSelectView para {dino_id}...")
