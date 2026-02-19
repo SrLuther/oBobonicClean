@@ -231,13 +231,13 @@ class StatsModal(ui.Modal):
         self.dino_id = dino_id
         self.dados = dados
     
-    melee = ui.TextInput(label="Melee Damage", required=False, placeholder="0", default="0")
-    health = ui.TextInput(label="Health/Saúde", required=False, placeholder="0", default="0")
-    stamina = ui.TextInput(label="Stamina", required=False, placeholder="0", default="0")
-    weight = ui.TextInput(label="Weight/Peso", required=False, placeholder="0", default="0")
-    oxygen = ui.TextInput(label="Oxygen/Oxigênio", required=False, placeholder="0", default="0")
-    food = ui.TextInput(label="Food/Comida", required=False, placeholder="0", default="0")
-    castrado = ui.TextInput(label="Castrado? (sim/não)", required=False, placeholder="não", default="não")
+    melee = ui.TextInput(label="Melee Damage", required=False, placeholder="0", min_length=0)
+    health = ui.TextInput(label="Health/Saúde", required=False, placeholder="0", min_length=0)
+    stamina = ui.TextInput(label="Stamina", required=False, placeholder="0", min_length=0)
+    weight = ui.TextInput(label="Weight/Peso", required=False, placeholder="0", min_length=0)
+    oxygen = ui.TextInput(label="Oxygen/Oxigênio", required=False, placeholder="0", min_length=0)
+    food = ui.TextInput(label="Food/Comida", required=False, placeholder="0", min_length=0)
+    castrado = ui.TextInput(label="Castrado? (sim/não)", required=False, placeholder="não", min_length=0)
     
     async def on_submit(self, interaction: discord.Interaction) -> None:
         """Processa o envio do modal"""
