@@ -141,28 +141,137 @@ async def recriar_todos_os_painels():
     """
     try:
         import asyncio
-        await asyncio.sleep(2)  # Aguarda cogs serem carregados
+        await asyncio.sleep(3)  # Aguarda cogs serem carregados
         
-        # Recriar painel de tickets
-        try:
-            cog_tickets = bot.get_cog('TicketsController')
-            if cog_tickets and hasattr(cog_tickets, 'recriar_painel_tickets'):
-                await cog_tickets.recriar_painel_tickets()
-                print("✅ Painels de tickets recriados via bot.py")
-        except Exception as e:
-            print(f"⚠️ Erro ao recriar painel de tickets: {e}")
+        print("\n🔄 [REINICIO] Iniciando recriação de painels...")
         
-        # Recriar painel de lojas
+        guild = bot.get_guild(GUILD_ID)
+        if not guild:
+            print("⚠️ [REINICIO] Guild não encontrada, pulando recriação de painels")
+            return
+        
+        # ========== RECRIAR PAINEL DE LOJAS ==========
         try:
-            cog_lojas = bot.get_cog('Lojas')
-            if cog_lojas and hasattr(cog_lojas, 'atualizar_painel_lojas'):
-                await cog_lojas.atualizar_painel_lojas()
-                print("✅ Painels de lojas recriados via bot.py")
+            from cogs.lojas import ViewCriarLoja
+            
+            canal_lojas = guild.get_channel(1473763773805363414)  # PANEL_CHANNEL_ID de lojas
+            if isinstance(canal_lojas, discord.TextChannel):
+                # Deletar mensagens antigas com o botão de lojas
+                async for msg in canal_lojas.history(limit=50):
+                    if msg.author.id == bot.user.id and msg.components:
+                        for component in msg.components:
+                            if hasattr(component, 'children'):
+                                for child in component.children:
+                                    if hasattr(child, 'custom_id') and child.custom_id == "criar_loja_btn":
+                                        try:
+                                            await msg.unpin()
+                                            await msg.delete()
+                                            print("✅ [REINICIO] Painel antigo de lojas deletado")
+                                        except:
+                                            pass
+                                        break
+                
+                # Recriar painel de lojas com nova View
+                await asyncio.sleep(1)
+                painel_lojas = await canal_lojas.send(
+                    "🏪 **SISTEMA DE LOJAS PESSOAIS**\n\n"
+                    "═══════════════════════════════════════\n\n"
+                    "**Bem-vindo ao sistema de lojas!**\n\n"
+                    "Clique no botão abaixo para criar sua própria loja "
+                    "e começar a vender seus recursos, dinossauros e serviços.\n\n"
+                    "**✨ Como Funciona:**\n"
+                    "1️⃣ Clique em \"Criar Minha Loja\"\n"
+                    "2️⃣ Defina um nome para sua loja\n"
+                    "3️⃣ Um canal exclusivo será criado para você\n"
+                    "4️⃣ Publique seus produtos!\n\n"
+                    "**⚙️ Gerenciamento:**\n"
+                    "• Use `!fecharloja` para encerrar sua loja\n"
+                    "• Você é o único que pode postar em sua loja\n"
+                    "• Lojas inativas podem ser reabertas\n\n"
+                    "**💡 Dicas:**\n"
+                    "• Descreva bem seus produtos\n"
+                    "• Inclua preços e disponibilidade\n"
+                    "• Seja claro na comunicação\n\n"
+                    "═══════════════════════════════════════",
+                    view=ViewCriarLoja(bot)
+                )
+                await painel_lojas.pin()
+                print("✅ [REINICIO] Painel de lojas recriado com sucesso!")
         except Exception as e:
-            print(f"⚠️ Erro ao recriar painel de lojas: {e}")
+            print(f"⚠️ [REINICIO] Erro ao recriar painel de lojas: {e}")
+        
+        # ========== RECRIAR PAINEL DE TICKETS ==========
+        try:
+            from cogs.tickets.tickets_views import gerar_view_ticket
+            from cogs.tickets.tickets_controls import TicketsController
+            
+            canal_tickets = guild.get_channel(CANAL_PAINEL_ID)  # CANAL_PAINEL_ID para tickets
+            if isinstance(canal_tickets, discord.TextChannel):
+                # Deletar mensagens antigas com o botão de tickets
+                async for msg in canal_tickets.history(limit=50):
+                    if msg.author.id == bot.user.id and msg.components:
+                        for component in msg.components:
+                            if hasattr(component, 'children'):
+                                for child in component.children:
+                                    if hasattr(child, 'custom_id') and child.custom_id == "abrir_ticket":
+                                        try:
+                                            await msg.unpin()
+                                            await msg.delete()
+                                            print("✅ [REINICIO] Painel antigo de tickets deletado")
+                                        except:
+                                            pass
+                                        break
+                
+                # Recriar painel de tickets com nova View
+                await asyncio.sleep(1)
+                controller = bot.get_cog('TicketsController')
+                if controller:
+                    painel_tickets = await canal_tickets.send(
+                        "🎟️ **SISTEMA DE TICKETS DE SUPORTE**\n\n"
+                        "═══════════════════════════════════════\n\n"
+                        "**Bem-vindo ao sistema de suporte!**\n\n"
+                        "Clique no botão abaixo para abrir um ticket "
+                        "e solicitar ajuda com dúvidas, problemas ou outros assuntos.\n\n"
+                        "**✨ Categorias de Suporte:**\n"
+                        "📋 Geral • 💰 Financeiro • 📦 Problemas com Kit\n"
+                        "🐛 Bug • ⚠️ Denúncia • 💡 Sugestão • 😠 Reclamação • ❓ Outro\n\n"
+                        "**✨ Como Funciona:**\n"
+                        "1️⃣ Clique em \"Abrir Ticket\"\n"
+                        "2️⃣ Escolha a categoria de suporte\n"
+                        "3️⃣ Forneça um resumo do seu problema\n"
+                        "4️⃣ Um canal privado será criado para você\n"
+                        "5️⃣ Um membro da equipe irá ajudá-lo!\n\n"
+                        "**⚠️ MATERIAL NECESSÁRIO:**\n"
+                        "• **Tenha tudo em mão antes de abrir o ticket!**\n"
+                        "• Provas, comprovantes ou evidências relevantes\n"
+                        "• Fotos ou prints mostrando o problema\n"
+                        "• Recibos ou confirmações de pagamento (se aplicável)\n"
+                        "• Informações completas e precisas sobre o caso\n\n"
+                        "**⚙️ Gerenciamento do Ticket:**\n"
+                        "• Um responsável irá **Assumir** seu atendimento\n"
+                        "• Responda rapidamente às questões da equipe\n"
+                        "• Envie anexos e evidências conforme solicitado\n"
+                        "• Quando resolvido, o ticket será **Fechado**\n"
+                        "• Forneça feedback sobre o atendimento\n\n"
+                        "**💡 Dicas Importantes:**\n"
+                        "• Seja específico e detalhado na descrição\n"
+                        "• Não abra múltiplos tickets para o mesmo assunto\n"
+                        "• A equipe trabalha o mais rápido possível\n"
+                        "• Tickets inativos são automaticamente encerrados\n\n"
+                        "═══════════════════════════════════════",
+                        view=gerar_view_ticket(controller)
+                    )
+                    await painel_tickets.pin()
+                    print("✅ [REINICIO] Painel de tickets recriado com sucesso!")
+        except Exception as e:
+            print(f"⚠️ [REINICIO] Erro ao recriar painel de tickets: {e}")
+            
+        print("✅ [REINICIO] Recriação de painels concluída!\n")
             
     except Exception as e:
-        print(f"❌ Erro geral ao recriar painels: {e}")
+        print(f"❌ [REINICIO] Erro geral ao recriar painels: {e}")
+        import traceback
+        traceback.print_exc()
 
 # --------------------
 # 4. FUNÇÃO PARA CRIAR O PAINEL PERSISTENTE
