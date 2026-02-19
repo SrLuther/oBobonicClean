@@ -30,11 +30,19 @@ class TicketsController(commands.Cog):
         except Exception as e:
             print(f"⚠️ Erro ao registrar view de tickets: {e}")
         
+        # Aguardar um pouco para o bot ficar totalmente pronto
+        try:
+            await asyncio.sleep(2)
+        except Exception:
+            pass
+        
         # Recriar painel de tickets após restart para garantir que as Views funcionem
         try:
             await self.recriar_painel_tickets()
         except Exception as e:
             print(f"⚠️ Erro ao recriar painel de tickets: {e}")
+            import traceback
+            traceback.print_exc()
 
     # ------------------------
     # RECRIAR PAINEL DE TICKETS

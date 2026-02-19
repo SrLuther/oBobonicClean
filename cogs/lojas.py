@@ -322,15 +322,21 @@ class Lojas(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self) -> None:
         """Executa quando o bot está pronto"""
+        import asyncio
         try:
             # Registrar a view persistente
             self.bot.add_view(ViewCriarLoja(self.bot))
             print("✅ [LOJAS] View persistente registrada")
             
+            # Aguardar um pouco para o bot ficar totalmente pronto
+            await asyncio.sleep(2)
+            
             # Criar/atualizar painel de lojas
             await self.atualizar_painel_lojas()
         except Exception as e:
             print(f"⚠️ [LOJAS] Erro ao inicializar: {e}")
+            import traceback
+            traceback.print_exc()
     
     async def atualizar_painel_lojas(self) -> None:
         """Cria ou atualiza o painel de lojas no canal - recriar ao reiniciar para garantir Views funcionem"""
