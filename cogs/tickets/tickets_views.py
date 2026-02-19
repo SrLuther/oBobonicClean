@@ -143,6 +143,29 @@ def gerar_ticket_view(controller: 'TicketsController', canal_ticket: discord.Tex
 
         @discord.ui.button(label="Assumir", style=discord.ButtonStyle.blurple)
         async def assumir_button(self, interaction: discord.Interaction, button: discord.ui.Button[Any]):
+            usuario = interaction.user
+            if not isinstance(usuario, discord.Member) and interaction.guild:
+                usuario = interaction.guild.get_member(usuario.id)  # type: ignore[assignment]
+            if not isinstance(usuario, discord.Member):
+                try:
+                    await interaction.response.send_message("❌ Erro ao identificar o membro.", ephemeral=True)
+                except Exception:
+                    pass
+                return
+            
+            # Verificar se é administrador do servidor
+            if not usuario.guild_permissions.administrator:
+                try:
+                    await interaction.response.send_message(
+                        "⛔ **Acesso Negado!**\n\n"
+                        "Apenas **administradores do servidor** podem assumir tickets.\n"
+                        "Se você é parte da equipe de suporte, solicite permissão de administrador.",
+                        ephemeral=True
+                    )
+                except Exception:
+                    pass
+                return
+            
             try:
                 await interaction.response.send_message("🛡️ Ticket assumido.", ephemeral=True)
             except Exception:
@@ -153,11 +176,6 @@ def gerar_ticket_view(controller: 'TicketsController', canal_ticket: discord.Tex
                     canal = interaction.guild.get_channel(interaction.channel_id)  # type: ignore[attr-defined]
                 if not isinstance(canal, discord.TextChannel):
                     return
-            usuario = interaction.user
-            if not isinstance(usuario, discord.Member) and interaction.guild:
-                usuario = interaction.guild.get_member(usuario.id)  # type: ignore[assignment]
-            if not isinstance(usuario, discord.Member):
-                return
             await controller.assumir_ticket(canal, usuario, ticket_id)
 
     return TicketView()
