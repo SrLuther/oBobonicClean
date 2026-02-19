@@ -85,6 +85,7 @@ LOG_SEPARATOR = os.getenv("LOG_SEPARATOR", "------------------------------------
 COGS = [
     'tickets',   # Só o pacote tickets
     'lojas',     # Sistema de lojas pessoais
+    'dinosaur_valuer',  # Calculadora de valor de dinossauros
     'admin', 
     'ai',
     'autoresponse', 
