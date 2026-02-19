@@ -42,7 +42,7 @@
     "crystal_wyvern": {"name": "Crystal Wyvern", "base_value": 5200, "stat_multipliers": {"melee": 145, "health": 78, "stamina": 44, "weight": 16, "oxygen": 5, "food": 12}, "optimal_stats": {"melee": 330, "stamina": 3300}},
     "shadowmane": {"name": "Shadowmane", "base_value": 6500, "stat_multipliers": {"melee": 165, "health": 88, "stamina": 42, "weight": 22, "oxygen": 5, "food": 14}, "optimal_stats": {"melee": 360, "health": 15500}},
     "bloodstalker": {"name": "Bloodstalker", "base_value": 4200, "stat_multipliers": {"melee": 125, "health": 72, "stamina": 50, "weight": 28, "oxygen": 5, "food": 13}, "optimal_stats": {"stamina": 3200, "melee": 310}},
-    "carcharado": {"name": "Carcharadontosaurus", "base_value": 7500, "stat_multipliers": {"melee": 195, "health": 92, "stamina": 32, "weight": 22, "oxygen": 5, "food": 14}, "optimal_stats": {"melee": 390, "health": 18500}},
+    "carcharado": {"name": "Carcharadontosaurus", "base_value": 8500, "stat_multipliers": {"melee": 195, "health": 92, "stamina": 32, "weight": 22, "oxygen": 5, "food": 14}, "optimal_stats": {"melee": 390, "health": 18500}},
     "achatina": {"name": "Achatina", "base_value": 1100, "stat_multipliers": {"melee": 45, "health": 35, "stamina": 20, "weight": 40, "oxygen": 5, "food": 12}, "optimal_stats": {"weight": 15000, "health": 6000}},
     "acrocanthosaurus": {"name": "Acrocanthosaurus", "base_value": 4300, "stat_multipliers": {"melee": 130, "health": 75, "stamina": 32, "weight": 18, "oxygen": 5, "food": 13}, "optimal_stats": {"melee": 310, "health": 13000}},
     "amargasaurus": {"name": "Amargasaurus", "base_value": 2700, "stat_multipliers": {"melee": 95, "health": 62, "stamina": 28, "weight": 48, "oxygen": 5, "food": 18}, "optimal_stats": {"weight": 21000, "health": 11000}},
