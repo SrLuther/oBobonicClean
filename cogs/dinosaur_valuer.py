@@ -513,7 +513,7 @@ class DinoSearchSelect(ui.Select):
                 description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** é castrado?",
                 color=discord.Color.blue()
             )
-            await interaction.response.send(embed=embed, view=select_view, ephemeral=True)
+            await interaction.response.send_message(embed=embed, view=select_view, ephemeral=True)
             print(f"[DINOSAUR] ✅ View enviada com sucesso!")
         except Exception as e:
             print(f"[DINOSAUR] ❌ Erro no callback do DinoSearchSelect: {type(e).__name__}: {e}")
@@ -593,7 +593,7 @@ class DinoSelect(ui.Select):
                 description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** é castrado?",
                 color=discord.Color.blue()
             )
-            await interaction.response.send(embed=embed, view=select_view, ephemeral=True)
+            await interaction.response.send_message(embed=embed, view=select_view, ephemeral=True)
             print(f"[DINOSAUR] ✅ View enviada com sucesso!")
         except Exception as e:
             print(f"[DINOSAUR] ❌ Erro no callback do DinoSelect: {type(e).__name__}: {e}")
