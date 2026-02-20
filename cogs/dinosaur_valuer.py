@@ -362,66 +362,58 @@ class ReaperKingSelectView(ui.View):
         pass
 
 
+class StryderBrocaBolsaSelect(ui.Select):
+    """Select para escolher configuração de broca/bolsa do Stryder"""
+    
+    def __init__(self, dados: dict, dino_id: str):
+        self.dados = dados
+        self.dino_id = dino_id
+        
+        opcoes = [
+            discord.SelectOption(label="🪟 Apenas Broca (-25%)", value="broca_so", emoji="⚙️"),
+            discord.SelectOption(label="🪟 Broca + Bolsa (0%)", value="broca_bolsa", emoji="💼")
+        ]
+        
+        super().__init__(
+            placeholder="Qual é a configuração?",
+            min_values=1,
+            max_values=1,
+            options=opcoes
+        )
+    
+    async def callback(self, interaction: discord.Interaction) -> None:
+        """Callback quando configuração é selecionada"""
+        try:
+            config = self.values[0]
+            # broca_so = apenas broca (será -25%), broca_bolsa = com bolsa (sem desconto)
+            tem_broca_e_bolsa = (config == "broca_bolsa")
+            
+            # Abre modal do Stryder com a configuração selecionada
+            modal = StryderStatsModal(self.dino_id, self.dados, tem_broca_e_bolsa)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            print(f"[DINOSAUR] ❌ Erro no callback do StryderBrocaBolsaSelect: {type(e).__name__}: {e}")
+            await interaction.response.send_message(f"❌ Erro: {str(e)}", ephemeral=True)
+
+
 class StryderBrocaBolsaSelectView(ui.View):
-    """View para selecionar se Stryder tem broca e bolsa"""
+    """View para o select de broca/bolsa do Stryder"""
     
     def __init__(self, dados: dict, dino_id: str):
         super().__init__()
         self.dados = dados
         self.dino_id = dino_id
-        self.tem_broca = False
-        self.tem_bolsa = False
-    
-    @ui.button(label="Tem Broca? NÃO", style=discord.ButtonStyle.danger, emoji="❌")
-    async def tem_broca_btn(self, interaction: discord.Interaction, button: ui.Button):
-        """Toggle para 'Tem Broca'"""
-        await interaction.response.defer()
-        self.tem_broca = not self.tem_broca
-        
-        if self.tem_broca:
-            button.label = "Tem Broca? SIM"
-            button.style = discord.ButtonStyle.success
-            button.emoji = "✅"
-        else:
-            button.label = "Tem Broca? NÃO"
-            button.style = discord.ButtonStyle.danger
-            button.emoji = "❌"
-        
-        await interaction.message.edit(view=self)
-    
-    @ui.button(label="Tem Bolsa? NÃO", style=discord.ButtonStyle.danger, emoji="❌")
-    async def tem_bolsa_btn(self, interaction: discord.Interaction, button: ui.Button):
-        """Toggle para 'Tem Bolsa'"""
-        await interaction.response.defer()
-        self.tem_bolsa = not self.tem_bolsa
-        
-        if self.tem_bolsa:
-            button.label = "Tem Bolsa? SIM"
-            button.style = discord.ButtonStyle.success
-            button.emoji = "✅"
-        else:
-            button.label = "Tem Bolsa? NÃO"
-            button.style = discord.ButtonStyle.danger
-            button.emoji = "❌"
-        
-        await interaction.message.edit(view=self)
-    
-    @ui.button(label="Prosseguir para Stats", style=discord.ButtonStyle.primary, emoji="▶️")
-    async def prosseguir_btn(self, interaction: discord.Interaction, button: ui.Button):
-        """Abre o modal de stats"""
-        await interaction.response.send_modal(StryderStatsModal(self.dino_id, self.dados, self.tem_broca, self.tem_bolsa))
-        self.stop()
+        self.add_item(StryderBrocaBolsaSelect(dados, dino_id))
 
 
 class StryderStatsModal(ui.Modal):
     """Modal especializado para Stryder (usa Oxigênio, Stamina, Peso, Velocidade)"""
     
-    def __init__(self, dino_id: str, dados: dict, tem_broca: bool = False, tem_bolsa: bool = False):
+    def __init__(self, dino_id: str, dados: dict, tem_broca_e_bolsa: bool = False):
         super().__init__(title="Stats do Stryder")
         self.dino_id = dino_id
         self.dados = dados
-        self.tem_broca = tem_broca
-        self.tem_bolsa = tem_bolsa
+        self.tem_broca_e_bolsa = tem_broca_e_bolsa
     
     oxygen = ui.TextInput(label="Oxygen/Oxigênio", required=False, placeholder="0", min_length=0)
     stamina = ui.TextInput(label="Stamina", required=False, placeholder="0", min_length=0)
@@ -468,17 +460,13 @@ class StryderStatsModal(ui.Modal):
         
         # Aplicar lógica de penalidades para Tek Stryder
         valor_final = valor_original
-        status_broca = "✅ Sem penalidade - Melhor!"
+        status_broca = "✅ Broca + Bolsa (Sem penalidade)"
         
-        # Se não tem broca, o valor é 0
-        if not self.tem_broca:
-            valor_final = 0
-            status_broca = "❌ Sem Broca = Sem Valor!"
-        # Se tem broca mas não tem bolsa, aplica 25% de desconto
-        elif self.tem_broca and not self.tem_bolsa:
+        # Se tem apenas broca (sem bolsa), aplica -25%
+        if not self.tem_broca_e_bolsa:
             valor_final = int(valor_original * 0.75)
-            status_broca = "🪟 Broca Só = -25%"
-        # Se tem ambos, sem desconto
+            status_broca = "🪟 Apenas Broca (-25%)"
+        # Se tem broca + bolsa, sem desconto
         
         # Aplicar cap de 10000 Arkium máximo
         if valor_final > 10000:
@@ -491,7 +479,7 @@ class StryderStatsModal(ui.Modal):
         # Enviar resultado
         embed = discord.Embed(
             title=f"💎 {resultado['especie']}",
-            description=f"**Broca:** {'✅ Sim' if self.tem_broca else '❌ Não'} | **Bolsa:** {'✅ Sim' if self.tem_bolsa else '❌ Não'}",
+            description=status_broca,
             color=self._get_tier_color(resultado["tier"])
         )
         
@@ -518,11 +506,9 @@ class StryderStatsModal(ui.Modal):
                     breakdown_text += f"{stat_name.capitalize()}: `+{formatar_moeda(valor_stat)}`\n"
         
         # Mostrar desconto/penalidade se aplicável
-        if not self.tem_broca:
-            breakdown_text += f"**Sem Broca: `Valor = 0`**\n"
-        elif self.tem_broca and not self.tem_bolsa:
+        if not self.tem_broca_e_bolsa:
             desconto = valor_original - valor_final
-            breakdown_text += f"**Desconto (Broca Só): `-{formatar_moeda(desconto)}`**\n"
+            breakdown_text += f"**Desconto (Apenas Broca): `-{formatar_moeda(desconto)}`**\n"
         
         # Mostrar cap se aplicado
         if valor_final == 10000 and valor_original > 10000:
