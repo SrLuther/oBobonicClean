@@ -165,7 +165,6 @@ async def enviar_regras_se_necessario():
 **ARK: Survival Evolved | Cluster Completo**
 
 **✅ PVE PURO – Sem PVP, sem grief, cooperação total**  
-**Discord:** https://discord.gg/7wPswZkb8z  
 **Vigência:** 2026  
 **Rates:** 10× | Mods: S+, Dino Storage, SpyGlass
 
@@ -246,6 +245,9 @@ Apelação → ticket com provas (vídeo/print) – resposta em até 48h
 3. Qualquer dúvida ou problema → abra ticket!
 
 **Divirta-se no ARKLAND BRASIL!** 🦖✨
+
+**🎮 Pronto para entrar no servidor?**
+**► Discord:** https://discord.gg/7wPswZkb8z
 """
         
         # Dividir em mensagens menores se necessário (limite Discord é 2000 caracteres)
