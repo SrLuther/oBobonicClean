@@ -1285,7 +1285,7 @@ class DinosaurValuerCog(commands.Cog):
         )
         
         embed1.set_footer(text="Use !ajudacalc para ver todas as páginas")
-        await ctx.send(embed=embed1)
+        await ctx.send(embed=embed1, ephemeral=True)
         
         # PÁGINA 2: PASSO A PASSO DETALHADO
         embed2 = discord.Embed(
@@ -1319,7 +1319,7 @@ class DinosaurValuerCog(commands.Cog):
             inline=False
         )
         
-        await ctx.send(embed=embed2)
+        await ctx.send(embed=embed2, ephemeral=True)
         
         # PÁGINA 3: CATEGORIAS (PARTE 1)
         embed3 = discord.Embed(
@@ -1363,7 +1363,7 @@ class DinosaurValuerCog(commands.Cog):
             inline=False
         )
         
-        await ctx.send(embed=embed3)
+        await ctx.send(embed=embed3, ephemeral=True)
         
         # PÁGINA 4: CATEGORIAS (PARTE 2)
         embed4 = discord.Embed(
@@ -1406,7 +1406,7 @@ class DinosaurValuerCog(commands.Cog):
             inline=False
         )
         
-        await ctx.send(embed=embed4)
+        await ctx.send(embed=embed4, ephemeral=True)
         
         # PÁGINA 5: CATEGORIAS (PARTE 3) & TIERS
         embed5 = discord.Embed(
@@ -1459,7 +1459,7 @@ class DinosaurValuerCog(commands.Cog):
             inline=False
         )
         
-        await ctx.send(embed=embed5)
+        await ctx.send(embed=embed5, ephemeral=True)
         
         # PÁGINA 6: EXEMPLO PRÁTICO E DICAS
         embed6 = discord.Embed(
@@ -1497,7 +1497,7 @@ class DinosaurValuerCog(commands.Cog):
         )
         
         embed6.set_footer(text="Sistema de Avaliação ARK | Escrito por SrLuther")
-        await ctx.send(embed=embed6)
+        await ctx.send(embed=embed6, ephemeral=True)
     
     def _salvar_avaliacao(self, user_id: int, username: str, resultado: dict) -> None:
         """Salva avaliação no histórico"""
