@@ -161,115 +161,91 @@ async def enviar_regras_se_necessario():
         
         # Se não encontrou, envia as regras
         regras_completas = """
-📜 INTRODUÇÃO
-Bem-vindo ao ARKLAND BRASIL no ARK: Survival Evolved!
-Somos um servidor PVE EXCLUSIVO (Player vs Environment), focado em sobrevivência, tame, breeding e diversão em grupo.
+# 🦕 REGRAS ARKLAND BRASIL – PVE 10x 🦖
+**ARK: Survival Evolved | Cluster Completo**
 
-🚫 NENHUM PVP permitido. Ataques a jogadores, bases ou tames alheios = BAN PERMANENTE IMEDIATO.
-Todas as regras promovem cooperação e fair play. Ignorância NÃO é desculpa.
-Idade mínima: 13 anos. Contas falsas ou alts para burlar = ban total.
-Linguagem: Português ou Inglês no chat global/proximidade.
-Reporte problemas via ticket no Discord com PROVAS OBRIGATÓRIAS (vídeo/screenshot/clips) em até 24h.
-Admins são imparciais: Podem inspecionar bases, tribos e inventários por denúncias. Decisões finais.
+**✅ PVE PURO – Sem PVP, sem grief, cooperação total**  
+**Discord:** https://discord.gg/7wPswZkb8z  
+**Vigência:** 2026  
+**Rates:** 10× | Mods: S+, Dino Storage, SpyGlass
 
-Objetivo: Comunidade BR amigável, sem griefing, rates 10x para progressão rápida, cluster completo (TheIsland, Ragnarok, Aberration, etc.) e eventos semanais!
+══════════════════════════════════════════════════════════════
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## 1. REGRAS BÁSICAS
+• Idade mínima: 13 anos  
+• Idioma: Português ou Inglês  
+• **NUNCA** ataque players, tames ou bases (mesmo offline/soltos) → **BAN PERM**  
+• Sem hacks, dupes, glitches, fly, clip → **BAN HWID**  
+• Sem spam, flood, caps excessivo ou emotes repetidos → mute/kick  
+• Ajude os novos! Cooperação é lei aqui
 
-**1. REGRAS GERAIS**
-1.1. PVE Puro: Proibido qualquer dano a jogadores, tames, estruturas ou itens de outros (mesmo offline/soltos).
-1.2. Sem Hacks/Exploits: Cheats, dupes, fly hacks, clipz, bots, god mode ou mods não autorizados = ban HWID permanente.
-1.3. Sem Spam/Flood: Caps lock excessivo, spam emotes/chat/voz = kick/mute imediato.
-1.4. Logout Protegido: Tames/dinos offline não podem ser aggroados, mortos ou roubados.
-1.5. Fair Play Incentivado: Ajude novos players! Doe itens iniciais, coopere em bosses.
-1.6. Mods Obrigatórios: Structures Plus (S+), Dino Storage v2, Awesome SpyGlass+. Outros mods proibidos sem aprovação admin.
+══════════════════════════════════════════════════════════════
 
-**2. CONSTRUÇÃO E BASES**
-2.1. Limites por Tribo (Cluster Total):
-• 3 bases principais por mapa.
-• Bases secundárias/forrageiras: Máx. 10x10 foundations.
-• Distância Mínima: 200m entre bases de tribos diferentes (medido por admin com fly).
+## 2. BASES
+• Máximo **3 bases principais** por mapa + secundárias pequenas (10×10)  
+• Distância mínima: **200 m** entre tribos diferentes  
+• **Proibido bloquear**:
+  - Spawns (100 m livre ao redor)
+  - Obelisks, beacons, drops, cavernas, boss arenas
+  - Nodes iniciais de metal/cristal/obsidiana
+• Pillar spam: máximo **50 estruturas vazias** por base  
+• Decay: **7 dias**  
+• Bases abandonadas (14 dias offline): anuncie no Discord e pode demolir
 
-2.2. Proibições de Bloqueio (Griefing):
-• Spawns de Players: Raio 100m livre ao redor de TODOS spawns (inicial, beach, etc.).
-• Obelisks/Beacons/Drops: Não bloqueie loot drops, supply beacons, explorer notes ou ARK Data.
-• Cavernas/Boss Arenas/Artefatos: Acesso livre e direto obrigatório.
-• Recursos Públicos: Não bloqueie nodes de metal/cristal/obsidian perto de spawns ou rotas comuns.
+══════════════════════════════════════════════════════════════
 
-2.3. Pillar/Structure Spam: Proibido. Máx. 50 structures não-funcionais (pillars vazios, etc.) por base.
-2.4. Decaimento: Structures decaem em 7 dias sem claim. Admins limpam bases abandonadas (14+ dias sem login da tribo).
-2.5. Bases Abandonadas: Após 14 dias sem login, qualquer um pode demolir. Anuncie no #avisos do Discord 24h antes.
-2.6. Construções em Dinos/Plataformas:
-• Rampas OK. Torretas automáticas PROIBIDAS em saddles.
-• Não blindar dinos 100% (exponha corpo para fair play).
-• Plantas X PROIBIDAS em plataformas/saddles.
+## 3. DINOS & TAMING
+• **Tames 100% protegidos** – nunca mate, roube, aggro ou abra inventário  
+• Limite: **500 dinos por tribo por mapa**  
+• Quilombos/kibble farms: ok, mas sem bloquear caminhos/spawns  
+• Transfer cluster: **1 wyvern/rock drake/quetzal por semana** por tribo  
+• Proibido deixar tames bloqueando cavernas, obelisks ou arenas
 
-**3. CRIATURAS E TAMING**
-3.1. Tames 100% Protegidos: NUNCA mate, roube, aggro, abra inventário ou Cryopod de tames alheios (soltos/offline).
-3.2. Limite de Tames: 500 por tribo por mapa (Dino Storage conta). Não spam dinos low-tier para encher.
-3.3. Quilombos/Kibble Farms: Permitidos em áreas públicas, mas não bloqueie spawns/paths.
-3.4. Titans/Boss Dinos: Cooperação incentivada. Não mate tames durante fights.
-3.5. Transferências Cluster: 1 Wyvern/Rock Drake/Quetzal por semana por tribo.
-Proibido: Deixar tames em cavernas, obelisks, arenas ou missões bloqueando acesso.
+══════════════════════════════════════════════════════════════
 
-**4. RECURSOS, LOOT E TRANSFERÊNCIAS**
-4.1. Loot Steal Proibido: Não mate dinos em tame de outros ou roube drops intencionalmente (kill steal).
-4.2. Farm Público: OK, mas libere rotas comuns (ex: metal nodes beach).
-4.3. Obeliscos/ARK Data: Guarde itens (expiram em 1 semana). Não dupe.
-4.4. Trades/Economia: Use #trades no Discord. Sem RMT (real money trading).
+## 4. RECURSOS & LOOT
+• Sem loot steal (não mate dinos que outro está tameando)  
+• Farm público: liberado, mas deixe rotas comuns acessíveis  
+• Trades: use o canal #trades | **sem venda por dinheiro real**
 
-**5. TRIBOS, ALIANÇAS E COOPERAÇÃO**
-5.1. Limites: Máx. 12 membros por tribo. Alianças: até 3 tribos (declare no #alianças Discord).
-5.2. Mesclar/Kick: Notifique admins 24h antes. Líderes respondem por ações de membros.
-5.3. Raid Interno: Proibido. Saída de tribo = leva só itens pessoais (sem tames/estruturas).
-5.4. Contas Alt: Proibidas para burlar limites. Todas contas em mesma tribo.
+══════════════════════════════════════════════════════════════
 
-**6. EVENTOS E BOSSES**
-6.1. Eventos Semanais: Anunciados no Discord (rate duplo, boss runs grátis, giveaways).
-6.2. Bosses: Todos podem participar. Coop OK, sem grief (bloquear arena = ban).
-6.3. Super Breeds: Permitidos, mas registre no #breeds para verificação admin.
+## 5. TRIBOS & ALIANÇAS
+• Máximo **12 membros por tribo**  
+• Alianças: até **3 tribos** (declare no Discord)  
+• Mesclar ou kick: avise admins com 24h de antecedência  
+• Raid interno: proibido – ao sair da tribo leva só itens pessoais
 
-**7. COMPORTAMENTO E COMUNICAÇÃO**
-7.1. Chat/Voz/Discord: Sem racismo, sexismo, homofobia, bullying, toxicidade, spam ou NSFW.
-7.2. Publicidade: Proibida sem permissão admin.
-7.3. Griefing Geral: Qualquer ação para atrapalhar (spam dinos, lag, bloqueio paths) = punição progressiva.
+══════════════════════════════════════════════════════════════
 
-**8. PROIBIÇÕES ESPECIAIS (EXPLOITS E BUGS - Evolved Específicos)**
-8.1. Glitches: Dupe (backpack, transfer), mesh building, under-map, tame stacking, C4 spam.
-8.2. Crashes/Lag: Não cause intencionalmente (ex: 1000 tames soltando).
-8.3. Nomes Ofensivos: Vulgar/racista = rename forçado + ban.
-8.4. S+ Específicos: Sem auto-decay abuse ou engrams proibidos.
+## 6. COMPORTAMENTO
+• Sem racismo, homofobia, sexismo, bullying, toxicidade ou NSFW  
+• Sem propaganda sem permissão dos admins
 
-**9. ADMINISTRAÇÃO, PUNIÇÕES E APELAÇÕES**
-9.1. Admins/Mods: Decisões finais. Inspecionam por denúncia (fly, unclaim temp).
-9.2. Sistema de Punições Progressivo:
-• Leve (spam chat): 1ª Vez - Mute 1h | 2ª Vez - Mute 24h | 3ª Vez - Temp Ban 3 dias
-• Média (bloqueio leve, grief): 1ª Vez - Temp Ban 1 dia | 2ª Vez - Temp Ban 7 dias | 3ª Vez - Temp Ban 30 dias
-• Grave (tame kill, pillar spam): 1ª Vez - Temp Ban 7 dias | 2ª Vez - Temp Ban 30 dias | 3ª Vez - Ban Perm
-• Muito Grave (PVP, hacks): Ban Perm em todas as infrações
+══════════════════════════════════════════════════════════════
 
-9.3. Apelações: Apenas via ticket Discord com provas. Resposta em 48h. Spam = rejeição automática.
-9.4. Wipes: Anunciados 7 dias antes no Discord. Exceto emergentes (bugs/hacks).
+## 7. PUNIÇÕES (progressivas)
+Leve (spam, caps) → mute 1h → mute 24h → ban 3 dias  
+Média (bloqueio leve, grief) → ban 1 dia → 7 dias → 30 dias  
+Grave (matar tame, pillar spam) → ban 7 dias → 30 dias → **PERM**  
+Muito grave (PVP, hacks, dupe) → **BAN PERM** imediato  
 
-**10. CONFIGURAÇÕES DO SERVIDOR (10x Rates - Evolved)**
-• Taming: 10x
-• Harvesting: 10x
-• XP: 10x
-• Breeding: 10x (maturation/egg)
-• Cuddle Interval: 0.1x
-• Mating Interval: 0.167x
-• Baby Food: 0.5x
-• Decay Structures: 7 dias
-• Max Players: 50
-• Mods: S+, Dino Storage, SpyGlass+
-• Cluster Transfer: 1 flyer grande/semana.
+Apelação → ticket com provas (vídeo/print) – resposta em até 48h
 
-⚠️ **Violações = AÇÃO IMEDIATA! Coopere para o melhor PVE BR no ARKLAND BRASIL!**
+══════════════════════════════════════════════════════════════
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## 8. WIPES & EVENTOS
+• Wipe mensal: dia **1** de cada mês (aviso com 7 dias)  
+• Eventos: toda **sexta às 20h BRT** (rates duplo, boss runs, giveaways)
 
-✅ Você concorda com as regras do servidor ao jogar aqui.
-📞 Dúvidas? Abra um ticket no #tickets!
+══════════════════════════════════════════════════════════════
+
+**Resumindo em 3 frases:**
+1. Coopere, não atrapalhe ninguém.
+2. Respeite os tames e bases dos outros.
+3. Qualquer dúvida ou problema → abra ticket!
+
+**Divirta-se no ARKLAND BRASIL!** 🦖✨
 """
         
         # Dividir em mensagens menores se necessário (limite Discord é 2000 caracteres)
