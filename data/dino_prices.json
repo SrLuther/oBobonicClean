@@ -1635,6 +1635,7 @@
     "reaper_queen": {
       "name": "Reaper Queen",
       "base_value": 7000,
+      "asexual": true,
       "stat_multipliers": {
         "melee": 240,
         "health": 160,
@@ -1811,6 +1812,8 @@
     "tek_stryder": {
       "name": "Tek Stryder",
       "base_value": 2500,
+      "asexual": true,
+      "has_broca": true,
       "stat_multipliers": {
         "melee": 150,
         "health": 95,

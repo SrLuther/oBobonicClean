@@ -101,6 +101,16 @@ async def load_cogs(bot: commands.Bot) -> bool:
 
     all_cogs_loaded = True
 
+    # Primeira, descarrega todos os cogs já carregados para evitar duplicação
+    loaded_cogs_list = list(bot.extensions.keys())
+    for extension in loaded_cogs_list:
+        try:
+            await bot.unload_extension(extension)
+            print(f"[COG] Descarregado: {extension}")
+        except Exception as e:
+            print(f"[AVISO] Não foi possível descarregar {extension}: {e}")
+
+    # Agora carrega os cogs
     for cog_name in COGS:
         module_name = f"cogs.{cog_name}"
         try:
