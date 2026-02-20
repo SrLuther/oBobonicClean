@@ -120,10 +120,10 @@ def calcular_valor_dino(
     stats: Dict[str, int],
     tipo_uso: Optional[str] = None,
     dados: Optional[dict] = None,
-    discount_percent: float = 0.0
+    castrado: bool = False
 ) -> Dict[str, Any]:
     """Calcula o valor de um dinossauro baseado em stats e tipo de uso
-    Se discount_percent > 0, o valor final é reduzido por essa porcentagem (ex: 0.25 = 25%)
+    Aplica multiplicador de categoria no final do cálculo
     """
     if dados is None:
         dados = carregar_dados_dinos()
@@ -135,7 +135,8 @@ def calcular_valor_dino(
         "analise": "",
         "tier": "Comum",
         "recomendacoes": [],
-        "discount_percent": discount_percent
+        "categoria": "Outros",
+        "castrado": castrado
     }
     
     # Encontrar dinossauro
@@ -149,7 +150,8 @@ def calcular_valor_dino(
     base_value = dino.get("base_value", 1000)
     stat_multipliers = dino.get("stat_multipliers", {})
     
-    # Calcular valor por stat
+    # Calcular valor por stat (base + stats)
+    valor_base = base_value
     valor_stats = base_value
     resultado["breakdown"]["valor_base"] = base_value
     
@@ -160,30 +162,46 @@ def calcular_valor_dino(
             valor_stats += contribuicao
             resultado["breakdown"][f"{stat_name}_value"] = int(contribuicao)
     
-    # Aplicar bônus de tipo de uso
-    bonus_tipo_uso = 1.0
-    tipo_uso_info = None
+    # Aplicar penalidade de castração (50% desconto)
+    castrado_final = castrado
+    if dino.get("no_castration", False):
+        # Reaper King e Mek não podem ser castrados
+        castrado_final = False
     
-    if tipo_uso:
-        tipo_uso = tipo_uso.lower()
-        tipos_disponiveis = dados.get("usage_types", {})
-        
-        if tipo_uso in tipos_disponiveis:
-            tipo_uso_info = tipos_disponiveis[tipo_uso]
-            bonus_tipo_uso = tipo_uso_info.get("bonus_multiplier", 1.0)
-            resultado["tipo_uso"] = tipo_uso_info.get("name", tipo_uso)
-            resultado["breakdown"]["bonus_tipo_uso"] = int(valor_stats * (bonus_tipo_uso - 1.0))
+    if castrado_final:
+        valor_stats = int(valor_stats * 0.5)
+        resultado["breakdown"]["desconto_castrado"] = -int(valor_base * 0.5)
     
-    # Calcular valor final
-    valor_final = int(valor_stats * bonus_tipo_uso)
+    # Aplicar multiplicador de categoria DEPOIS dos stats
+    categoria = dino.get("category", "outros").lower()
+    categoria_map = {
+        "apex_combat": 1.30,
+        "pve_combat": 1.20,
+        "criacao": 1.40,
+        "transporte": 1.25,
+        "farming": 1.15,
+        "utilidade": 1.10,
+        "outros": 1.00
+    }
     
-    # Aplicar desconto se houver
-    if discount_percent > 0:
-        valor_final = int(valor_final * (1.0 - discount_percent))  # Reduz pelo desconto
-        resultado["breakdown"]["desconto_broca"] = -int(valor_final * (discount_percent / (1.0 - discount_percent)))  # Mostra o desconto negativo
+    multiplicador_categoria = categoria_map.get(categoria, 1.0)
+    categoria_nome_map = {
+        "apex_combat": "Apex Combat",
+        "pve_combat": "PvE Combat",
+        "criacao": "Criação",
+        "transporte": "Transporte",
+        "farming": "Farming",
+        "utilidade": "Utilidade",
+        "outros": "Outros"
+    }
+    resultado["categoria"] = categoria_nome_map.get(categoria, "Outros")
+    
+    # Calcular valor final COM multiplicador de categoria
+    valor_final = int(valor_stats * multiplicador_categoria)
+    resultado["breakdown"]["multiplo_categoria"] = int(valor_final - valor_stats)
     
     resultado["valor_total"] = valor_final
-    resultado["bonus_tipo_uso_multiplier"] = bonus_tipo_uso
+    resultado["multiplicador_categoria"] = multiplicador_categoria
     
     # Classificar tier
     if valor_final < 500:
@@ -215,11 +233,11 @@ def calcular_valor_dino(
     
     resultado["analise_stats"] = analise_stats
     
-    # Recomendações
-    if bonus_tipo_uso >= 1.3:
-        resultado["recomendacoes"].append(f"🎯 Excelente para {tipo_uso_info.get('description', tipo_uso) if tipo_uso_info else 'este uso'}!")
-    elif bonus_tipo_uso >= 1.15:
-        resultado["recomendacoes"].append(f"👍 Bom para {tipo_uso_info.get('description', tipo_uso) if tipo_uso_info else 'este uso'}")
+    # Recomendações baseadas no tier
+    if valor_final >= 8000:
+        resultado["recomendacoes"].append("🎯 Espécime Excepcional!")
+    elif valor_final >= 5000:
+        resultado["recomendacoes"].append("👍 Ótimo espécime")
     
     return resultado
 
@@ -252,9 +270,8 @@ class CastradoSelect(ui.Select):
         """Callback quando castrado é selecionado"""
         try:
             eh_castrado = self.values[0] == "sim"
-            # castrado = 50% penalty, não castrado = 0% penalty
-            discount = 0.5 if eh_castrado else 0.0
-            modal = StatsModal(self.dino_id, self.dados, discount_percent=discount)
+            # Passar boolean em vez de desconto
+            modal = StatsModal(self.dino_id, self.dados, castrado=eh_castrado)
             await interaction.response.send_modal(modal)
         except Exception as e:
             print(f"[DINOSAUR] ❌ Erro no callback do CastradoSelect: {type(e).__name__}: {e}")
@@ -310,7 +327,7 @@ class SaddleSelect(ui.Select):
 
 
 class ReaperKingSelect(ui.Select):
-    """Select para abrir avaliação de Reaper King (sempre valor total, sem penalidades)"""
+    """Select para abrir avaliação de Reaper King ou Mek (sem castração)"""
     
     def __init__(self, dados: dict, dino_id: str):
         self.dados = dados
@@ -321,17 +338,17 @@ class ReaperKingSelect(ui.Select):
         ]
         
         super().__init__(
-            placeholder="Valuar Reaper King...",
+            placeholder="Iniciar avaliação...",
             min_values=1,
             max_values=1,
             options=opcoes
         )
     
     async def callback(self, interaction: discord.Interaction) -> None:
-        """Callback para abrir modal de stats do Reaper King"""
+        """Callback para abrir modal de stats (sem castração)"""
         try:
-            # Reaper King sempre tem valor total (sem desconto)
-            modal = StatsModal(self.dino_id, self.dados, discount_percent=0.0)
+            # Reaper King e Mek não podem ser castrados
+            modal = StatsModal(self.dino_id, self.dados, castrado=False)
             await interaction.response.send_modal(modal)
         except Exception as e:
             print(f"[DINOSAUR] ❌ Erro no callback do ReaperKingSelect: {type(e).__name__}: {e}")
@@ -455,7 +472,7 @@ class StryderStatsModal(ui.Modal):
             return
         
         # Calcular valor base (sem descontos)
-        resultado = calcular_valor_dino(self.dino_id, stats, None, self.dados, 0.0)
+        resultado = calcular_valor_dino(self.dino_id, stats, None, self.dados, False)
         valor_original = resultado['valor_total']
         
         # Aplicar lógica de penalidades para Tek Stryder
@@ -543,11 +560,11 @@ class StryderStatsModal(ui.Modal):
 class StatsModal(ui.Modal):
     """Modal para inserir os stats do dinossauro"""
     
-    def __init__(self, dino_id: str, dados: dict, discount_percent: float = 0.0):
+    def __init__(self, dino_id: str, dados: dict, castrado: bool = False):
         super().__init__(title="Inserir Stats do Dinossauro")
         self.dino_id = dino_id
         self.dados = dados
-        self.discount_percent = discount_percent
+        self.castrado = castrado
     
     melee = ui.TextInput(label="Melee Damage", required=False, placeholder="0", min_length=0)
     health = ui.TextInput(label="Health/Saúde", required=False, placeholder="0", min_length=0)
@@ -588,8 +605,8 @@ class StatsModal(ui.Modal):
             await interaction.followup.send(embed=embed, ephemeral=True)
             return
         
-        # Calcular valor
-        resultado = calcular_valor_dino(self.dino_id, stats, None, self.dados, self.discount_percent)
+        # Calcular valor com castração (se aplicável)
+        resultado = calcular_valor_dino(self.dino_id, stats, None, self.dados, self.castrado)
         
         # Calcular valor comercial sugerido
         valor_comercial = arredondar_valor_comercial(resultado['valor_total'])
@@ -597,27 +614,20 @@ class StatsModal(ui.Modal):
         # Enviar resultado
         embed = discord.Embed(
             title=f"💎 {resultado['especie']}",
-            description=resultado.get("tipo_uso", ""),
+            description=f"**Categoria:** {resultado.get('categoria', 'Outros')}",
             color=self._get_tier_color(resultado["tier"])
         )
-        
-        # Adicionar status de desconto se aplicável
-        if self.discount_percent == 0.25:
-            desconto_pct = 25
-            status_desconto = f" 🪟 **({desconto_pct}% OFF - Broca)**"
-        elif self.discount_percent == 0.5:
-            desconto_pct = 50
-            status_desconto = f" 🔪 **({desconto_pct}% OFF - Castrado)**"
-        else:
-            status_desconto = " ✅ **(Sem penalidade - Melhor!)**"
         
         # Mostrar valor exato e sugerido
         if valor_comercial != resultado['valor_total']:
             valor_field = f"**Exato:** `{formatar_moeda(resultado['valor_total'])}` Arkiums\n"
             valor_field += f"**Sugerido:** `{formatar_moeda(valor_comercial)}` Arkiums *(comercial)*\n"
-            valor_field += f"{resultado['tier']}{status_desconto}"
+            valor_field += f"{resultado['tier']}"
         else:
-            valor_field = f"`{formatar_moeda(resultado['valor_total'])}` {resultado['tier']}{status_desconto}"
+            valor_field = f"`{formatar_moeda(resultado['valor_total'])}` {resultado['tier']}"
+        
+        if self.castrado:
+            valor_field += " 🔪 **(Castrado -50%)**"
         
         embed.add_field(
             name="💰 Valor Total",
@@ -632,10 +642,12 @@ class StatsModal(ui.Modal):
                 if stats.get(stat_name, 0) > 0:
                     breakdown_text += f"{stat_name.capitalize()}: `+{formatar_moeda(valor_stat)}`\n"
         
-        if self.discount_percent == 0.25 and "desconto_broca" in resultado["breakdown"]:
-            breakdown_text += f"**Desconto Broca: `-25%`**\n"
-        elif self.discount_percent == 0.5 and "desconto_broca" in resultado["breakdown"]:
-            breakdown_text += f"**Desconto Castrado: `-50%`**\n"
+        if self.castrado and "desconto_castrado" in resultado["breakdown"]:
+            desconto = resultado["breakdown"]["desconto_castrado"]
+            breakdown_text += f"**Desconto Castrado: `-{formatar_moeda(abs(desconto))}`**\n"
+        
+        if "multiplo_categoria" in resultado["breakdown"]:
+            breakdown_text += f"**Multiplicador ({resultado.get('categoria', 'Outros')} x{resultado.get('multiplicador_categoria', 1.0):.2f}):** `+{formatar_moeda(resultado['breakdown']['multiplo_categoria'])}`\n"
         
         embed.add_field(name="📊 Breakdown", value=breakdown_text, inline=False)
         
@@ -726,15 +738,15 @@ class SearchDinoModal(ui.Modal):
                                f"Selecione se tem Broca e Bolsa",
                     color=discord.Color.blue()
                 )
-            # Se é Reaper King (asexuado sem broca), abre avaliação diretamente
-            elif dino_data.get("asexual", False):
-                print(f"[DINOSAUR] {dino_id} é Reaper King, mostrando ReaperKingSelectView...")
+            # Se é Reaper King ou Mek (não podem ser castrados)
+            elif dino_id in ["reaper_king", "mek"] or dino_data.get("no_castration", False):
+                print(f"[DINOSAUR] {dino_id} não pode ser castrado, mostrando ReaperKingSelectView...")
                 select_view = ReaperKingSelectView(self.dados, dino_id)
                 
                 embed = discord.Embed(
-                    title="🦖 Reaper King Selecionado",
+                    title="🦖 Criatura Selecionada",
                     description=f"**{resultados[dino_id].get('name')}**\n\n"
-                               f"Valor total sempre aplicado (sem penalidades)",
+                               f"Esta criatura não pode ser castrada",
                     color=discord.Color.blue()
                 )
             else:
@@ -820,14 +832,14 @@ class DinoSearchSelect(ui.Select):
                     description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** tem qual broca?",
                     color=discord.Color.blue()
                 )
-            # Se é Reaper King (asexuado sem broca), abre avaliação diretamente
-            elif dino_data.get("asexual", False):
-                print(f"[DINOSAUR] {dino_id} é Reaper King, mostrando ReaperKingSelectView...")
+            # Se é Reaper King ou Mek (não podem ser castrados)
+            elif dino_id in ["reaper_king", "mek"] or dino_data.get("no_castration", False):
+                print(f"[DINOSAUR] {dino_id} não pode ser castrado, mostrando ReaperKingSelectView...")
                 select_view = ReaperKingSelectView(self.dados, dino_id)
                 
                 embed = discord.Embed(
-                    title="🦖 Reaper King",
-                    description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** sempre vale seu valor total (sem penalidades)",
+                    title="🦖 Criatura Selecionada",
+                    description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** não pode ser castrado",
                     color=discord.Color.blue()
                 )
             else:
@@ -925,14 +937,14 @@ class DinoSelect(ui.Select):
                     description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** tem qual broca?",
                     color=discord.Color.blue()
                 )
-            # Se é Reaper King (asexuado sem broca), abre avaliação diretamente
-            elif dino_data.get("asexual", False):
-                print(f"[DINOSAUR] {dino_id} é Reaper King, mostrando ReaperKingSelectView...")
+            # Se é Reaper King ou Mek (não podem ser castrados)
+            elif dino_id in ["reaper_king", "mek"] or dino_data.get("no_castration", False):
+                print(f"[DINOSAUR] {dino_id} não pode ser castrado, mostrando ReaperKingSelectView...")
                 select_view = ReaperKingSelectView(self.dados, dino_id)
                 
                 embed = discord.Embed(
-                    title="🦖 Reaper King",
-                    description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** sempre vale seu valor total (sem penalidades)",
+                    title="🦖 Criatura Selecionada",
+                    description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** não pode ser castrado",
                     color=discord.Color.blue()
                 )
             else:
