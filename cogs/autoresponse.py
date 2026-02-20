@@ -256,6 +256,7 @@ class AutoResponse(commands.Cog):
         for gatilho, resposta in self.gatilhos.items():
             if gatilho in conteudo:
                 await message.channel.send(resposta)
+                return  # Responde apenas uma vez
 
 async def setup(bot):
     await bot.add_cog(AutoResponse(bot))
