@@ -162,7 +162,19 @@
     },
     "astrocetus": {
       "name": "Astrocetus",
-      "base_value": 5500
+      "base_value": 5500,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 138,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      }
     },
     "astrodelphis": {
       "name": "Astrodelphis",
@@ -198,7 +210,19 @@
     },
     "basilisk": {
       "name": "Basilisk",
-      "base_value": 6000
+      "base_value": 6000,
+      "stat_multipliers": {
+        "melee": 220,
+        "health": 145,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      }
     },
     "basilosaurus": {
       "name": "Basilosaurus",
@@ -794,7 +818,19 @@
     },
     "griffin": {
       "name": "Griffin",
-      "base_value": 4500
+      "base_value": 4500,
+      "stat_multipliers": {
+        "melee": 190,
+        "health": 125,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      }
     },
     "hesperornis": {
       "name": "Hesperornis",
@@ -1006,7 +1042,19 @@
     },
     "magmasaur": {
       "name": "Magmasaur",
-      "base_value": 5000
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 200,
+        "health": 131,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      }
     },
     "maewing": {
       "name": "Maewing",
@@ -1042,7 +1090,19 @@
     },
     "managarmr": {
       "name": "Managarmr",
-      "base_value": 4800
+      "base_value": 4800,
+      "stat_multipliers": {
+        "melee": 195,
+        "health": 128,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      }
     },
     "manta": {
       "name": "Manta",
@@ -1446,7 +1506,19 @@
     },
     "phoenix": {
       "name": "Phoenix",
-      "base_value": 6000
+      "base_value": 6000,
+      "stat_multipliers": {
+        "melee": 220,
+        "health": 145,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      }
     },
     "plesiosaur": {
       "name": "Plesiosaur",
@@ -1626,7 +1698,19 @@
     },
     "shadowmane": {
       "name": "Shadowmane",
-      "base_value": 6500
+      "base_value": 6500,
+      "stat_multipliers": {
+        "melee": 240,
+        "health": 160,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      }
     },
     "shinehorn": {
       "name": "Shinehorn",
