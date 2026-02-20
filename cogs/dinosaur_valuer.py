@@ -1255,7 +1255,7 @@ class DinosaurValuerCog(commands.Cog):
         
         await ctx.send(embed=embed)
     
-    @commands.command(name="ajudacalc", aliases=["ajuda", "como-funciona"])
+    @commands.command(name="ajudacalc")
     async def ajuda_calculadora(self, ctx: commands.Context):
         """Exibe guia completo sobre como os cálculos de valor funcionam"""
         
@@ -1284,7 +1284,7 @@ class DinosaurValuerCog(commands.Cog):
             inline=False
         )
         
-        embed1.set_footer(text="Use ajudacalc <número> para ver próximas páginas (2-6)")
+        embed1.set_footer(text="Use !ajudacalc para ver todas as páginas")
         await ctx.send(embed=embed1)
         
         # PÁGINA 2: PASSO A PASSO DETALHADO
@@ -1584,19 +1584,27 @@ async def criar_painel_automatico(bot: commands.Bot, canal: discord.TextChannel,
             title="🦖 CALCULADORA DE VALOR DE DINOSSAUROS",
             description=(
                 "Bem-vindo ao sistema de avaliação de dinossauros!\n\n"
-                "**Como usar:**\n"
+                "**📖 Como usar:**\n"
                 "1. Clique no botão abaixo\n"
                 "2. Selecione o tipo de dinossauro\n"
                 "3. Preencha os stats (Melee, Health, Stamina, etc)\n"
                 "4. Receba a avaliação detalhada\n\n"
-                "**Nossas Categorias:**\n"
-                "⚔️ **PvP Combat** - Dinossauros de combate PvP (bonus x1.3)\n"
-                "🐉 **PvE Combat** - Para derrotar bosses (bonus x1.2)\n"
-                "⛏️ **Farming** - Para coletar recursos (bonus x1.15)\n"
-                "🚚 **Transporte** - Para carregar/voar (bonus x1.25)\n"
-                "🥚 **Criação** - Para reprodução (bonus x1.4)\n"
-                "🔧 **Utilidade** - Funções especiais (bonus x1.1)\n\n"
-                f"**Dinossauros Disponíveis:** {len(dados.get('dinosaurs', {}))} espécies diferentes!\n\n"
+                "**📚 Quer aprender como os cálculos funcionam?**\n"
+                "Use o comando `!ajudacalc` para ver o guia completo com:\n"
+                "• Fórmula principal e fundamentos\n"
+                "• Passo a passo detalhado\n"
+                "• Todas as 7 categorias explicadas\n"
+                "• Exemplos práticos\n"
+                "• Dicas importantes\n\n"
+                "**👑 Nossas Categorias:**\n"
+                "👑 **Apex Combat** (x1.30) - Elite de combate\n"
+                "🥚 **Criação** (x1.40) - Reprodução (MAIS VALIOSA!)\n"
+                "🚚 **Transporte** (x1.25) - Mobilidade\n"
+                "🐉 **PvE Combat** (x1.20) - Bosses\n"
+                "⛏️ **Farming** (x1.15) - Recursos\n"
+                "🔧 **Utilidade** (x1.10) - Especial\n"
+                "🦕 **Outros** (x1.00) - Sem função\n\n"
+                f"**🦖 Dinossauros:** {len(dados.get('dinosaurs', {}))} espécies!\n\n"
                 "═══════════════════════════════════════"
             ),
             color=discord.Color.gold()
