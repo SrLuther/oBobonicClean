@@ -87,7 +87,6 @@ COGS = [
     'lojas',     # Sistema de lojas pessoais
     'dinosaur_valuer',  # Calculadora de valor de dinossauros
     'admin', 
-    'ai',
     'autoresponse', 
     'moderation', 
     'xp', 
