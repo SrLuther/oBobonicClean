@@ -1811,20 +1811,20 @@
     },
     "tek_stryder": {
       "name": "Tek Stryder",
-      "base_value": 2500,
+      "base_value": 6000,
       "asexual": true,
       "has_broca": true,
       "stat_multipliers": {
-        "melee": 150,
-        "health": 95,
-        "stamina": 30,
-        "weight": 25,
-        "oxygen": 5,
-        "food": 12
+        "weight": 12,
+        "oxygen": 15,
+        "stamina": 10,
+        "velocity": 18
       },
       "optimal_stats": {
-        "melee": 300,
-        "health": 12000
+        "weight": 400,
+        "oxygen": 1000,
+        "stamina": 500,
+        "velocity": 800
       }
     },
     "tek_stegosaurus": {

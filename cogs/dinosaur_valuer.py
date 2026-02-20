@@ -362,14 +362,66 @@ class ReaperKingSelectView(ui.View):
         pass
 
 
+class StryderBrocaBolsaSelectView(ui.View):
+    """View para selecionar se Stryder tem broca e bolsa"""
+    
+    def __init__(self, dados: dict, dino_id: str):
+        super().__init__()
+        self.dados = dados
+        self.dino_id = dino_id
+        self.tem_broca = False
+        self.tem_bolsa = False
+    
+    @ui.button(label="Tem Broca? NÃO", style=discord.ButtonStyle.danger, emoji="❌")
+    async def tem_broca_btn(self, interaction: discord.Interaction, button: ui.Button):
+        """Toggle para 'Tem Broca'"""
+        await interaction.response.defer()
+        self.tem_broca = not self.tem_broca
+        
+        if self.tem_broca:
+            button.label = "Tem Broca? SIM"
+            button.style = discord.ButtonStyle.success
+            button.emoji = "✅"
+        else:
+            button.label = "Tem Broca? NÃO"
+            button.style = discord.ButtonStyle.danger
+            button.emoji = "❌"
+        
+        await interaction.message.edit(view=self)
+    
+    @ui.button(label="Tem Bolsa? NÃO", style=discord.ButtonStyle.danger, emoji="❌")
+    async def tem_bolsa_btn(self, interaction: discord.Interaction, button: ui.Button):
+        """Toggle para 'Tem Bolsa'"""
+        await interaction.response.defer()
+        self.tem_bolsa = not self.tem_bolsa
+        
+        if self.tem_bolsa:
+            button.label = "Tem Bolsa? SIM"
+            button.style = discord.ButtonStyle.success
+            button.emoji = "✅"
+        else:
+            button.label = "Tem Bolsa? NÃO"
+            button.style = discord.ButtonStyle.danger
+            button.emoji = "❌"
+        
+        await interaction.message.edit(view=self)
+    
+    @ui.button(label="Prosseguir para Stats", style=discord.ButtonStyle.primary, emoji="▶️")
+    async def prosseguir_btn(self, interaction: discord.Interaction, button: ui.Button):
+        """Abre o modal de stats"""
+        await interaction.response.send_modal(StryderStatsModal(self.dino_id, self.dados, self.tem_broca, self.tem_bolsa))
+        self.stop()
+
+
 class StryderStatsModal(ui.Modal):
     """Modal especializado para Stryder (usa Oxigênio, Stamina, Peso, Velocidade)"""
     
-    def __init__(self, dino_id: str, dados: dict, discount_percent: float = 0.0):
+    def __init__(self, dino_id: str, dados: dict, tem_broca: bool = False, tem_bolsa: bool = False):
         super().__init__(title="Stats do Stryder")
         self.dino_id = dino_id
         self.dados = dados
-        self.discount_percent = discount_percent
+        self.tem_broca = tem_broca
+        self.tem_bolsa = tem_bolsa
     
     oxygen = ui.TextInput(label="Oxygen/Oxigênio", required=False, placeholder="0", min_length=0)
     stamina = ui.TextInput(label="Stamina", required=False, placeholder="0", min_length=0)
@@ -410,33 +462,46 @@ class StryderStatsModal(ui.Modal):
             await interaction.followup.send(embed=embed, ephemeral=True)
             return
         
-        # Calcular valor
-        resultado = calcular_valor_dino(self.dino_id, stats, None, self.dados, self.discount_percent)
+        # Calcular valor base (sem descontos)
+        resultado = calcular_valor_dino(self.dino_id, stats, None, self.dados, 0.0)
+        valor_original = resultado['valor_total']
+        
+        # Aplicar lógica de penalidades para Tek Stryder
+        valor_final = valor_original
+        status_broca = "✅ Sem penalidade - Melhor!"
+        
+        # Se não tem broca, o valor é 0
+        if not self.tem_broca:
+            valor_final = 0
+            status_broca = "❌ Sem Broca = Sem Valor!"
+        # Se tem broca mas não tem bolsa, aplica 25% de desconto
+        elif self.tem_broca and not self.tem_bolsa:
+            valor_final = int(valor_original * 0.75)
+            status_broca = "🪟 Broca Só = -25%"
+        # Se tem ambos, sem desconto
+        
+        # Aplicar cap de 10000 Arkium máximo
+        if valor_final > 10000:
+            valor_final = 10000
+            status_broca += " (Cap 10k)"
         
         # Calcular valor comercial sugerido
-        valor_comercial = arredondar_valor_comercial(resultado['valor_total'])
+        valor_comercial = arredondar_valor_comercial(valor_final)
         
         # Enviar resultado
         embed = discord.Embed(
             title=f"💎 {resultado['especie']}",
-            description=resultado.get("tipo_uso", ""),
+            description=f"**Broca:** {'✅ Sim' if self.tem_broca else '❌ Não'} | **Bolsa:** {'✅ Sim' if self.tem_bolsa else '❌ Não'}",
             color=self._get_tier_color(resultado["tier"])
         )
         
-        # Adicionar status de desconto se aplicável
-        if self.discount_percent == 0.25:
-            desconto_pct = 25
-            status_desconto = f" 🪟 **({desconto_pct}% OFF - Broca)**"
-        else:
-            status_desconto = " ✅ **(Sem penalidade - Melhor!)**"
-        
         # Mostrar valor exato e sugerido
-        if valor_comercial != resultado['valor_total']:
-            valor_field = f"**Exato:** `{formatar_moeda(resultado['valor_total'])}` Arkiums\n"
+        if valor_comercial != valor_final:
+            valor_field = f"**Exato:** `{formatar_moeda(valor_final)}` Arkiums\n"
             valor_field += f"**Sugerido:** `{formatar_moeda(valor_comercial)}` Arkiums *(comercial)*\n"
-            valor_field += f"{resultado['tier']}{status_desconto}"
+            valor_field += f"{resultado['tier']} - {status_broca}"
         else:
-            valor_field = f"`{formatar_moeda(resultado['valor_total'])}` {resultado['tier']}{status_desconto}"
+            valor_field = f"`{formatar_moeda(valor_final)}` {resultado['tier']} - {status_broca}"
         
         embed.add_field(
             name="💰 Valor Total",
@@ -444,6 +509,7 @@ class StryderStatsModal(ui.Modal):
             inline=False
         )
         
+        # Breakdown dos stats
         breakdown_text = f"Base: `{formatar_moeda(resultado['breakdown'].get('valor_base', 0))}`\n"
         for stat_name in ["oxygen", "stamina", "weight", "velocity"]:
             if f"{stat_name}_value" in resultado["breakdown"]:
@@ -451,8 +517,16 @@ class StryderStatsModal(ui.Modal):
                 if stats.get(stat_name, 0) > 0:
                     breakdown_text += f"{stat_name.capitalize()}: `+{formatar_moeda(valor_stat)}`\n"
         
-        if self.discount_percent == 0.25 and "desconto_broca" in resultado["breakdown"]:
-            breakdown_text += f"**Desconto Broca: `-25%`**\n"
+        # Mostrar desconto/penalidade se aplicável
+        if not self.tem_broca:
+            breakdown_text += f"**Sem Broca: `Valor = 0`**\n"
+        elif self.tem_broca and not self.tem_bolsa:
+            desconto = valor_original - valor_final
+            breakdown_text += f"**Desconto (Broca Só): `-{formatar_moeda(desconto)}`**\n"
+        
+        # Mostrar cap se aplicado
+        if valor_final == 10000 and valor_original > 10000:
+            breakdown_text += f"**Cap Máximo: `10000 Arkiums`**\n"
         
         embed.add_field(name="📊 Breakdown", value=breakdown_text, inline=False)
         
@@ -657,13 +731,13 @@ class SearchDinoModal(ui.Modal):
             
             # Se é Stryder (asexuado com broca), pergunta qual tipo de broca
             if dino_data.get("asexual", False) and dino_data.get("has_broca", False):
-                print(f"[DINOSAUR] {dino_id} é Stryder, mostrando SaddleSelectView...")
-                select_view = SaddleSelectView(self.dados, dino_id)
+                print(f"[DINOSAUR] {dino_id} é Stryder, mostrando StryderBrocaBolsaSelectView...")
+                select_view = StryderBrocaBolsaSelectView(self.dados, dino_id)
                 
                 embed = discord.Embed(
                     title="🦖 Stryder Selecionado",
                     description=f"**{resultados[dino_id].get('name')}**\n\n"
-                               f"Qual tipo de broca?",
+                               f"Selecione se tem Broca e Bolsa",
                     color=discord.Color.blue()
                 )
             # Se é Reaper King (asexuado sem broca), abre avaliação diretamente
@@ -752,12 +826,12 @@ class DinoSearchSelect(ui.Select):
             
             # Se é Stryder (asexuado com broca), pergunta qual tipo de broca
             if dino_data.get("asexual", False) and dino_data.get("has_broca", False):
-                print(f"[DINOSAUR] {dino_id} é Stryder, mostrando SaddleSelectView...")
-                select_view = SaddleSelectView(self.dados, dino_id)
+                print(f"[DINOSAUR] {dino_id} é Stryder, mostrando StryderBrocaBolsaSelectView...")
+                select_view = StryderBrocaBolsaSelectView(self.dados, dino_id)
                 
                 embed = discord.Embed(
                     title="🦖 Qual tipo de broca?",
-                    description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** usa qual broca?",
+                    description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** tem qual broca?",
                     color=discord.Color.blue()
                 )
             # Se é Reaper King (asexuado sem broca), abre avaliação diretamente
@@ -857,12 +931,12 @@ class DinoSelect(ui.Select):
             
             # Se é Stryder (asexuado com broca), pergunta qual tipo de broca
             if dino_data.get("asexual", False) and dino_data.get("has_broca", False):
-                print(f"[DINOSAUR] {dino_id} é Stryder, mostrando SaddleSelectView...")
-                select_view = SaddleSelectView(self.dados, dino_id)
+                print(f"[DINOSAUR] {dino_id} é Stryder, mostrando StryderBrocaBolsaSelectView...")
+                select_view = StryderBrocaBolsaSelectView(self.dados, dino_id)
                 
                 embed = discord.Embed(
                     title="🦖 Qual tipo de broca?",
-                    description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** usa qual broca?",
+                    description=f"O dinossauro **{self.dados.get('dinosaurs', {}).get(dino_id, {}).get('name', dino_id)}** tem qual broca?",
                     color=discord.Color.blue()
                 )
             # Se é Reaper King (asexuado sem broca), abre avaliação diretamente
