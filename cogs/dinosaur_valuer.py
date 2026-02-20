@@ -1255,6 +1255,250 @@ class DinosaurValuerCog(commands.Cog):
         
         await ctx.send(embed=embed)
     
+    @commands.command(name="ajudacalc", aliases=["ajuda", "como-funciona"])
+    async def ajuda_calculadora(self, ctx: commands.Context):
+        """Exibe guia completo sobre como os cálculos de valor funcionam"""
+        
+        # PÁGINA 1: INTRODUÇÃO E FÓRMULA PRINCIPAL
+        embed1 = discord.Embed(
+            title="📖 Guia Completo da Calculadora de Arkiums",
+            description="**Página 1 de 6** - Fundamentos",
+            color=discord.Color.gold()
+        )
+        
+        embed1.add_field(
+            name="🧮 Fórmula Principal",
+            value="```\nVALOR FINAL = (Base + Stats) × Multiplicador da Categoria\n```",
+            inline=False
+        )
+        
+        embed1.add_field(
+            name="📊 Como Funciona",
+            value=(
+                "**Passo 1:** Cada dinossauro começa com um **Base Value** (valor base fixo)\n"
+                "**Passo 2:** Adicionamos a contribuição de cada **Stat** (Melee, Health, etc)\n"
+                "**Passo 3:** Se castrado, aplicamos penalidade de **-50%**\n"
+                "**Passo 4:** Multiplicamos pelo **Multiplicador da Categoria**\n"
+                "**Passo 5:** Classificamos em um **Tier** baseado no resultado"
+            ),
+            inline=False
+        )
+        
+        embed1.set_footer(text="Use ajudacalc <número> para ver próximas páginas (2-6)")
+        await ctx.send(embed=embed1)
+        
+        # PÁGINA 2: PASSO A PASSO DETALHADO
+        embed2 = discord.Embed(
+            title="📖 Guia Completo da Calculadora de Arkiums",
+            description="**Página 2 de 6** - Passo a Passo",
+            color=discord.Color.gold()
+        )
+        
+        embed2.add_field(
+            name="📐 Exemplo Prático: T-Rex",
+            value=(
+                "**Base Value:** 3.500\n"
+                "**MELEE:** 250 × 1.50 = 375\n"
+                "**HEALTH:** 10.000 × 1.10 = 11.000\n"
+                "**STAMINA:** 500 × 0.30 = 150\n"
+                "─────────────────────────\n"
+                "**Base + Stats = 3.500 + 11.525 = 15.025**"
+            ),
+            inline=False
+        )
+        
+        embed2.add_field(
+            name="🔪 Passo 3: Castração",
+            value=(
+                "Se **NÃO** castrado → sem penalidade\n"
+                "Se **SIM** castrado → × 0.50 (perde 50%)\n\n"
+                "❌ **EXCEÇÕES:**\n"
+                "• Reaper King (nunca castrado)\n"
+                "• Mek (nunca castrado)"
+            ),
+            inline=False
+        )
+        
+        await ctx.send(embed=embed2)
+        
+        # PÁGINA 3: CATEGORIAS (PARTE 1)
+        embed3 = discord.Embed(
+            title="👑 As 7 Categorias e Seus Multiplicadores",
+            description="**Página 3 de 6** - Categorias Elite & Reprodução",
+            color=discord.Color.gold()
+        )
+        
+        embed3.add_field(
+            name="👑 Apex Combat • x1.30",
+            value=(
+                "**Elite máxima de combate**\n"
+                "• Carcharadontosaurus\n"
+                "• Giganotosaurus\n"
+                "• Reaper King\n"
+                "• Rock Elemental\n"
+                "• Wyverns (todas)\n"
+                "• Voidwyrm\n"
+                "• Shadowmane\n"
+                "• Mek\n\n"
+                "💡 Criaturas mais perigosas e valiosas para PvP"
+            ),
+            inline=False
+        )
+        
+        embed3.add_field(
+            name="🥚 Criação • x1.40 ⭐ MAIS VALIOSA",
+            value=(
+                "**Reprodução e mutação**\n"
+                "• Maewing (melhor reprodutor!)\n"
+                "• Procoptodon\n"
+                "• Oviraptor\n"
+                "• Daeodon\n"
+                "• Phiomia\n"
+                "• Paraceratherium\n"
+                "• Diplodocus\n"
+                "• Carbonemys\n"
+                "• Megachelon\n\n"
+                "💡 Criam mutações = valor econômico MÁXIMO!"
+            ),
+            inline=False
+        )
+        
+        await ctx.send(embed=embed3)
+        
+        # PÁGINA 4: CATEGORIAS (PARTE 2)
+        embed4 = discord.Embed(
+            title="👑 As 7 Categorias - Continuação",
+            description="**Página 4 de 6** - Transporte & Combate PvE",
+            color=discord.Color.gold()
+        )
+        
+        embed4.add_field(
+            name="🚚 Transporte • x1.25",
+            value=(
+                "**Mobilidade e logística**\n"
+                "• Argentavis\n"
+                "• Quetzal\n"
+                "• Tapejara\n"
+                "• Pteranodon\n"
+                "• Griffin\n"
+                "• Snow Owl\n"
+                "• Astrocetus\n"
+                "• E mais...\n\n"
+                "💡 Indispensáveis para movimento de bases"
+            ),
+            inline=False
+        )
+        
+        embed4.add_field(
+            name="🐉 PvE Combat • x1.20",
+            value=(
+                "**Combate geral e progressão**\n"
+                "• T-Rex\n"
+                "• Spinosaurus\n"
+                "• Therizinosaur\n"
+                "• Allosaurus\n"
+                "• Direwolf\n"
+                "• Velonasaur\n"
+                "• Managarmr\n"
+                "• And 9+ more\n\n"
+                "💡 Essenciais para derrotar bosses"
+            ),
+            inline=False
+        )
+        
+        await ctx.send(embed=embed4)
+        
+        # PÁGINA 5: CATEGORIAS (PARTE 3) & TIERS
+        embed5 = discord.Embed(
+            title="👑 As 7 Categorias - Finalização & Tiers",
+            description="**Página 5 de 6** - Farming, Utilidade & Classificação",
+            color=discord.Color.gold()
+        )
+        
+        embed5.add_field(
+            name="⛏️ Farming • x1.15",
+            value=(
+                "**Coleta de recursos**\n"
+                "Ankylosaurus, Doedicurus, Castoroides,\n"
+                "Mammoth, Magmasaur, Roll Rat, e mais\n\n"
+                "💡 Aumentam velocidade de recursos"
+            ),
+            inline=False
+        )
+        
+        embed5.add_field(
+            name="🔧 Utilidade • x1.10",
+            value=(
+                "**Funções especiais**\n"
+                "Beelzebufo, Troodon, Ichthyornis,\n"
+                "Otter, Shinehorn, Compy, Vulture, etc\n\n"
+                "💡 Úteis mas não econômicos"
+            ),
+            inline=False
+        )
+        
+        embed5.add_field(
+            name="🦕 Outros • x1.00",
+            value=(
+                "**Sem função principal**\n"
+                "Dodos, Dilophosaurus, e não categorizados\n\n"
+                "💡 Sem valor econômico significativo"
+            ),
+            inline=False
+        )
+        
+        embed5.add_field(
+            name="🎯 Tiers de Classificação",
+            value=(
+                "🟤 **Comum** - Valor < 500\n"
+                "🟢 **Raro** - Valor 500-1.999\n"
+                "🔵 **Épico** - Valor 2.000-4.999\n"
+                "🟣 **Lendário** - Valor 5.000-7.999\n"
+                "🟡 **Mítico** - Valor 8.000+"
+            ),
+            inline=False
+        )
+        
+        await ctx.send(embed=embed5)
+        
+        # PÁGINA 6: EXEMPLO PRÁTICO E DICAS
+        embed6 = discord.Embed(
+            title="📖 Guia Completo - Encerramento",
+            description="**Página 6 de 6** - Exemplo Completo & Dicas",
+            color=discord.Color.gold()
+        )
+        
+        embed6.add_field(
+            name="📈 Exemplo Prático: Maewing Criação (x1.40)",
+            value=(
+                "**Base:** 4.000\n"
+                "**MELEE:** 200 × 1.50 = 300\n"
+                "**HEALTH:** 8.000 × 1.10 = 8.800\n"
+                "**Subtotal:** 4.000 + 9.100 = 13.100\n"
+                "**Castrado?** Não (sem penalidade)\n"
+                "**Multiplicador (x1.40):** 13.100 × 1.40\n"
+                "═════════════════════════════\n"
+                "**VALOR FINAL = 18.340 Arkiums** 🟡 Mítico"
+            ),
+            inline=False
+        )
+        
+        embed6.add_field(
+            name="💡 Dicas Importantes",
+            value=(
+                "✅ **Criação** é a categoria mais lucrativa (x1.40)\n"
+                "✅ **Stats altos** impactam muito (cada 100 Melee = +150)\n"
+                "⚠️ **Castração custa 50%** - pense bem antes\n"
+                "⚠️ **Reaper King/Mek** nunca são castrados\n"
+                "⚠️ **Multiplicadores** são aplicados ao final\n"
+                "⚠️ **Tek Stryder** usa sistema exclusivo (broca/bolsa)"
+            ),
+            inline=False
+        )
+        
+        embed6.set_footer(text="Sistema de Avaliação ARK | Escrito por SrLuther")
+        await ctx.send(embed=embed6)
+    
     def _salvar_avaliacao(self, user_id: int, username: str, resultado: dict) -> None:
         """Salva avaliação no histórico"""
         historico = carregar_historico()
