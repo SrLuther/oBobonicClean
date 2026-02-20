@@ -147,41 +147,58 @@ async def load_cogs(bot: commands.Bot) -> bool:
 # --------------------
 async def recriar_todos_os_painels():
     """
-    Recriar painels de lojas e tickets após restart para garantir Views funcionem
+    Limpa e recriar painels de lojas, calculadora e tickets após restart para garantir Views funcionem.
+    NÃO envia regras - apenas sob demanda com comando !regras
     """
     try:
         import asyncio
         await asyncio.sleep(3)  # Aguarda cogs serem carregados
         
-        print("\n🔄 [REINICIO] Iniciando recriação de painels...")
+        print("\n🔄 [REINICIO] Iniciando limpeza e recriação de painels...")
         
         guild = bot.get_guild(GUILD_ID)
         if not guild:
-            print("⚠️ [REINICIO] Guild não encontrada, pulando recriação de painels")
+            print("⚠️ [REINICIO] Guild não encontrada, pulando limpeza de painels")
             return
         
-        # ========== RECRIAR PAINEL DE LOJAS ==========
+        # ========== LIMPAR E RECRIAR PAINEL DE CALCULADORA ==========
+        try:
+            VALUATION_CHANNEL_ID = 1474164587141271709
+            from cogs.dinosaur_valuer import criar_painel_automatico, carregar_dados_dinos
+            
+            canal_calcula = guild.get_channel(VALUATION_CHANNEL_ID)
+            if isinstance(canal_calcula, discord.TextChannel):
+                # Limpar todo o canal
+                async for msg in canal_calcula.history(limit=None):
+                    try:
+                        await msg.delete()
+                    except:
+                        pass
+                print(f"✅ [REINICIO] Canal de calculadora ({VALUATION_CHANNEL_ID}) limpado")
+                
+                # Recriar painel
+                await asyncio.sleep(1)
+                dados_dinos = carregar_dados_dinos()
+                await criar_painel_automatico(bot, canal_calcula, dados_dinos)
+                print("✅ [REINICIO] Painel de calculadora recriado com sucesso!")
+        except Exception as e:
+            print(f"⚠️ [REINICIO] Erro ao recriar painel de calculadora: {e}")
+        
+        # ========== LIMPAR E RECRIAR PAINEL DE LOJAS ==========
         try:
             from cogs.lojas import ViewCriarLoja
             
             canal_lojas = guild.get_channel(1473763773805363414)  # PANEL_CHANNEL_ID de lojas
             if isinstance(canal_lojas, discord.TextChannel):
-                # Deletar mensagens antigas com o botão de lojas
-                async for msg in canal_lojas.history(limit=50):
-                    if msg.author.id == bot.user.id and msg.components:
-                        for component in msg.components:
-                            if hasattr(component, 'children'):
-                                for child in component.children:
-                                    if hasattr(child, 'custom_id') and child.custom_id == "criar_loja_btn":
-                                        try:
-                                            await msg.unpin()
-                                            await msg.delete()
-                                            print("✅ [REINICIO] Painel antigo de lojas deletado")
-                                        except:
-                                            pass
-                                        break
+                # Limpar todo o canal
+                async for msg in canal_lojas.history(limit=None):
+                    try:
+                        await msg.delete()
+                    except:
+                        pass
+                print(f"✅ [REINICIO] Canal de lojas (1473763773805363414) limpado")
                 
-                # Recriar painel de lojas com nova View
+                # Recriar painel de lojas
                 await asyncio.sleep(1)
                 painel_lojas = await canal_lojas.send(
                     "🏪 **SISTEMA DE LOJAS PESSOAIS**\n\n"
@@ -210,29 +227,22 @@ async def recriar_todos_os_painels():
         except Exception as e:
             print(f"⚠️ [REINICIO] Erro ao recriar painel de lojas: {e}")
         
-        # ========== RECRIAR PAINEL DE TICKETS ==========
+        # ========== LIMPAR E RECRIAR PAINEL DE TICKETS ==========
         try:
             from cogs.tickets.tickets_views import gerar_view_ticket
             from cogs.tickets.tickets_controls import TicketsController
             
             canal_tickets = guild.get_channel(CANAL_PAINEL_ID)  # CANAL_PAINEL_ID para tickets
             if isinstance(canal_tickets, discord.TextChannel):
-                # Deletar mensagens antigas com o botão de tickets
-                async for msg in canal_tickets.history(limit=50):
-                    if msg.author.id == bot.user.id and msg.components:
-                        for component in msg.components:
-                            if hasattr(component, 'children'):
-                                for child in component.children:
-                                    if hasattr(child, 'custom_id') and child.custom_id == "abrir_ticket":
-                                        try:
-                                            await msg.unpin()
-                                            await msg.delete()
-                                            print("✅ [REINICIO] Painel antigo de tickets deletado")
-                                        except:
-                                            pass
-                                        break
+                # Limpar todo o canal
+                async for msg in canal_tickets.history(limit=None):
+                    try:
+                        await msg.delete()
+                    except:
+                        pass
+                print(f"✅ [REINICIO] Canal de tickets ({CANAL_PAINEL_ID}) limpado")
                 
-                # Recriar painel de tickets com nova View
+                # Recriar painel de tickets
                 await asyncio.sleep(1)
                 controller = bot.get_cog('TicketsController')
                 if controller:
@@ -276,7 +286,9 @@ async def recriar_todos_os_painels():
         except Exception as e:
             print(f"⚠️ [REINICIO] Erro ao recriar painel de tickets: {e}")
         
-        print("✅ [REINICIO] Recriação de painels concluída!\n")
+        print("✅ [REINICIO] Limpeza e recriação de painels concluída!\n")
+        print("📝 [REINICIO] Nota: Regras NÃO são enviadas automaticamente.")
+        print("            Use !regras para enviar regras sob demanda.\n")
             
     except Exception as e:
         print(f"❌ [REINICIO] Erro geral ao recriar painels: {e}")
