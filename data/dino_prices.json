@@ -2332,6 +2332,23 @@
         "health": 12000
       },
       "category": "pve_combat"
+    },
+    "carcharadontosaurus": {
+      "name": "Carcharadontosaurus",
+      "base_value": 3500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
     }
   }
 }
