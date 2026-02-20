@@ -2335,7 +2335,7 @@
     },
     "carcharadontosaurus": {
       "name": "Carcharadontosaurus",
-      "base_value": 3500,
+      "base_value": 9000,
       "stat_multipliers": {
         "melee": 150,
         "health": 95,
