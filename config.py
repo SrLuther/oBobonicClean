@@ -93,6 +93,7 @@ COGS = [
     'comandos',
     'sales',
     'voicemanager',
+    'autoloop',  # Sistema de mensagens automáticas a cada 6 horas
 ]
 
 # ============================================================
