@@ -15,21 +15,19 @@ TARGET_ROLE_ID = 1440828415103074356
 class AutoLoopCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.current_messages = []
-        self.used_messages = []
+        self.current_messages: list[str] = []
+        self.used_messages: list[str] = []
         self.last_sent_index = -1
         
         # Carrega as mensagens ao iniciar
         self.load_messages()
         
         # Inicia a task de envio automático
-        if not self.auto_send_message.is_running():
-            self.auto_send_message.start()
+        self.auto_send_message.start()  # type: ignore
     
     def cog_unload(self):
         """Cancela a task quando o cog é descarregado"""
-        if self.auto_send_message.is_running():
-            self.auto_send_message.cancel()
+        self.auto_send_message.cancel()  # type: ignore
     
     def load_messages(self):
         """Carrega as mensagens do arquivo JSON"""
