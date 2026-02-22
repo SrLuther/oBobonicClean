@@ -986,6 +986,156 @@ class DinoSelectView(ui.View):
         pass
 
 
+class AdicionarDinoModal(ui.Modal):
+    """Modal para adicionar um novo dinossauro sugerido"""
+    
+    def __init__(self, bot: commands.Bot):
+        super().__init__(title="Adicionar Dinossauro Sugerido")
+        self.bot = bot
+    
+    nome_dino = ui.TextInput(
+        label="Nome do Dinossauro",
+        placeholder="Ex: Meu Rex Shiny",
+        required=True,
+        min_length=1,
+        max_length=100
+    )
+    
+    valor_full = ui.TextInput(
+        label="Valor para Dino Full (254 stats)",
+        placeholder="Ex: 15000",
+        required=True,
+        min_length=1,
+        max_length=10
+    )
+    
+    observacoes = ui.TextInput(
+        label="Observações",
+        placeholder="Ex: Tem mutações, coloração única, etc...",
+        required=True,
+        min_length=1,
+        max_length=500,
+        style=discord.TextStyle.paragraph
+    )
+    
+    is_mod = ui.TextInput(
+        label="É de algum mod? (Sim/Não)",
+        placeholder="Deixe em branco se não for de mod",
+        required=False,
+        min_length=0,
+        max_length=3
+    )
+    
+    nome_mod = ui.TextInput(
+        label="Nome do Mod (se aplicável)",
+        placeholder="Ex: Ark Additions, Primal Fear, etc...",
+        required=False,
+        min_length=0,
+        max_length=100
+    )
+    
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        """Processa o envio do modal"""
+        await interaction.response.defer()
+        
+        try:
+            # Validar valor
+            try:
+                valor = int(self.valor_full.value)
+                if valor <= 0:
+                    raise ValueError("Valor deve ser maior que 0")
+            except ValueError:
+                embed = discord.Embed(
+                    title="❌ Erro",
+                    description="O valor deve ser um número válido e maior que 0!",
+                    color=discord.Color.red()
+                )
+                await interaction.followup.send(embed=embed, ephemeral=True)
+                return
+            
+            # Validar se é de mod
+            is_mod_text = self.is_mod.value.strip().lower()
+            é_de_mod = is_mod_text in ["sim", "yes", "s", "y"]
+            
+            nome_mod_final = self.nome_mod.value.strip()
+            
+            # Se marcou como mod, nome do mod é obrigatório
+            if é_de_mod and not nome_mod_final:
+                embed = discord.Embed(
+                    title="❌ Erro",
+                    description="Se o dinossauro é de um mod, você precisa informar o nome do mod!",
+                    color=discord.Color.red()
+                )
+                await interaction.followup.send(embed=embed, ephemeral=True)
+                return
+            
+            # Preparar dados
+            usuario = interaction.user
+            agora = datetime.now()
+            data_formatada = agora.strftime("%d/%m/%Y às %H:%M:%S")
+            
+            # Enviar para o canal designado
+            canal_id = 1475129137201942560
+            canal = self.bot.get_channel(canal_id)
+            
+            if not canal:
+                embed = discord.Embed(
+                    title="❌ Erro",
+                    description=f"Canal de sugestões não encontrado!",
+                    color=discord.Color.red()
+                )
+                await interaction.followup.send(embed=embed, ephemeral=True)
+                return
+            
+            # Criar embed para enviar ao canal
+            embed = discord.Embed(
+                title=f"🦖 Nova Sugestão de Dinossauro",
+                description=f"Sugestão preparada para análise",
+                color=discord.Color.gold()
+            )
+            
+            embed.add_field(name="👤 Usuário", value=f"{usuario.mention} ({usuario.name})", inline=False)
+            embed.add_field(name="📅 Data e Hora", value=data_formatada, inline=False)
+            embed.add_field(name="🦖 Nome do Dinossauro", value=f"```{self.nome_dino.value}```", inline=False)
+            embed.add_field(name="💰 Valor Full (254 stats)", value=f"```{valor} Arkiums```", inline=False)
+            embed.add_field(name="📝 Observações", value=f"```{self.observacoes.value}```", inline=False)
+            
+            if é_de_mod:
+                embed.add_field(name="📦 Mod", value=f"```✅ {nome_mod_final}```", inline=False)
+            else:
+                embed.add_field(name="📦 Mod", value="```❌ Vanilla```", inline=False)
+            
+            embed.set_footer(text=f"ID do Usuário: {usuario.id}")
+            
+            # Enviar ao canal
+            mensagem = await canal.send(embed=embed)
+            await mensagem.add_reaction("✅")
+            await mensagem.add_reaction("❌")
+            
+            # Confirmar para o usuário
+            confirm_embed = discord.Embed(
+                title="✅ Sugestão Enviada!",
+                description=f"Sua sugestão foi enviada com sucesso para análise!\n\n"
+                           f"**Dinossauro:** {self.nome_dino.value}\n"
+                           f"**Valor Sugerido:** {valor} Arkiums",
+                color=discord.Color.green()
+            )
+            
+            await interaction.followup.send(embed=confirm_embed, ephemeral=True)
+            
+        except Exception as e:
+            print(f"[DINOSAUR] ❌ Erro ao processar sugestão: {e}")
+            import traceback
+            traceback.print_exc()
+            
+            embed = discord.Embed(
+                title="❌ Erro ao enviar sugestão",
+                description=f"Ocorreu um erro: {str(e)}",
+                color=discord.Color.red()
+            )
+            await interaction.followup.send(embed=embed, ephemeral=True)
+
+
 class ValuationPanelView(ui.View):
     """View para o painel principal de avaliação"""
     
@@ -998,6 +1148,12 @@ class ValuationPanelView(ui.View):
     async def avaliar_button(self, interaction: discord.Interaction, button: ui.Button):
         """Abre o modal de busca de dinossauro"""
         modal = SearchDinoModal(self.dados)
+        await interaction.response.send_modal(modal)
+    
+    @ui.button(label="➕ Adicionar Dino", style=discord.ButtonStyle.success, custom_id="adicionar_dino_btn")
+    async def adicionar_button(self, interaction: discord.Interaction, button: ui.Button):
+        """Abre o modal para adicionar um novo dinossauro sugerido"""
+        modal = AdicionarDinoModal(self.bot)
         await interaction.response.send_modal(modal)
 
 
