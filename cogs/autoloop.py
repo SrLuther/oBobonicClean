@@ -107,7 +107,7 @@ class AutoLoopCog(commands.Cog):
                 description=message_content,
                 color=discord.Color.from_rgb(255, 69, 0)  # Vermelho-laranja chamativo (OrangeRed)
             )
-            embed.set_footer(text="Sistema de Notificações Automáticas")
+            embed.set_footer(text="Sistema de Notificações Automáticas • A cada 6h")
             embed.set_thumbnail(url=self.bot.user.avatar.url if self.bot.user else None)
             
             # Monta a mensagem com menção ao cargo
@@ -295,7 +295,7 @@ class AutoLoopCog(commands.Cog):
                 description=message_content,
                 color=discord.Color.from_rgb(255, 69, 0)
             )
-            embed.set_footer(text="Sistema de Notificações Automáticas")
+            embed.set_footer(text="Sistema de Notificações Automáticas • A cada 6h")
             embed.set_thumbnail(url=self.bot.user.avatar.url if self.bot.user else None)
             
             # Menção ao cargo
