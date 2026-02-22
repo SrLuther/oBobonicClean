@@ -995,7 +995,7 @@ class AdicionarDinoModal(ui.Modal):
     
     nome_dino = ui.TextInput(
         label="Nome do Dinossauro",
-        placeholder="Ex: Meu Rex Shiny",
+        placeholder="Ex: Ultraxenovenator",
         required=True,
         min_length=1,
         max_length=100
@@ -1018,24 +1018,8 @@ class AdicionarDinoModal(ui.Modal):
         style=discord.TextStyle.paragraph
     )
     
-    is_mod = ui.TextInput(
-        label="É de algum mod? (Sim/Não)",
-        placeholder="Deixe em branco se não for de mod",
-        required=False,
-        min_length=0,
-        max_length=3
-    )
-    
-    nome_mod = ui.TextInput(
-        label="Nome do Mod (se aplicável)",
-        placeholder="Ex: Ark Additions, Primal Fear, etc...",
-        required=False,
-        min_length=0,
-        max_length=100
-    )
-    
     async def on_submit(self, interaction: discord.Interaction) -> None:
-        """Processa o envio do modal"""
+        """Processa o envio do modal e mostra o select de mod"""
         await interaction.response.defer()
         
         try:
@@ -1053,78 +1037,146 @@ class AdicionarDinoModal(ui.Modal):
                 await interaction.followup.send(embed=embed, ephemeral=True)
                 return
             
-            # Validar se é de mod
-            is_mod_text = self.is_mod.value.strip().lower()
-            é_de_mod = is_mod_text in ["sim", "yes", "s", "y"]
+            # Armazenar dados temporários na view
+            dados_temporarios = {
+                "nome_dino": self.nome_dino.value,
+                "valor_full": valor,
+                "observacoes": self.observacoes.value,
+                "usuario": interaction.user,
+                "bot": self.bot
+            }
             
-            nome_mod_final = self.nome_mod.value.strip()
+            # Mostrar select de mod
+            select_view = ModSelectView(dados_temporarios)
             
-            # Se marcou como mod, nome do mod é obrigatório
-            if é_de_mod and not nome_mod_final:
-                embed = discord.Embed(
-                    title="❌ Erro",
-                    description="Se o dinossauro é de um mod, você precisa informar o nome do mod!",
-                    color=discord.Color.red()
-                )
-                await interaction.followup.send(embed=embed, ephemeral=True)
-                return
-            
-            # Preparar dados
-            usuario = interaction.user
-            agora = datetime.now()
-            data_formatada = agora.strftime("%d/%m/%Y às %H:%M:%S")
-            
-            # Enviar para o canal designado
-            canal_id = 1475129137201942560
-            canal = self.bot.get_channel(canal_id)
-            
-            if not canal:
-                embed = discord.Embed(
-                    title="❌ Erro",
-                    description=f"Canal de sugestões não encontrado!",
-                    color=discord.Color.red()
-                )
-                await interaction.followup.send(embed=embed, ephemeral=True)
-                return
-            
-            # Criar embed para enviar ao canal
             embed = discord.Embed(
-                title=f"🦖 Nova Sugestão de Dinossauro",
-                description=f"Sugestão preparada para análise",
-                color=discord.Color.gold()
+                title="📦 É de algum mod?",
+                description="Selecione se este dinossauro é de algum mod ou é vanilla",
+                color=discord.Color.blue()
             )
             
-            embed.add_field(name="👤 Usuário", value=f"{usuario.mention} ({usuario.name})", inline=False)
-            embed.add_field(name="📅 Data e Hora", value=data_formatada, inline=False)
-            embed.add_field(name="🦖 Nome do Dinossauro", value=f"```{self.nome_dino.value}```", inline=False)
-            embed.add_field(name="💰 Valor Full (254 stats)", value=f"```{valor} Arkiums```", inline=False)
-            embed.add_field(name="📝 Observações", value=f"```{self.observacoes.value}```", inline=False)
-            
-            if é_de_mod:
-                embed.add_field(name="📦 Mod", value=f"```✅ {nome_mod_final}```", inline=False)
-            else:
-                embed.add_field(name="📦 Mod", value="```❌ Vanilla```", inline=False)
-            
-            embed.set_footer(text=f"ID do Usuário: {usuario.id}")
-            
-            # Enviar ao canal
-            mensagem = await canal.send(embed=embed)
-            await mensagem.add_reaction("✅")
-            await mensagem.add_reaction("❌")
-            
-            # Confirmar para o usuário
-            confirm_embed = discord.Embed(
-                title="✅ Sugestão Enviada!",
-                description=f"Sua sugestão foi enviada com sucesso para análise!\n\n"
-                           f"**Dinossauro:** {self.nome_dino.value}\n"
-                           f"**Valor Sugerido:** {valor} Arkiums",
-                color=discord.Color.green()
-            )
-            
-            await interaction.followup.send(embed=confirm_embed, ephemeral=True)
+            await interaction.followup.send(embed=embed, view=select_view, ephemeral=True)
             
         except Exception as e:
             print(f"[DINOSAUR] ❌ Erro ao processar sugestão: {e}")
+            import traceback
+            traceback.print_exc()
+            
+            embed = discord.Embed(
+                title="❌ Erro ao processar",
+                description=f"Ocorreu um erro: {str(e)}",
+                color=discord.Color.red()
+            )
+            await interaction.followup.send(embed=embed, ephemeral=True)
+
+
+class ModSelect(ui.Select):
+    """Select para escolher se é de mod ou não"""
+    
+    def __init__(self, dados_temporarios: dict):
+        self.dados_temporarios = dados_temporarios
+        
+        opcoes = [
+            discord.SelectOption(label="Sim", value="sim", emoji="✅", description="É de um mod"),
+            discord.SelectOption(label="Não", value="nao", emoji="❌", description="É vanilla")
+        ]
+        
+        super().__init__(
+            placeholder="Escolha uma opção...",
+            min_values=1,
+            max_values=1,
+            options=opcoes
+        )
+    
+    async def callback(self, interaction: discord.Interaction) -> None:
+        """Callback quando a opção é selecionada"""
+        try:
+            opcao = self.values[0]
+            
+            if opcao == "sim":
+                # Mostrar modal para pedir o nome do mod
+                modal = ModNameModal(self.dados_temporarios)
+                await interaction.response.send_modal(modal)
+            else:
+                # Enviar diretamente sem mod
+                await enviar_sugestao_dino(
+                    interaction,
+                    self.dados_temporarios["nome_dino"],
+                    self.dados_temporarios["valor_full"],
+                    self.dados_temporarios["observacoes"],
+                    self.dados_temporarios["usuario"],
+                    self.dados_temporarios["bot"],
+                    é_de_mod=False,
+                    nome_mod=""
+                )
+        
+        except Exception as e:
+            print(f"[DINOSAUR] ❌ Erro no ModSelect: {e}")
+            import traceback
+            traceback.print_exc()
+            
+            embed = discord.Embed(
+                title="❌ Erro",
+                description=f"Ocorreu um erro: {str(e)}",
+                color=discord.Color.red()
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
+class ModSelectView(ui.View):
+    """View para o select de mod"""
+    
+    def __init__(self, dados_temporarios: dict):
+        super().__init__()
+        self.dados_temporarios = dados_temporarios
+        self.add_item(ModSelect(dados_temporarios))
+
+
+class ModNameModal(ui.Modal):
+    """Modal para informar o nome do mod"""
+    
+    def __init__(self, dados_temporarios: dict):
+        super().__init__(title="Nome do Mod")
+        self.dados_temporarios = dados_temporarios
+    
+    nome_mod = ui.TextInput(
+        label="Nome do Mod",
+        placeholder="Ex: Ark Additions, Primal Fear, Genesis",
+        required=True,
+        min_length=1,
+        max_length=100
+    )
+    
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        """Processa o nome do mod e envia a sugestão"""
+        await interaction.response.defer()
+        
+        try:
+            nome_mod = self.nome_mod.value.strip()
+            
+            if not nome_mod:
+                embed = discord.Embed(
+                    title="❌ Erro",
+                    description="O nome do mod não pode estar vazio!",
+                    color=discord.Color.red()
+                )
+                await interaction.followup.send(embed=embed, ephemeral=True)
+                return
+            
+            # Enviar sugestão com mod
+            await enviar_sugestao_dino(
+                interaction,
+                self.dados_temporarios["nome_dino"],
+                self.dados_temporarios["valor_full"],
+                self.dados_temporarios["observacoes"],
+                self.dados_temporarios["usuario"],
+                self.dados_temporarios["bot"],
+                é_de_mod=True,
+                nome_mod=nome_mod
+            )
+        
+        except Exception as e:
+            print(f"[DINOSAUR] ❌ Erro ao processar nome do mod: {e}")
             import traceback
             traceback.print_exc()
             
@@ -1134,6 +1186,71 @@ class AdicionarDinoModal(ui.Modal):
                 color=discord.Color.red()
             )
             await interaction.followup.send(embed=embed, ephemeral=True)
+
+
+async def enviar_sugestao_dino(
+    interaction: discord.Interaction,
+    nome_dino: str,
+    valor_full: int,
+    observacoes: str,
+    usuario: discord.User,
+    bot: commands.Bot,
+    é_de_mod: bool,
+    nome_mod: str = ""
+) -> None:
+    """Função auxiliar para enviar a sugestão de dinossauro"""
+    
+    agora = datetime.now()
+    data_formatada = agora.strftime("%d/%m/%Y às %H:%M:%S")
+    
+    # Enviar para o canal designado
+    canal_id = 1475129137201942560
+    canal = bot.get_channel(canal_id)
+    
+    if not canal:
+        embed = discord.Embed(
+            title="❌ Erro",
+            description=f"Canal de sugestões não encontrado!",
+            color=discord.Color.red()
+        )
+        await interaction.followup.send(embed=embed, ephemeral=True)
+        return
+    
+    # Criar embed para enviar ao canal
+    embed = discord.Embed(
+        title=f"🦖 Nova Sugestão de Dinossauro",
+        description=f"Sugestão preparada para análise",
+        color=discord.Color.gold()
+    )
+    
+    embed.add_field(name="👤 Usuário", value=f"{usuario.mention} ({usuario.name})", inline=False)
+    embed.add_field(name="📅 Data e Hora", value=data_formatada, inline=False)
+    embed.add_field(name="🦖 Nome do Dinossauro", value=f"```{nome_dino}```", inline=False)
+    embed.add_field(name="💰 Valor Full (254 stats)", value=f"```{valor_full} Arkiums```", inline=False)
+    embed.add_field(name="📝 Observações", value=f"```{observacoes}```", inline=False)
+    
+    if é_de_mod:
+        embed.add_field(name="📦 Mod", value=f"```✅ {nome_mod}```", inline=False)
+    else:
+        embed.add_field(name="📦 Mod", value="```❌ Vanilla```", inline=False)
+    
+    embed.set_footer(text=f"ID do Usuário: {usuario.id}")
+    
+    # Enviar ao canal
+    mensagem = await canal.send(embed=embed)
+    await mensagem.add_reaction("✅")
+    await mensagem.add_reaction("❌")
+    
+    # Confirmar para o usuário
+    confirm_embed = discord.Embed(
+        title="✅ Sugestão Enviada!",
+        description=f"Sua sugestão foi enviada com sucesso para análise!\n\n"
+                   f"**Dinossauro:** {nome_dino}\n"
+                   f"**Valor Sugerido:** {valor_full} Arkiums",
+        color=discord.Color.green()
+    )
+    
+    await interaction.followup.send(embed=confirm_embed, ephemeral=True)
 
 
 class ValuationPanelView(ui.View):
