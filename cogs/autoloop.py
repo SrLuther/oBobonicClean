@@ -264,6 +264,55 @@ class AutoLoopCog(commands.Cog):
         
         except asyncio.TimeoutError:
             await ctx.send("⏰ Tempo esgotado! Operação cancelada.")
+    
+    @commands.command(name="enviarloop")
+    async def force_send_message(self, ctx: commands.Context[Any]):
+        """Força o envio imediato de uma mensagem aleatória do loop."""
+        # Verifica permissão
+        if not ctx.author.guild_permissions.administrator:
+            await ctx.send("❌ Apenas administradores podem usar este comando!")
+            return
+        
+        if not self.current_messages:
+            await ctx.send("❌ Nenhuma mensagem disponível para enviar!")
+            return
+        
+        try:
+            channel = self.bot.get_channel(TARGET_CHANNEL_ID)
+            role = discord.utils.get(self.bot.guilds[0].roles, id=TARGET_ROLE_ID)
+            
+            if not channel:
+                await ctx.send(f"❌ Canal {TARGET_CHANNEL_ID} não encontrado!")
+                return
+            
+            message_content = self.get_next_message()
+            
+            if not message_content:
+                await ctx.send("❌ Erro ao obter mensagem aleatória!")
+                return
+            
+            # Monta o embed
+            embed = discord.Embed(
+                title="📢 Aviso Importante",
+                description=message_content,
+                color=discord.Color.from_rgb(255, 69, 0)
+            )
+            embed.set_footer(text="Sistema de Notificações Automáticas")
+            embed.set_thumbnail(url=self.bot.user.avatar.url if self.bot.user else None)
+            
+            # Menção ao cargo
+            role_mention = role.mention if role else f"<@&{TARGET_ROLE_ID}>"
+            
+            # Envia a mensagem
+            await channel.send(role_mention, embed=embed)
+            
+            # Confirma ao admin
+            await ctx.send(f"✅ Mensagem enviada com sucesso no <#{TARGET_CHANNEL_ID}>!")
+            print(f"[AUTOLOOP] Mensagem forçada enviada por {ctx.author} ({ctx.author.id})")
+        
+        except Exception as e:
+            await ctx.send(f"❌ Erro ao enviar mensagem: {str(e)}")
+            print(f"[AUTOLOOP] Erro ao forçar envio: {e}")
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutoLoopCog(bot))
