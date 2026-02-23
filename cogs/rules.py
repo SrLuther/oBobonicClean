@@ -3,18 +3,17 @@ Cog para gerenciar as regras do servidor ArkLand Brasil
 """
 import discord
 from discord.ext import commands
-from typing import Any
 
 
 class RulesCog(commands.Cog):
     """Cog responsável pelas regras do servidor"""
 
-    def __init__(self, bot: commands.Bot[Any]) -> None:
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
     @commands.command(name="regras", aliases=["rules"])
     @commands.has_permissions(administrator=True)
-    async def regras_command(self, ctx: commands.Context[Any]) -> None:
+    async def regras_command(self, ctx: commands.Context) -> None:
         """Envia as regras do servidor na sala de regras (admin only)"""
         try:
             RULES_CHANNEL_ID = 1473500120430673940
@@ -159,6 +158,6 @@ Seu poder **NÃO** pode foder a experiência dos outros.
             print(f"❌ Erro ao enviar regras: {e}")
 
 
-async def setup(bot: commands.Bot[Any]) -> None:
+async def setup(bot: commands.Bot) -> None:
     """Setup do cog"""
     await bot.add_cog(RulesCog(bot))
