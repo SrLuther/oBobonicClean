@@ -89,6 +89,7 @@ class AIChat(commands.Cog):
         prefixes = await self._resolve_prefixes(message)
         should_ignore = any(message.content.startswith(p) for p in prefixes)
         if message.author.bot or should_ignore:
+            await self.bot.process_commands(message)
             return
 
         user = self.bot.user

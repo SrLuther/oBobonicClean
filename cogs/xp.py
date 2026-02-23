@@ -236,7 +236,8 @@ class XPSystem(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         # Implementação de XP deve ser adicionada conforme sua lógica original.
-        pass
+        # Permite processamento normal de comandos
+        await self.bot.process_commands(message)
 
     @commands.command(name="xp", aliases=["level", "lvl"])
     async def show_xp(self, ctx: commands.Context[Any], member: Optional[discord.Member] = None):
