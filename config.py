@@ -91,6 +91,7 @@ COGS = [
     'moderation', 
     'xp', 
     'comandos',
+    'rules',     # Sistema de gerenciamento de regras
     'sales',
     'voicemanager',
     'autoloop',  # Sistema de mensagens automáticas a cada 6 horas
