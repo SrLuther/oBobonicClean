@@ -316,10 +316,10 @@ class SaddleSelect(ui.Select):
         try:
             saddle_type = self.values[0]
             # broca normal = 25% penalty, broca+bolsa = 0% penalty
-            discount = 0.25 if saddle_type == "broca" else 0.0
+            tem_broca_e_bolsa = (saddle_type == "broca_bolsa")
             
             # Para Stryder, usar modal especializado
-            modal = StryderStatsModal(self.dino_id, self.dados, discount_percent=discount)
+            modal = StryderStatsModal(self.dino_id, self.dados, tem_broca_e_bolsa=tem_broca_e_bolsa)
             await interaction.response.send_modal(modal)
         except Exception as e:
             print(f"[DINOSAUR] ❌ Erro no callback do SaddleSelect: {type(e).__name__}: {e}")

@@ -97,8 +97,8 @@ class XPSystem(commands.Cog):
 
     async def cog_unload(self) -> None:
         """Cleanup ao descarregar o cog."""
-        if hasattr(self, "update_leaderboard_task") and self.update_leaderboard_task.is_running():
-            self.update_leaderboard_task.cancel()
+        if hasattr(self, "update_leaderboard_task") and self.update_leaderboard_task.is_running():  # type: ignore
+            self.update_leaderboard_task.cancel()  # type: ignore
         # Salva dados pendentes
         if self._pending_saves:
             await self._flush_pending_saves()
@@ -134,9 +134,9 @@ class XPSystem(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         """Inicia tasks ao bot ficar pronto."""
-        if not hasattr(self, "update_leaderboard_task") or not self.update_leaderboard_task.is_running():
+        if not hasattr(self, "update_leaderboard_task") or not self.update_leaderboard_task.is_running():  # type: ignore
             print("[xp] Tarefa de ranking iniciada.")
-            self.update_leaderboard_task.start()
+            self.update_leaderboard_task.start()  # type: ignore
         
         # Inicia task de auto-save
         if not self._save_task or self._save_task.done():
