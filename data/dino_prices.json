@@ -2349,6 +2349,3287 @@
         "health": 12000
       },
       "category": "apex_combat"
+    },
+    "alpha_allosaurus": {
+      "name": "Alpha Allosaurus",
+      "base_value": 5250,
+      "stat_multipliers": {
+        "melee": 204,
+        "health": 132,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_ankylosaurus": {
+      "name": "Alpha Ankylosaurus",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_araneo": {
+      "name": "Alpha Araneo",
+      "base_value": 2250,
+      "stat_multipliers": {
+        "melee": 156,
+        "health": 97,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_argentavis": {
+      "name": "Alpha Argentavis",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_arthropluera": {
+      "name": "Alpha Arthropluera",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_baryonyx": {
+      "name": "Alpha Baryonyx",
+      "base_value": 5250,
+      "stat_multipliers": {
+        "melee": 204,
+        "health": 132,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_basilisk": {
+      "name": "Alpha Basilisk",
+      "base_value": 9000,
+      "stat_multipliers": {
+        "melee": 264,
+        "health": 174,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_basilosaurus": {
+      "name": "Alpha Basilosaurus",
+      "base_value": 5250,
+      "stat_multipliers": {
+        "melee": 204,
+        "health": 132,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_beelzebufo": {
+      "name": "Alpha Beelzebufo",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_bloodstalker": {
+      "name": "Alpha Bloodstalker",
+      "base_value": 7500,
+      "stat_multipliers": {
+        "melee": 240,
+        "health": 157,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_bulbdog": {
+      "name": "Alpha Bulbdog",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_carnotaurus": {
+      "name": "Alpha Carnotaurus",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_castoroides": {
+      "name": "Alpha Castoroides",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_chalicotherium": {
+      "name": "Alpha Chalicotherium",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_daeodon": {
+      "name": "Alpha Daeodon",
+      "base_value": 5250,
+      "stat_multipliers": {
+        "melee": 204,
+        "health": 132,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_deinonychus": {
+      "name": "Alpha Deinonychus",
+      "base_value": 5250,
+      "stat_multipliers": {
+        "melee": 204,
+        "health": 132,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_dilophosaur": {
+      "name": "Alpha Dilophosaur",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_direwolf": {
+      "name": "Alpha Direwolf",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_dodo": {
+      "name": "Alpha Dodo",
+      "base_value": 2250,
+      "stat_multipliers": {
+        "melee": 156,
+        "health": 97,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_doedicurus": {
+      "name": "Alpha Doedicurus",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_enforcer": {
+      "name": "Alpha Enforcer",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_equus": {
+      "name": "Alpha Equus",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_featherlight": {
+      "name": "Alpha Featherlight",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_ferox": {
+      "name": "Alpha Ferox",
+      "base_value": 7500,
+      "stat_multipliers": {
+        "melee": 240,
+        "health": 157,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_gacha": {
+      "name": "Alpha Gacha",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_gasbags": {
+      "name": "Alpha Gasbags",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_giganotosaurus": {
+      "name": "Alpha Giganotosaurus",
+      "base_value": 12750,
+      "stat_multipliers": {
+        "melee": 324,
+        "health": 217,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_gigantopithecus": {
+      "name": "Alpha Gigantopithecus",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_glowtail": {
+      "name": "Alpha Glowtail",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_griffin": {
+      "name": "Alpha Griffin",
+      "base_value": 6750,
+      "stat_multipliers": {
+        "melee": 228,
+        "health": 150,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_hesperornis": {
+      "name": "Alpha Hesperornis",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_hyaenodon": {
+      "name": "Alpha Hyaenodon",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_ichthyosaurus": {
+      "name": "Alpha Ichthyosaurus",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_iguanodon": {
+      "name": "Alpha Iguanodon",
+      "base_value": 2250,
+      "stat_multipliers": {
+        "melee": 156,
+        "health": 97,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_kaprosuchus": {
+      "name": "Alpha Kaprosuchus",
+      "base_value": 5250,
+      "stat_multipliers": {
+        "melee": 204,
+        "health": 132,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_karkinos": {
+      "name": "Alpha Karkinos",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_kentrosaurus": {
+      "name": "Alpha Kentrosaurus",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_liopleurodon": {
+      "name": "Alpha Liopleurodon",
+      "base_value": 5250,
+      "stat_multipliers": {
+        "melee": 204,
+        "health": 132,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_magmasaur": {
+      "name": "Alpha Magmasaur",
+      "base_value": 7500,
+      "stat_multipliers": {
+        "melee": 240,
+        "health": 157,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_mammoth": {
+      "name": "Alpha Mammoth",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_managarmr": {
+      "name": "Alpha Managarmr",
+      "base_value": 7200,
+      "stat_multipliers": {
+        "melee": 234,
+        "health": 153,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_mantis": {
+      "name": "Alpha Mantis",
+      "base_value": 5250,
+      "stat_multipliers": {
+        "melee": 204,
+        "health": 132,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_megalania": {
+      "name": "Alpha Megalania",
+      "base_value": 5250,
+      "stat_multipliers": {
+        "melee": 204,
+        "health": 132,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_megaloceros": {
+      "name": "Alpha Megaloceros",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_megalodon": {
+      "name": "Alpha Megalodon",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_megalosaurus": {
+      "name": "Alpha Megalosaurus",
+      "base_value": 5250,
+      "stat_multipliers": {
+        "melee": 204,
+        "health": 132,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_megatherium": {
+      "name": "Alpha Megatherium",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_morellatops": {
+      "name": "Alpha Morellatops",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_mosasaurus": {
+      "name": "Alpha Mosasaurus",
+      "base_value": 5250,
+      "stat_multipliers": {
+        "melee": 204,
+        "health": 132,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_onyc": {
+      "name": "Alpha Onyc",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_otter": {
+      "name": "Alpha Otter",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_parasaur": {
+      "name": "Alpha Parasaur",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_pegomastax": {
+      "name": "Alpha Pegomastax",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_phoenix": {
+      "name": "Alpha Phoenix",
+      "base_value": 9000,
+      "stat_multipliers": {
+        "melee": 264,
+        "health": 174,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_plesiosaur": {
+      "name": "Alpha Plesiosaur",
+      "base_value": 5250,
+      "stat_multipliers": {
+        "melee": 204,
+        "health": 132,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_pteranodon": {
+      "name": "Alpha Pteranodon",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_pulmonoscorpius": {
+      "name": "Alpha Pulmonoscorpius",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_quetzal": {
+      "name": "Alpha Quetzal",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_raptor": {
+      "name": "Alpha Raptor",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_ravager": {
+      "name": "Alpha Ravager",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_reaper_queen": {
+      "name": "Alpha Reaper Queen",
+      "base_value": 10500,
+      "stat_multipliers": {
+        "melee": 288,
+        "health": 192,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_roll_rat": {
+      "name": "Alpha Roll Rat",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_sabertooth": {
+      "name": "Alpha Sabertooth",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_shinehorn": {
+      "name": "Alpha Shinehorn",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_snow_owl": {
+      "name": "Alpha Snow Owl",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_stegosaurus": {
+      "name": "Alpha Stegosaurus",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_tapejara": {
+      "name": "Alpha Tapejara",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_terror_bird": {
+      "name": "Alpha Terror Bird",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_thorny_dragon": {
+      "name": "Alpha Thorny Dragon",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_thylacoleo": {
+      "name": "Alpha Thylacoleo",
+      "base_value": 5250,
+      "stat_multipliers": {
+        "melee": 204,
+        "health": 132,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_titanoboa": {
+      "name": "Alpha Titanoboa",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_triceratops": {
+      "name": "Alpha Triceratops",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_troodon": {
+      "name": "Alpha Troodon",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_tropeognathus": {
+      "name": "Alpha Tropeognathus",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_tusoteuthis": {
+      "name": "Alpha Tusoteuthis",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_velonasaur": {
+      "name": "Alpha Velonasaur",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_woolly_rhino": {
+      "name": "Alpha Woolly Rhino",
+      "base_value": 3750,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 114,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_yutyrannus": {
+      "name": "Alpha Yutyrannus",
+      "base_value": 7500,
+      "stat_multipliers": {
+        "melee": 240,
+        "health": 157,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "apex_allosaurus": {
+      "name": "Apex Allosaurus",
+      "base_value": 7000,
+      "stat_multipliers": {
+        "melee": 237,
+        "health": 154,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_argentavis": {
+      "name": "Apex Argentavis",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 133,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_baryonyx": {
+      "name": "Apex Baryonyx",
+      "base_value": 7000,
+      "stat_multipliers": {
+        "melee": 237,
+        "health": 154,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_basilisk": {
+      "name": "Apex Basilisk",
+      "base_value": 12000,
+      "stat_multipliers": {
+        "melee": 308,
+        "health": 203,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_basilosaurus": {
+      "name": "Apex Basilosaurus",
+      "base_value": 7000,
+      "stat_multipliers": {
+        "melee": 237,
+        "health": 154,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_carnotaurus": {
+      "name": "Apex Carnotaurus",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 133,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_chalicotherium": {
+      "name": "Apex Chalicotherium",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 133,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_daeodon": {
+      "name": "Apex Daeodon",
+      "base_value": 7000,
+      "stat_multipliers": {
+        "melee": 237,
+        "health": 154,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_deinonychus": {
+      "name": "Apex Deinonychus",
+      "base_value": 7000,
+      "stat_multipliers": {
+        "melee": 237,
+        "health": 154,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_dilophosaur": {
+      "name": "Apex Dilophosaur",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 133,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_direwolf": {
+      "name": "Apex Direwolf",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 133,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_enforcer": {
+      "name": "Apex Enforcer",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 133,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_ferox": {
+      "name": "Apex Ferox",
+      "base_value": 10000,
+      "stat_multipliers": {
+        "melee": 280,
+        "health": 183,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_giganotosaurus": {
+      "name": "Apex Giganotosaurus",
+      "base_value": 17000,
+      "stat_multipliers": {
+        "melee": 378,
+        "health": 253,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_griffin": {
+      "name": "Apex Griffin",
+      "base_value": 9000,
+      "stat_multipliers": {
+        "melee": 266,
+        "health": 175,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_hyaenodon": {
+      "name": "Apex Hyaenodon",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 133,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_kaprosuchus": {
+      "name": "Apex Kaprosuchus",
+      "base_value": 7000,
+      "stat_multipliers": {
+        "melee": 237,
+        "health": 154,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_karkinos": {
+      "name": "Apex Karkinos",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 133,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_kentrosaurus": {
+      "name": "Apex Kentrosaurus",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 133,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_liopleurodon": {
+      "name": "Apex Liopleurodon",
+      "base_value": 7000,
+      "stat_multipliers": {
+        "melee": 237,
+        "health": 154,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_magmasaur": {
+      "name": "Apex Magmasaur",
+      "base_value": 10000,
+      "stat_multipliers": {
+        "melee": 280,
+        "health": 183,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_managarmr": {
+      "name": "Apex Managarmr",
+      "base_value": 9600,
+      "stat_multipliers": {
+        "melee": 273,
+        "health": 179,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_megalodon": {
+      "name": "Apex Megalodon",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 133,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_megalosaurus": {
+      "name": "Apex Megalosaurus",
+      "base_value": 7000,
+      "stat_multipliers": {
+        "melee": 237,
+        "health": 154,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_mosasaurus": {
+      "name": "Apex Mosasaurus",
+      "base_value": 7000,
+      "stat_multipliers": {
+        "melee": 237,
+        "health": 154,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_phoenix": {
+      "name": "Apex Phoenix",
+      "base_value": 12000,
+      "stat_multipliers": {
+        "melee": 308,
+        "health": 203,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_plesiosaur": {
+      "name": "Apex Plesiosaur",
+      "base_value": 7000,
+      "stat_multipliers": {
+        "melee": 237,
+        "health": 154,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_pulmonoscorpius": {
+      "name": "Apex Pulmonoscorpius",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 133,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_raptor": {
+      "name": "Apex Raptor",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 133,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_ravager": {
+      "name": "Apex Ravager",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 133,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_reaper_queen": {
+      "name": "Apex Reaper Queen",
+      "base_value": 14000,
+      "stat_multipliers": {
+        "melee": 336,
+        "health": 224,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_sabertooth": {
+      "name": "Apex Sabertooth",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 133,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_snow_owl": {
+      "name": "Apex Snow Owl",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 133,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_terror_bird": {
+      "name": "Apex Terror Bird",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 133,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_thorny_dragon": {
+      "name": "Apex Thorny Dragon",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 133,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_thylacoleo": {
+      "name": "Apex Thylacoleo",
+      "base_value": 7000,
+      "stat_multipliers": {
+        "melee": 237,
+        "health": 154,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_tusoteuthis": {
+      "name": "Apex Tusoteuthis",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 133,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_velonasaur": {
+      "name": "Apex Velonasaur",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 133,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_yutyrannus": {
+      "name": "Apex Yutyrannus",
+      "base_value": 10000,
+      "stat_multipliers": {
+        "melee": 280,
+        "health": 183,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "ascended_celestial_allosaurus": {
+      "name": "Ascended Celestial Allosaurus",
+      "base_value": 12250,
+      "stat_multipliers": {
+        "melee": 306,
+        "health": 198,
+        "stamina": 54,
+        "weight": 45,
+        "oxygen": 9,
+        "food": 21
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "celestial_endgame"
+    },
+    "ascended_celestial_argentavis": {
+      "name": "Ascended Celestial Argentavis",
+      "base_value": 8750,
+      "stat_multipliers": {
+        "melee": 270,
+        "health": 171,
+        "stamina": 54,
+        "weight": 45,
+        "oxygen": 9,
+        "food": 21
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "celestial_endgame"
+    },
+    "ascended_celestial_griffin": {
+      "name": "Ascended Celestial Griffin",
+      "base_value": 15750,
+      "stat_multipliers": {
+        "melee": 342,
+        "health": 225,
+        "stamina": 54,
+        "weight": 45,
+        "oxygen": 9,
+        "food": 21
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "celestial_endgame"
+    },
+    "ascended_celestial_thylacoleo": {
+      "name": "Ascended Celestial Thylacoleo",
+      "base_value": 12250,
+      "stat_multipliers": {
+        "melee": 306,
+        "health": 198,
+        "stamina": 54,
+        "weight": 45,
+        "oxygen": 9,
+        "food": 21
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "celestial_endgame"
+    },
+    "ascended_celestial_yutyrannus": {
+      "name": "Ascended Celestial Yutyrannus",
+      "base_value": 17500,
+      "stat_multipliers": {
+        "melee": 360,
+        "health": 235,
+        "stamina": 54,
+        "weight": 45,
+        "oxygen": 9,
+        "food": 21
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "celestial_endgame"
+    },
+    "black_omega_allosaurus": {
+      "name": "Black Omega Allosaurus",
+      "base_value": 10500,
+      "stat_multipliers": {
+        "melee": 289,
+        "health": 187,
+        "stamina": 51,
+        "weight": 42,
+        "oxygen": 8,
+        "food": 20
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "black_omega_advanced"
+    },
+    "fey_thylacoleo": {
+      "name": "Fey Thylacoleo",
+      "base_value": 8750,
+      "stat_multipliers": {
+        "melee": 255,
+        "health": 165,
+        "stamina": 45,
+        "weight": 37,
+        "oxygen": 7,
+        "food": 18
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "fey_expansion"
+    },
+    "fey_managarmr": {
+      "name": "Fey Managarmr",
+      "base_value": 12000,
+      "stat_multipliers": {
+        "melee": 292,
+        "health": 192,
+        "stamina": 45,
+        "weight": 37,
+        "oxygen": 7,
+        "food": 18
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "fey_expansion"
+    },
+    "fey_griffin": {
+      "name": "Fey Griffin",
+      "base_value": 11250,
+      "stat_multipliers": {
+        "melee": 285,
+        "health": 187,
+        "stamina": 45,
+        "weight": 37,
+        "oxygen": 7,
+        "food": 18
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "fey_expansion"
+    },
+    "primal_allosaurus": {
+      "name": "Primal Allosaurus",
+      "base_value": 7700,
+      "stat_multipliers": {
+        "melee": 229,
+        "health": 148,
+        "stamina": 40,
+        "weight": 33,
+        "oxygen": 6,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "primal_boss"
+    },
+    "primal_carnotaurus": {
+      "name": "Primal Carnotaurus",
+      "base_value": 5500,
+      "stat_multipliers": {
+        "melee": 202,
+        "health": 128,
+        "stamina": 40,
+        "weight": 33,
+        "oxygen": 6,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "primal_boss"
+    },
+    "primal_giganotosaurus": {
+      "name": "Primal Giganotosaurus",
+      "base_value": 18700,
+      "stat_multipliers": {
+        "melee": 364,
+        "health": 244,
+        "stamina": 40,
+        "weight": 33,
+        "oxygen": 6,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "primal_boss"
+    },
+    "primal_kentrosaurus": {
+      "name": "Primal Kentrosaurus",
+      "base_value": 5500,
+      "stat_multipliers": {
+        "melee": 202,
+        "health": 128,
+        "stamina": 40,
+        "weight": 33,
+        "oxygen": 6,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "primal_boss"
+    },
+    "primal_liopleurodon": {
+      "name": "Primal Liopleurodon",
+      "base_value": 7700,
+      "stat_multipliers": {
+        "melee": 229,
+        "health": 148,
+        "stamina": 40,
+        "weight": 33,
+        "oxygen": 6,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "primal_boss"
+    },
+    "primal_megalodon": {
+      "name": "Primal Megalodon",
+      "base_value": 5500,
+      "stat_multipliers": {
+        "melee": 202,
+        "health": 128,
+        "stamina": 40,
+        "weight": 33,
+        "oxygen": 6,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "primal_boss"
+    },
+    "primal_mosasaurus": {
+      "name": "Primal Mosasaurus",
+      "base_value": 7700,
+      "stat_multipliers": {
+        "melee": 229,
+        "health": 148,
+        "stamina": 40,
+        "weight": 33,
+        "oxygen": 6,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "primal_boss"
+    },
+    "primal_plesiosaur": {
+      "name": "Primal Plesiosaur",
+      "base_value": 7700,
+      "stat_multipliers": {
+        "melee": 229,
+        "health": 148,
+        "stamina": 40,
+        "weight": 33,
+        "oxygen": 6,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "primal_boss"
+    },
+    "primal_raptor": {
+      "name": "Primal Raptor",
+      "base_value": 5500,
+      "stat_multipliers": {
+        "melee": 202,
+        "health": 128,
+        "stamina": 40,
+        "weight": 33,
+        "oxygen": 6,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "primal_boss"
+    },
+    "primal_thylacoleo": {
+      "name": "Primal Thylacoleo",
+      "base_value": 7700,
+      "stat_multipliers": {
+        "melee": 229,
+        "health": 148,
+        "stamina": 40,
+        "weight": 33,
+        "oxygen": 6,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "primal_boss"
+    },
+    "t_rex": {
+      "name": "T-Rex",
+      "base_value": 9000,
+      "stat_multipliers": {
+        "melee": 270,
+        "health": 181,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "rock_drake": {
+      "name": "Rock Drake",
+      "base_value": 8500,
+      "stat_multipliers": {
+        "melee": 250,
+        "health": 170,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "spinosaur": {
+      "name": "Spinosaur",
+      "base_value": 7500,
+      "stat_multipliers": {
+        "melee": 230,
+        "health": 150,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "therizinosaurus": {
+      "name": "Therizinosaurus",
+      "base_value": 7000,
+      "stat_multipliers": {
+        "melee": 220,
+        "health": 145,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "fire_wyvern": {
+      "name": "Fire Wyvern",
+      "base_value": 6500,
+      "stat_multipliers": {
+        "melee": 200,
+        "health": 130,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "lightning_wyvern": {
+      "name": "Lightning Wyvern",
+      "base_value": 6500,
+      "stat_multipliers": {
+        "melee": 200,
+        "health": 130,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "ice_wyvern": {
+      "name": "Ice Wyvern",
+      "base_value": 6500,
+      "stat_multipliers": {
+        "melee": 200,
+        "health": 130,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "poison_wyvern": {
+      "name": "Poison Wyvern",
+      "base_value": 6500,
+      "stat_multipliers": {
+        "melee": 200,
+        "health": 130,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "wyvern": {
+      "name": "Wyvern",
+      "base_value": 6000,
+      "stat_multipliers": {
+        "melee": 190,
+        "health": 125,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "dragon": {
+      "name": "Dragon",
+      "base_value": 12000,
+      "stat_multipliers": {
+        "melee": 300,
+        "health": 200,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "broodmother": {
+      "name": "Broodmother",
+      "base_value": 10000,
+      "stat_multipliers": {
+        "melee": 280,
+        "health": 190,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "reaper": {
+      "name": "Reaper",
+      "base_value": 9500,
+      "stat_multipliers": {
+        "melee": 275,
+        "health": 185,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "reaper_king": {
+      "name": "Reaper King",
+      "base_value": 11000,
+      "stat_multipliers": {
+        "melee": 290,
+        "health": 195,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "sarcosuchus": {
+      "name": "Sarcosuchus",
+      "base_value": 5500,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 120,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "seeker": {
+      "name": "Seeker",
+      "base_value": 8000,
+      "stat_multipliers": {
+        "melee": 240,
+        "health": 160,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "indominus_rex": {
+      "name": "Indominus Rex",
+      "base_value": 10000,
+      "stat_multipliers": {
+        "melee": 280,
+        "health": 190,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "manticore": {
+      "name": "Manticore",
+      "base_value": 9000,
+      "stat_multipliers": {
+        "melee": 260,
+        "health": 175,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "megapithecus": {
+      "name": "Megapithecus",
+      "base_value": 9000,
+      "stat_multipliers": {
+        "melee": 260,
+        "health": 175,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "dodo_rex": {
+      "name": "Dodo Rex",
+      "base_value": 4000,
+      "stat_multipliers": {
+        "melee": 160,
+        "health": 105,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "otros"
+    },
+    "alpha_t_rex": {
+      "name": "Alpha T-Rex",
+      "base_value": 13500,
+      "stat_multipliers": {
+        "melee": 324,
+        "health": 217,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_rock_drake": {
+      "name": "Alpha Rock Drake",
+      "base_value": 12750,
+      "stat_multipliers": {
+        "melee": 300,
+        "health": 204,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_spinosaur": {
+      "name": "Alpha Spinosaur",
+      "base_value": 11250,
+      "stat_multipliers": {
+        "melee": 276,
+        "health": 180,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_therizinosaurus": {
+      "name": "Alpha Therizinosaurus",
+      "base_value": 10500,
+      "stat_multipliers": {
+        "melee": 264,
+        "health": 174,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_fire_wyvern": {
+      "name": "Alpha Fire Wyvern",
+      "base_value": 9750,
+      "stat_multipliers": {
+        "melee": 240,
+        "health": 156,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_lightning_wyvern": {
+      "name": "Alpha Lightning Wyvern",
+      "base_value": 9750,
+      "stat_multipliers": {
+        "melee": 240,
+        "health": 156,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_ice_wyvern": {
+      "name": "Alpha Ice Wyvern",
+      "base_value": 9750,
+      "stat_multipliers": {
+        "melee": 240,
+        "health": 156,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_poison_wyvern": {
+      "name": "Alpha Poison Wyvern",
+      "base_value": 9750,
+      "stat_multipliers": {
+        "melee": 240,
+        "health": 156,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_wyvern": {
+      "name": "Alpha Wyvern",
+      "base_value": 9000,
+      "stat_multipliers": {
+        "melee": 228,
+        "health": 150,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_dragon": {
+      "name": "Alpha Dragon",
+      "base_value": 18000,
+      "stat_multipliers": {
+        "melee": 360,
+        "health": 240,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_broodmother": {
+      "name": "Alpha Broodmother",
+      "base_value": 15000,
+      "stat_multipliers": {
+        "melee": 336,
+        "health": 228,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_reaper": {
+      "name": "Alpha Reaper",
+      "base_value": 14250,
+      "stat_multipliers": {
+        "melee": 330,
+        "health": 222,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_reaper_king": {
+      "name": "Alpha Reaper King",
+      "base_value": 16500,
+      "stat_multipliers": {
+        "melee": 348,
+        "health": 234,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_sarcosuchus": {
+      "name": "Alpha Sarcosuchus",
+      "base_value": 8250,
+      "stat_multipliers": {
+        "melee": 216,
+        "health": 144,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_seeker": {
+      "name": "Alpha Seeker",
+      "base_value": 12000,
+      "stat_multipliers": {
+        "melee": 288,
+        "health": 192,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_indominus_rex": {
+      "name": "Alpha Indominus Rex",
+      "base_value": 15000,
+      "stat_multipliers": {
+        "melee": 336,
+        "health": 228,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_manticore": {
+      "name": "Alpha Manticore",
+      "base_value": 13500,
+      "stat_multipliers": {
+        "melee": 312,
+        "health": 210,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_megapithecus": {
+      "name": "Alpha Megapithecus",
+      "base_value": 13500,
+      "stat_multipliers": {
+        "melee": 312,
+        "health": 210,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "alpha_dodo_rex": {
+      "name": "Alpha Dodo Rex",
+      "base_value": 6000,
+      "stat_multipliers": {
+        "melee": 192,
+        "health": 126,
+        "stamina": 36,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "alpha_combat"
+    },
+    "apex_t_rex": {
+      "name": "Apex T-Rex",
+      "base_value": 18000,
+      "stat_multipliers": {
+        "melee": 378,
+        "health": 253,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_rock_drake": {
+      "name": "Apex Rock Drake",
+      "base_value": 17000,
+      "stat_multipliers": {
+        "melee": 350,
+        "health": 237,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_spinosaur": {
+      "name": "Apex Spinosaur",
+      "base_value": 15000,
+      "stat_multipliers": {
+        "melee": 322,
+        "health": 210,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_therizinosaurus": {
+      "name": "Apex Therizinosaurus",
+      "base_value": 14000,
+      "stat_multipliers": {
+        "melee": 308,
+        "health": 203,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_fire_wyvern": {
+      "name": "Apex Fire Wyvern",
+      "base_value": 13000,
+      "stat_multipliers": {
+        "melee": 280,
+        "health": 182,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_lightning_wyvern": {
+      "name": "Apex Lightning Wyvern",
+      "base_value": 13000,
+      "stat_multipliers": {
+        "melee": 280,
+        "health": 182,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_ice_wyvern": {
+      "name": "Apex Ice Wyvern",
+      "base_value": 13000,
+      "stat_multipliers": {
+        "melee": 280,
+        "health": 182,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_poison_wyvern": {
+      "name": "Apex Poison Wyvern",
+      "base_value": 13000,
+      "stat_multipliers": {
+        "melee": 280,
+        "health": 182,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_wyvern": {
+      "name": "Apex Wyvern",
+      "base_value": 12000,
+      "stat_multipliers": {
+        "melee": 266,
+        "health": 175,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_dragon": {
+      "name": "Apex Dragon",
+      "base_value": 24000,
+      "stat_multipliers": {
+        "melee": 420,
+        "health": 280,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_broodmother": {
+      "name": "Apex Broodmother",
+      "base_value": 20000,
+      "stat_multipliers": {
+        "melee": 392,
+        "health": 266,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_reaper": {
+      "name": "Apex Reaper",
+      "base_value": 19000,
+      "stat_multipliers": {
+        "melee": 385,
+        "health": 259,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_reaper_king": {
+      "name": "Apex Reaper King",
+      "base_value": 22000,
+      "stat_multipliers": {
+        "melee": 406,
+        "health": 273,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_sarcosuchus": {
+      "name": "Apex Sarcosuchus",
+      "base_value": 11000,
+      "stat_multipliers": {
+        "melee": 251,
+        "health": 168,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_seeker": {
+      "name": "Apex Seeker",
+      "base_value": 16000,
+      "stat_multipliers": {
+        "melee": 336,
+        "health": 224,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_indominus_rex": {
+      "name": "Apex Indominus Rex",
+      "base_value": 20000,
+      "stat_multipliers": {
+        "melee": 392,
+        "health": 266,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_manticore": {
+      "name": "Apex Manticore",
+      "base_value": 18000,
+      "stat_multipliers": {
+        "melee": 364,
+        "health": 244,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_megapithecus": {
+      "name": "Apex Megapithecus",
+      "base_value": 18000,
+      "stat_multipliers": {
+        "melee": 364,
+        "health": 244,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+    "apex_dodo_rex": {
+      "name": "Apex Dodo Rex",
+      "base_value": 8000,
+      "stat_multipliers": {
+        "melee": 224,
+        "health": 147,
+        "stamina": 42,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 16
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
     }
   }
 }
