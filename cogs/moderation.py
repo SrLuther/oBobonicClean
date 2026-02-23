@@ -210,9 +210,6 @@ class Moderation(commands.Cog):
             if log_channel:
                 await log_channel.send(f"⚠ Palavrão detectado ({now}) de {message.author.mention}:\n`{message.content}`")
             return
-        
-        # Permite processamento normal de comandos
-        await self.bot.process_commands(message)
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Moderation(bot))
