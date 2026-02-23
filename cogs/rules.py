@@ -15,6 +15,7 @@ class RulesCog(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def regras_command(self, ctx: commands.Context) -> None:
         """Envia as regras do servidor na sala de regras (admin only)"""
+        print(f"[DEBUG] Comando !regras executado por {ctx.author}")
         try:
             RULES_CHANNEL_ID = 1473500120430673940
             canal_regras = self.bot.get_channel(RULES_CHANNEL_ID)
@@ -127,7 +128,7 @@ Seu poder **NÃO** pode foder a experiência dos outros.
 **Reaja com ☠️ para confirmar!**  
 
 *🗺️ ArkLand Brasil • Primal Fear + Expansões • Ragnarok PvE*  
-*Mods: [Coleção Steam](https://steamcommunity.com/sharedfiles/filedetails/?id=3239651918)*"""
+*Mods: [Coleção Steam](<https://steamcommunity.com/sharedfiles/filedetails/?id=3239651918>)*"""
 
             # Dividir em mensagens menores (limite Discord é 2000 caracteres)
             mensagens = []
