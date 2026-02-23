@@ -83,93 +83,111 @@ class ComandosCog(commands.Cog):
                 await ctx.send(f"❌ Canal de regras ({RULES_CHANNEL_ID}) não encontrado.")
                 return
             
-            regras_completas = """# 🦕 REGRAS ARKLAND BRASIL – PVE 10x 🦖
-**ARK: Survival Evolved | Cluster Completo**
+            regras_completas = """**🗺️ ArkLand Brasil • Primal Fear • Ragnarok**  
+*Versão Atualizada - Obrigatório para todos em progressão avançada/endgame*
 
-**✅ PVE PURO – Sem PVP, sem grief, cooperação total**  
-**Vigência:** 2026  
-**Rates:** 10× | Mods: S+, Dino Storage, SpyGlass
+**⚠️ AVISO PRINCIPAL**  
+Mesmo sendo **TOTALMENTE PvE**, suas criaturas, invocações e construções podem:  
+• Matar outros jogadores  
+• Destruir bases e progresso alheio  
+• Causar lag no servidor  
 
-══════════════════════════════════════════════════════════════
+**VOCÊ É 100% RESPONSÁVEL** por TUDO que causar.  
+PvE ≠ Sem regras ou consequências.  
+**Respeito mútuo é lei aqui.**
 
-## 1. REGRAS BÁSICAS
-• Idade mínima: 13 anos  
-• Idioma: Português ou Inglês  
-• **NUNCA** ataque players, tames ou bases (mesmo offline/soltos) → **BAN PERM**  
-• Sem hacks, dupes, glitches, fly, clip → **BAN HWID**  
-• Sem spam, flood, caps excessivo ou emotes repetidos → mute/kick  
-• Ajude os novos! Cooperação é lei aqui
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-══════════════════════════════════════════════════════════════
+## 1. ÁREAS PROTEGIDAS (Ragnarok)
+**🚫 PROIBIDO** construir, colocar estruturas, teleporters ou deixar criaturas em:  
+• Desert Arena  
+• Lava Golem Arena  
+• Ice Queen Arena  
+• Dragon Arena  
+• Wyvern Trench  
+• **Qualquer spawn de Boss ou Artefato**  
 
-## 2. BASES
-• Máximo **3 bases principais** por mapa + secundárias pequenas (10×10)  
-• Distância mínima: **200 m** entre tribos diferentes  
-• **Proibido bloquear**:
-  - Spawns (100 m livre ao redor)
-  - Obelisks, beacons, drops, cavernas, boss arenas
-  - Nodes iniciais de metal/cristal/obsidiana
-• Pillar spam: máximo **50 estruturas vazias** por base  
-• Decay: **7 dias**  
-• Bases abandonadas (14 dias offline): anuncie no Discord e pode demolir
+**Distância mínima:** **100 fundações** (em linha reta).  
 
-══════════════════════════════════════════════════════════════
+**Motivo:** Essencial para progressão de **TODOS**.  
+**Penalidade:** Remoção imediata + advertência/ban.
 
-## 3. DINOS & TAMING
-• **Tames 100% protegidos** – nunca mate, roube, aggro ou abra inventário  
-• Limite: **500 dinos por tribo por mapa**  
-• Quilombos/kibble farms: ok, mas sem bloquear caminhos/spawns  
-• Transfer cluster: **1 wyvern/rock drake/quetzal por semana** por tribo  
-• Proibido deixar tames bloqueando cavernas, obelisks ou arenas
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-══════════════════════════════════════════════════════════════
+## 2. CRIATURAS DE ALTO RISCO  
+*(Spirit, Celestial, Demonic, Chaos, Fey, Bosses, Alphas/Apexes e equivalentes de Primal Fear/Expansões)*  
 
-## 4. RECURSOS & LOOT
-• Sem loot steal (não mate dinos que outro está tameando)  
-• Farm público: liberado, mas deixe rotas comuns acessíveis  
-• Trades: use o canal #trades | **sem venda por dinheiro real**
+Essas são **EXTREMAMENTE perigosas** mesmo em PvE.  
 
-══════════════════════════════════════════════════════════════
+**✅ OBRIGATÓRIO:**  
+• Sempre em **Passive**  
+• **NUNCA** em Aggressive/Wandering  
+• **NUNCA** soltas fora da base (sem supervisão)  
+• **Cryopodadas** ao sair/logoff  
+• Use **Dino Storage** para excesso  
 
-## 5. TRIBOS & ALIANÇAS
-• Máximo **12 membros por tribo**  
-• Alianças: até **3 tribos** (declare no Discord)  
-• Mesclar ou kick: avise admins com 24h de antecedência  
-• Raid interno: proibido – ao sair da tribo leva só itens pessoais
+**🚫 PROIBIDO:** Deixar sem supervisão ou soltas.  
 
-══════════════════════════════════════════════════════════════
+**Penalidade:** Remoção das criaturas + ban em reincidência.
 
-## 6. COMPORTAMENTO
-• Sem racismo, homofobia, sexismo, bullying, toxicidade ou NSFW  
-• Sem propaganda sem permissão dos admins
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-══════════════════════════════════════════════════════════════
+## 3. INVOCAÇÃO DE BOSSES & EVENTOS  
+**Permitido**, mas:  
+• **Distância mínima de QUALQUER base:** **150 fundações**  
+• **Somente** em áreas isoladas ou arenas próprias  
+• **🚫 NUNCA** em áreas públicas/protegidas/rotas  
 
-## 7. PUNIÇÕES (progressivas)
-Leve (spam, caps) → mute 1h → mute 24h → ban 3 dias  
-Média (bloqueio leve, grief) → ban 1 dia → 7 dias → 30 dias  
-Grave (matar tame, pillar spam) → ban 7 dias → 30 dias → **PERM**  
-Muito grave (PVP, hacks, dupe) → **BAN PERM** imediato  
+**Você responde por TODO dano** (mortes, destruição, lag).  
+**Penalidade:** Remoção + reparação + ban.
 
-Apelação → ticket com provas (vídeo/print) – resposta em até 48h
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-══════════════════════════════════════════════════════════════
+## 4. GRIEFING (PROIBIDO - MESMO PvE)  
+**Exemplos:**  
+• Atrair mobs/bosses para bases alheias  
+• Invocações perto de outros  
+• Trollar iniciantes com OP dinos  
+• Bloquear recursos/spawns  
+• Teleporters públicos em áreas protegidas  
 
-## 8. WIPES & EVENTOS
-• Wipe mensal: dia **1** de cada mês (aviso com 7 dias)  
-• Eventos: toda **sexta às 20h BRT** (rates duplo, boss runs, giveaways)
+**Penalidade:** **BAN PERMANENTE** (sem aviso).
 
-══════════════════════════════════════════════════════════════
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**Resumindo em 3 frases:**
-1. Coopere, não atrapalhe ninguém.
-2. Respeite os tames e bases dos outros.
-3. Qualquer dúvida ou problema → abra ticket!
+## 5. BASES, CONSTRUÇÃO & LAG  
+**🚫 PROIBIDO:**  
+• Spam de estruturas/fundações (incluindo S+)  
+• Bases gigantes desnecessárias  
+• Excesso de entidades (tochas, dinos renderizados)  
 
-**Divirta-se no ARKLAND BRASIL!** 🦖✨
+Admins removem **sem aviso** se causar lag.  
+**Dica:** Otimize com S+ e Dino Storage.
 
-**🎮 Pronto para entrar no servidor?**
-**► Discord:** https://discord.gg/7wPswZkb8z"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## 6. LIMITE DE CRIATURAS ENDGAME  
+• Mantenha **mínimo necessário**  
+• Cryopods/Dino Storage para o resto  
+• Excesso = remoção automática  
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## 7. PODER DOS ADMINS  
+• Remover criaturas/bases/estruturas para proteger servidor  
+• Reverter danos causados por irresponsabilidade  
+• **Sem discussão** em casos claros.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## 👑 REGRA FINAL  
+**PvE = Progressão + Respeito.**  
+Seu poder **NÃO** pode foder a experiência dos outros.  
+
+**Reaja com ☠️ para confirmar!**  
+
+*🗺️ ArkLand Brasil • Primal Fear + Expansões • Ragnarok PvE*  
+*Mods: [Coleção Steam](https://steamcommunity.com/sharedfiles/filedetails/?id=3239651918)*"""
             
             # Dividir em mensagens menores (limite Discord é 2000 caracteres)
             mensagens = []
