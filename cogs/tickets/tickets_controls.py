@@ -16,7 +16,7 @@ from .tickets_views import gerar_view_ticket
 class TicketsController(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.inatividade_check.start()
+        self.inatividade_check.start()  # type: ignore
 
     # ------------------------
     # COMANDO SLASH PARA CRIAR PAINEL (opcional)
