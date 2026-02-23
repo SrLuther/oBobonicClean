@@ -8,7 +8,7 @@ import json
 import os
 import ssl
 from datetime import datetime, timedelta
-import pytz
+import pytz  # type: ignore
 import config
 
 USER_AGENT = (
@@ -383,11 +383,11 @@ class Sales(commands.Cog):
         self.cache = load_cache()
         self._rates: Dict[str, float] = {"USD": 0.0, "EUR": 0.0, "GBP": 0.0}
         self._rates_ts: float = 0.0
-        self.send_daily_promos.start()
+        self.send_daily_promos.start()  # type: ignore
 
     async def cog_unload(self) -> None:
         try:
-            self.send_daily_promos.cancel()
+            self.send_daily_promos.cancel()  # type: ignore
         except Exception:
             pass
 
