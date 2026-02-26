@@ -93,7 +93,7 @@ class DinoData:
     """Estrutura para dados do dinossauro"""
     species: str
     level: float = 1
-    base_stats: DinoStats = None
+    base_stats: Optional[DinoStats] = None
     calculation_mode: CalculationMode = CalculationMode.VANILLA
     
     # Propriedades VANILLA
