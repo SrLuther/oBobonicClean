@@ -38,7 +38,8 @@ def get_highest_priority_prefix(member) -> Optional[str]:
     """
     for role_id_str in PRIORITY_ORDER:
         role_id = int(role_id_str)
-        if member.get_role(role_id):
+        # Verificar se o membro tem o cargo procurando em member.roles
+        if any(role.id == role_id for role in member.roles):
             return PREFIX_MAP[role_id_str]
     return None
 
@@ -90,18 +91,23 @@ async def update_member_nickname(member) -> bool:
             print(f"[NicknameUpdater] ❌ Sem permissão para gerenciar apelidos")
             return False
 
-        if not member.manageable:
-            print(
-                f"[NicknameUpdater] ⚠️ Não tenho permissão para gerenciar {member.name}"
-            )
-            return False
-
         # Bot não deve mudar a si mesmo
-        if member == member.guild.me:
+        if member.id == member.guild.me.id:
             return False
 
         # Bots não devem ter apelidos gerenciados
         if member.bot:
+            return False
+
+        # Verificar se o bot pode gerenciar este membro (comparar posição de cargos)
+        try:
+            if member.guild.me.top_role.position <= member.top_role.position:
+                print(
+                    f"[NicknameUpdater] ⚠️ Não tenho permissão para gerenciar {member.name}"
+                )
+                return False
+        except Exception as e:
+            print(f"[NicknameUpdater] ⚠️ Erro ao verificar permissão para {member.name}: {e}")
             return False
 
         highest_prefix = get_highest_priority_prefix(member)
@@ -146,18 +152,36 @@ async def sync_all_members_nicknames(guild) -> dict:
     try:
         print("[NicknameUpdater] 🔄 Iniciando sincronização de apelidos...")
         
-        members = guild.members
+        # Verificar permissões do bot
+        if not guild.me.guild_permissions.manage_nicknames:
+            print("[NicknameUpdater] ❌ Bot não tem permissão para gerenciar apelidos!")
+            return {'updated': 0, 'skipped': 0, 'failed': 0}
+        
         updated = 0
         skipped = 0
         failed = 0
 
-        for member in members:
+        # Iterar sobre os membros do cache do bot
+        for member in guild.members:
             try:
+                # Pular bots
                 if member.bot:
                     skipped += 1
                     continue
 
-                if not member.manageable:
+                # Pular o próprio bot
+                if member.id == guild.me.id:
+                    skipped += 1
+                    continue
+
+                # Verificar se o bot tem permissão para gerenciar este membro
+                # Comparar a posição do cargo mais alto do bot com a do membro
+                try:
+                    if guild.me.top_role.position <= member.top_role.position:
+                        skipped += 1
+                        continue
+                except Exception as e:
+                    print(f"[NicknameUpdater] ⚠️ Erro ao verificar permissão para {member.name}: {e}")
                     skipped += 1
                     continue
 
@@ -177,10 +201,10 @@ async def sync_all_members_nicknames(guild) -> dict:
                         print(
                             f"[NicknameUpdater] ✅ {base_name} → {new_nickname}"
                         )
-                    except Exception as e:
+                    except Exception as edit_error:
                         failed += 1
                         print(
-                            f"[NicknameUpdater] ❌ Erro ao sincronizar {base_name}: {e}"
+                            f"[NicknameUpdater] ❌ Erro ao editar {base_name}: {edit_error}"
                         )
                 else:
                     skipped += 1
