@@ -2,6 +2,11 @@
 Sistema de Avaliação de Dinossauros para ARK
 Calcula valor de venda baseado em stats e tipo/uso
 Com painel interativo no Discord
+
+Versão 2.0: Suporta múltiplos modos de cálculo
+- VANILLA: Cálculo padrão ARK
+- PRIMAL_FEAR: Com multiplicadores de tier
+- OMEGA: Com tier, variante e paragon
 """
 
 import discord
@@ -12,6 +17,20 @@ import os
 from typing import Optional, Dict, Any, Tuple
 from datetime import datetime
 import asyncio
+
+# Importar novo módulo de cálculo
+from dino_calculator import (
+    CalculationMode,
+    DinoData,
+    DinoStats,
+    calculate_dino_stats,
+    get_available_modes,
+    get_mode_by_name,
+    PRIMAL_FEAR_MULTIPLIERS,
+    OMEGA_TIER_MULTIPLIERS,
+    OMEGA_VARIANT_MULTIPLIERS,
+    OMEGA_PARAGON_MULTIPLIERS
+)
 
 # ============================================
 # CONFIGURAÇÃO
@@ -120,13 +139,45 @@ def calcular_valor_dino(
     stats: Dict[str, int],
     tipo_uso: Optional[str] = None,
     dados: Optional[dict] = None,
-    castrado: bool = False
+    castrado: bool = False,
+    calculation_mode: str = "VANILLA",
+    # Parâmetros adicionais para modos especiais
+    primal_tier: Optional[str] = None,
+    omega_tier: Optional[str] = None,
+    omega_variant: Optional[str] = None,
+    omega_paragon: int = 0,
+    level: int = 1
 ) -> Dict[str, Any]:
     """Calcula o valor de um dinossauro baseado em stats e tipo de uso
-    Aplica multiplicador de categoria no final do cálculo
+    
+    Suporta múltiplos modos de cálculo:
+    - VANILLA: Cálculo padrão (compatibilidade total)
+    - PRIMAL_FEAR: Com multiplicadores de tier Primal Fear
+    - OMEGA: Com tier, variante e paragon
+    
+    Args:
+        especie: Nome da espécie de dinossauro
+        stats: Dicionário com stats {stat_name: value}
+        tipo_uso: Tipo de uso (opcional)
+        dados: Dados dos dinossauros (carrega se None)
+        castrado: Se o dinossauro é castrado
+        calculation_mode: Modo de cálculo (VANILLA, PRIMAL_FEAR, OMEGA)
+        primal_tier: Tier Primal Fear (Alpha, Apex, Fabled, Demonic, Celestial)
+        omega_tier: Tier Omega (Basic, Augmented, Superior, Alpha, Omega, etc)
+        omega_variant: Variante Omega (Fire, Ice, Lightning, Poison, Celestial, Chaos)
+        omega_paragon: Nível de Paragon (0-5)
+        level: Nível do dinossauro (afeta cálculo de stats)
+    
+    Returns:
+        Dicionário com resultado da avaliação
     """
     if dados is None:
         dados = carregar_dados_dinos()
+    
+    # Validar modo de cálculo
+    valid_modes = get_available_modes()
+    if calculation_mode not in valid_modes:
+        calculation_mode = "VANILLA"
     
     resultado = {
         "especie": especie,
@@ -136,7 +187,10 @@ def calcular_valor_dino(
         "tier": "Comum",
         "recomendacoes": [],
         "categoria": "Outros",
-        "castrado": castrado
+        "castrado": castrado,
+        "calculation_mode": calculation_mode,
+        "power_score": 0,
+        "calculation_details": {}
     }
     
     # Encontrar dinossauro
@@ -150,7 +204,47 @@ def calcular_valor_dino(
     base_value = dino.get("base_value", 1000)
     stat_multipliers = dino.get("stat_multipliers", {})
     
-    # Calcular valor por stat (base + stats)
+    # ============================================
+    # NOVO SISTEMA: Usar calculadora modular
+    # ============================================
+    # Preparar dados para calculadora
+    base_stats = DinoStats(
+        health=stats.get("health", 0),
+        damage=stats.get("damage", stats.get("melee", 0)),  # Compatibilidade com "melee"
+        stamina=stats.get("stamina", 0),
+        weight=stats.get("weight", 0),
+        torpor=stats.get("torpor", 0),
+        speed=stats.get("speed", 0),
+        oxygen=stats.get("oxygen", 0),
+        food=stats.get("food", 0)
+    )
+    
+    # Criar objeto DinoData para cálculo
+    dino_calc = DinoData(
+        species=dino.get("name", especie),
+        level=level,
+        base_stats=base_stats,
+        castrado=castrado,
+        primal_tier=primal_tier,
+        tier=omega_tier,
+        variant=omega_variant,
+        paragon=omega_paragon
+    )
+    
+    # Executar cálculo no modo especificado
+    mode = get_mode_by_name(calculation_mode) or CalculationMode.VANILLA
+    calculation_result = calculate_dino_stats(dino_calc, mode)
+    
+    # Armazenar detalhes do cálculo
+    resultado["power_score"] = calculation_result.power_score
+    resultado["calculation_details"] = calculation_result.to_dict()
+    resultado["calculation_details"]["multipliers"] = calculation_result.multipliers_applied
+    
+    # ============================================
+    # CONTINUAR COM CÁLCULO DE VALOR (compatibilidade)
+    # ============================================
+    
+    # Calcular valor por stat (base + stats) - MANTÉM COMPATIBILIDADE
     valor_base = base_value
     valor_stats = base_value
     resultado["breakdown"]["valor_base"] = base_value
