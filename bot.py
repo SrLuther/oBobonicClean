@@ -10,7 +10,6 @@ from io import StringIO
 import datetime
 import config
 import certifi
-from nicknameUpdater import setup_nickname_updater, sync_all_members_nicknames
 
 # --------------------
 # 1. KEEP-ALIVE (FLASK)
@@ -390,27 +389,6 @@ async def on_ready():
         await recriar_todos_os_painels()
     except Exception as e:
         print(f"⚠️ ERRO ao recriar painels: {e}")
-
-    # ==================== NICKNAME UPDATER ====================
-    # Configurar listener automático para atualizar apelidos
-    try:
-        setup_nickname_updater(bot)
-        print("✅ Sistema de atualização de apelidos ativado!")
-    except Exception as e:
-        print(f"⚠️ Erro ao configurar nickname updater: {e}")
-    
-    # Sincronizar apelidos de todos os membros existentes
-    try:
-        guild = bot.get_guild(GUILD_ID)
-        if guild:
-            print("\n🔄 Sincronizando apelidos de membros existentes...")
-            stats = await sync_all_members_nicknames(guild)
-            print(f"📊 Resultat: {stats['updated']} atualizados, "
-                  f"{stats['skipped']} sem alterações, "
-                  f"{stats['failed']} erros\n")
-    except Exception as e:
-        print(f"⚠️ Erro ao sincronizar apelidos: {e}")
-    # =========================================================
 
     # finaliza captura e envia log
     try:

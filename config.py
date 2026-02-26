@@ -86,6 +86,7 @@ COGS = [
     'tickets',   # Só o pacote tickets
     'lojas',     # Sistema de lojas pessoais
     'dinosaur_valuer',  # Calculadora de valor de dinossauros
+    'nickname_updater',  # Sistema de atualização automática de apelidos
     'admin', 
     'autoresponse', 
     'moderation', 
