@@ -219,7 +219,12 @@ class NicknameUpdaterCog(commands.Cog):
         
         Uso: !meuapelido
         """
-        member = ctx.author
+        # Garantir que temos um Member (tem nick e roles) e não um User
+        member = ctx.guild.get_member(ctx.author.id) if ctx.guild else None
+        if not isinstance(member, discord.Member):
+            await ctx.send("❌ Este comando só pode ser usado dentro de um servidor.", ephemeral=True)
+            return
+
         highest_prefix = get_highest_priority_prefix(member)
         base_name = member.name
         current_nickname = member.nick or base_name
