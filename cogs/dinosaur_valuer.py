@@ -14,7 +14,7 @@ from discord.ext import commands
 from discord import ui
 import json
 import os
-from typing import Optional, Dict, Any, Tuple
+from typing import Optional, Dict, Any, Tuple, Union
 from datetime import datetime
 import asyncio
 
@@ -1387,7 +1387,7 @@ async def enviar_sugestao_dino(
     nome_dino: str,
     valor_full: int,
     observacoes: str,
-    usuario: discord.User,
+    usuario: Union[discord.User, discord.Member],
     bot: commands.Bot,
     é_de_mod: bool,
     nome_mod: str = ""
@@ -1401,7 +1401,7 @@ async def enviar_sugestao_dino(
     canal_id = 1475129137201942560
     canal = bot.get_channel(canal_id)
     
-    if not canal:
+    if not canal or not isinstance(canal, discord.TextChannel):
         embed = discord.Embed(
             title="❌ Erro",
             description=f"Canal de sugestões não encontrado!",
@@ -1504,8 +1504,8 @@ class DinosaurValuerCog(commands.Cog):
             canal = guild.get_channel(VALUATION_CHANNEL_ID)
             print(f"[PAINEL DINOSAURO] Canal obtido: {canal}")
             
-            if not canal:
-                print(f"[PAINEL] ❌ Canal {VALUATION_CHANNEL_ID} não encontrado")
+            if not canal or not isinstance(canal, discord.TextChannel):
+                print(f"[PAINEL] ❌ Canal {VALUATION_CHANNEL_ID} não encontrado ou não é TextChannel")
                 return
             
             # Verificar se o painel já existe
@@ -1528,6 +1528,10 @@ class DinosaurValuerCog(commands.Cog):
             embed = discord.Embed(
                 title="🦖 CALCULADORA DE VALOR DE DINOSSAUROS",
                 description=(
+                    "⚠️ **AVISO:** Esta calculadora está em **processo de desenvolvimento** "
+                    "e ainda **não representa a versão final oficial**. "
+                    "Os valores e fórmulas podem sofrer alterações.\n\n"
+                    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
                     "Bem-vindo ao sistema de avaliação de dinossauros!\n\n"
                     "**Como usar:**\n"
                     "1. Clique no botão abaixo\n"
@@ -1548,7 +1552,7 @@ class DinosaurValuerCog(commands.Cog):
                 color=discord.Color.gold()
             )
             
-            embed.set_footer(text="Sistema de Avaliação ARK | Clique no botão para começar!")
+            embed.set_footer(text="⚠️ Em desenvolvimento — valores sujeitos a alteração | Clique no botão para começar!")
             
             view = ValuationPanelView(self.bot, self.dados)
             msg = await canal.send(embed=embed, view=view)
@@ -1570,7 +1574,7 @@ class DinosaurValuerCog(commands.Cog):
         try:
             canal = ctx.guild.get_channel(VALUATION_CHANNEL_ID)
             
-            if not canal:
+            if not canal or not isinstance(canal, discord.TextChannel):
                 embed = discord.Embed(
                     title="❌ Erro",
                     description=f"Canal com ID `{VALUATION_CHANNEL_ID}` não encontrado!",
@@ -1583,6 +1587,10 @@ class DinosaurValuerCog(commands.Cog):
             embed = discord.Embed(
                 title="🦖 CALCULADORA DE VALOR DE DINOSSAUROS",
                 description=(
+                    "⚠️ **AVISO:** Esta calculadora está em **processo de desenvolvimento** "
+                    "e ainda **não representa a versão final oficial**. "
+                    "Os valores e fórmulas podem sofrer alterações.\n\n"
+                    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
                     "Bem-vindo ao sistema de avaliação de dinossauros!\n\n"
                     "**Como usar:**\n"
                     "1. Clique no botão abaixo\n"
@@ -1603,7 +1611,7 @@ class DinosaurValuerCog(commands.Cog):
                 color=discord.Color.gold()
             )
             
-            embed.set_footer(text="Sistema de Avaliação ARK | Clique no botão para começar!")
+            embed.set_footer(text="⚠️ Em desenvolvimento — valores sujeitos a alteração | Clique no botão para começar!")
             
             view = ValuationPanelView(self.bot, self.dados)
             msg = await canal.send(embed=embed, view=view)
@@ -2017,7 +2025,7 @@ async def setup(bot: commands.Bot):
             canal = guild.get_channel(VALUATION_CHANNEL_ID)
             print(f"[DINOSAUR] Canal obtido: {canal}")
             
-            if canal:
+            if canal and isinstance(canal, discord.TextChannel):
                 config = carregar_painel_config()
                 painel_msg_id = config.get("painel_message_id")
                 
@@ -2050,6 +2058,10 @@ async def criar_painel_automatico(bot: commands.Bot, canal: discord.TextChannel,
         embed = discord.Embed(
             title="🦖 CALCULADORA DE VALOR DE DINOSSAUROS",
             description=(
+                "⚠️ **AVISO:** Esta calculadora está em **processo de desenvolvimento** "
+                "e ainda **não representa a versão final oficial**. "
+                "Os valores e fórmulas podem sofrer alterações.\n\n"
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
                 "Bem-vindo ao sistema de avaliação de dinossauros!\n\n"
                 "**📖 Como usar:**\n"
                 "1. Clique no botão abaixo\n"
@@ -2077,7 +2089,7 @@ async def criar_painel_automatico(bot: commands.Bot, canal: discord.TextChannel,
             color=discord.Color.gold()
         )
         
-        embed.set_footer(text="Sistema de Avaliação ARK | Clique no botão para começar!")
+        embed.set_footer(text="⚠️ Em desenvolvimento — valores sujeitos a alteração | Clique no botão para começar!")
         
         view = ValuationPanelView(bot, dados)
         msg = await canal.send(embed=embed, view=view)
