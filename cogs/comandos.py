@@ -58,6 +58,14 @@ class ComandosCog(commands.Cog):
             inline=False
         )
 
+        e1.add_field(
+            name="🎫 VIP",
+            value=(
+                f"`{p}painelvip` — Cria o painel VIP no canal configurado *(admin)*"
+            ),
+            inline=False
+        )
+
         e1.set_footer(text=f"Prefixo: {p}  •  Página 1 de 3")
 
         # ── embed 2: lojas + tickets + moderação + autoloop ────────────

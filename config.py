@@ -87,6 +87,7 @@ COGS = [
     'lojas',     # Sistema de lojas pessoais
     'dinosaur_valuer',  # Calculadora de valor de dinossauros
     'nickname_updater',  # Sistema de atualização automática de apelidos
+    'vip',       # Painel VIP com link para a loja
     'admin', 
     'autoresponse', 
     'moderation', 
