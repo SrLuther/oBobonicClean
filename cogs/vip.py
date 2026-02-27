@@ -54,54 +54,58 @@ class VipPainelView(discord.ui.View):
 # ============================================
 def _build_vip_embed() -> discord.Embed:
     embed = discord.Embed(
-        title="💜 VIP — ARK Land BR",
+        title="🌋 SISTEMA VIP ARKLAND – CONSTRUÍDO PELA TRIBO 🦖",
         description=(
-            "Apoie o servidor e ganhe vantagens exclusivas!\n"
-            "Sua contribuição mantém os servidores online e ajuda a comunidade a crescer.\n\n"
-            "═══════════════════════════════════════"
+            "Na **ARKLAND**, poder não é imposto.\n"
+            "Ele é conquistado… e construído em conjunto.\n\n"
+            "O nosso Sistema VIP já está disponível, mas existe um diferencial que torna tudo mais interessante:\n\n"
+            "💬 **Os benefícios de cada VIP serão definidos junto com a comunidade.**\n\n"
+            "Isso mesmo.\n"
+            "Bronze, Prata, Ouro, Diamante e VIP Doação não serão apenas pacotes prontos. "
+            "Eles serão moldados com a opinião dos jogadores que fazem o servidor existir.\n\n"
+            "Você não está apenas comprando vantagens.\n"
+            "**Você está ajudando a desenhar como elas funcionarão.**"
         ),
         color=discord.Color.from_rgb(148, 0, 211)
     )
 
     embed.add_field(
-        name="💎 Benefícios VIP",
+        name="💠 Planos disponíveis atualmente",
         value=(
-            "🏷️ **Cargo exclusivo `[VIP]`** no seu apelido\n"
-            "🛒 **Acesso ao canal de lojas VIP**\n"
-            "⚡ **Prioridade no suporte via tickets**\n"
-            "🎨 **Canais exclusivos para membros VIP**\n"
-            "🦕 **Acesso antecipado a eventos e sorteios**\n"
-            "📣 **Poder criar anúncios em canais especiais**\n"
-            "🎁 **Itens e pacotes exclusivos no servidor ARK**"
+            "• **VIP Bronze** — R$20\n"
+            "• **VIP Prata** — R$30\n"
+            "• **VIP Ouro** — R$50\n"
+            "• **VIP Diamante** — R$75\n"
+            "• **VIP Doação** — valor livre para apoiar o servidor"
         ),
         inline=False
     )
 
     embed.add_field(
-        name="📋 Como Funciona",
+        name="🔥 Por que participar agora?",
         value=(
-            "1️⃣ Clique em **🛒 Assinar VIP** abaixo\n"
-            "2️⃣ Escolha o plano que melhor te atende\n"
-            "3️⃣ Realize o pagamento de forma segura\n"
-            "4️⃣ Seu cargo VIP será aplicado automaticamente!\n\n"
-            "> ⚠️ Problemas? Abra um ticket em <#1441608808086237265>"
+            "Porque quem entra cedo ajuda a decidir:\n"
+            "✔️ Quais bônus cada VIP terá\n"
+            "✔️ Quais vantagens fazem sentido para o servidor\n"
+            "✔️ Como manter o equilíbrio sem quebrar a experiência\n\n"
+            "Além disso, você estará apoiando diretamente a evolução da ARKLAND "
+            "durante o período de testes e ajustes."
         ),
         inline=False
     )
 
     embed.add_field(
-        name="🌐 Loja",
-        value=f"[arklandbr.tip4serv.com]({VIP_STORE_URL})",
-        inline=True
+        name="\u200b",
+        value=(
+            "Aqui, o VIP não é apenas um título.\n"
+            "**É um voto. É influência. É presença ativa na construção do servidor.**\n\n"
+            "🌎 A era está começando.\n"
+            "*E quem ajuda a erguer o império… jamais é esquecido.*"
+        ),
+        inline=False
     )
 
-    embed.add_field(
-        name="💬 Suporte",
-        value="Tickets • Discord",
-        inline=True
-    )
-
-    embed.set_footer(text="ARK Land BR • Obrigado por apoiar o servidor! 💜")
+    embed.set_footer(text="ARK Land BR • Clique no botão abaixo para apoiar o servidor 💜")
     return embed
 
 
