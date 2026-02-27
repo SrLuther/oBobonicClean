@@ -40,6 +40,11 @@ VALUATION_HISTORY_FILE = "data/valuation_history.json"
 PAINEL_CONFIG_FILE = "data/dino_painel.json"
 VALUATION_CHANNEL_ID = 1474164587141271709  # Canal para avaliações
 
+# Categorias de dinos por modo de jogo
+VANILLA_CATEGORIES = {"pve_combat", "criacao", "farming", "transporte", "utilidade", "outros", "otros"}
+PRIMAL_FEAR_CATEGORIES = {"alpha_combat", "apex_combat", "celestial_endgame", "demonic_variant", "primal_boss", "fey_expansion", "spirit_toptier"}
+OMEGA_CATEGORIES = {"black_omega_advanced"}
+
 # ============================================
 # FUNÇÕES AUXILIARES
 # ============================================
@@ -297,21 +302,55 @@ def calcular_valor_dino(
     # Calcular valor final COM multiplicador de categoria
     valor_final = int(valor_stats * multiplicador_categoria)
     resultado["breakdown"]["multiplo_categoria"] = int(valor_final - valor_stats)
-    
+
+    # ============================================
+    # APLICAR MULTIPLICADORES DE MODO (PF / OMEGA)
+    # ============================================
+    mult_modo = 1.0
+
+    if calculation_mode == "PRIMAL_FEAR" and primal_tier:
+        mult_pf = PRIMAL_FEAR_MULTIPLIERS.get(primal_tier, 1)
+        mult_modo = mult_pf
+        resultado["breakdown"][f"mult_primal_{primal_tier}"] = int(valor_final * mult_pf - valor_final)
+        valor_final = int(valor_final * mult_pf)
+
+    elif calculation_mode == "OMEGA":
+        mult_tier = OMEGA_TIER_MULTIPLIERS.get(omega_tier, 1) if omega_tier else 1
+        mult_variant = OMEGA_VARIANT_MULTIPLIERS.get(omega_variant, 1) if omega_variant else 1
+        mult_paragon = OMEGA_PARAGON_MULTIPLIERS.get(omega_paragon, 1)
+        mult_modo = mult_tier * mult_variant * mult_paragon
+
+        if omega_tier:
+            resultado["breakdown"][f"mult_tier_{omega_tier}"] = int(valor_final * mult_tier - valor_final)
+            valor_final = int(valor_final * mult_tier)
+        if omega_variant:
+            resultado["breakdown"][f"mult_variant_{omega_variant}"] = int(valor_final * mult_variant - valor_final)
+            valor_final = int(valor_final * mult_variant)
+        if omega_paragon > 0:
+            resultado["breakdown"][f"mult_paragon_P{omega_paragon}"] = int(valor_final * mult_paragon - valor_final)
+            valor_final = int(valor_final * mult_paragon)
+
     resultado["valor_total"] = valor_final
     resultado["multiplicador_categoria"] = multiplicador_categoria
-    
-    # Classificar tier
+    resultado["mult_modo"] = mult_modo
+
+    # Classificar tier (escala expandida para suportar PF/Omega)
     if valor_final < 500:
         resultado["tier"] = "🟤 Comum"
-    elif valor_final < 2000:
+    elif valor_final < 2_000:
         resultado["tier"] = "🟢 Raro"
-    elif valor_final < 5000:
+    elif valor_final < 8_000:
         resultado["tier"] = "🔵 Épico"
-    elif valor_final < 8000:
+    elif valor_final < 30_000:
         resultado["tier"] = "🟣 Lendário"
-    else:
+    elif valor_final < 150_000:
         resultado["tier"] = "🟡 Mítico"
+    elif valor_final < 600_000:
+        resultado["tier"] = "🔶 Divino"
+    elif valor_final < 3_000_000:
+        resultado["tier"] = "🔴 Celestial"
+    else:
+        resultado["tier"] = "⚡ Eterno"
     
     # Análise de stats
     analise_stats = []
@@ -332,9 +371,17 @@ def calcular_valor_dino(
     resultado["analise_stats"] = analise_stats
     
     # Recomendações baseadas no tier
-    if valor_final >= 8000:
+    if valor_final >= 3_000_000:
+        resultado["recomendacoes"].append("⚡ Espécime ETERNO — valor extremo!")
+    elif valor_final >= 600_000:
+        resultado["recomendacoes"].append("🔴 Espécime CELESTIAL — raridade máxima!")
+    elif valor_final >= 150_000:
+        resultado["recomendacoes"].append("🔶 Espécime DIVINO — extremamente valioso!")
+    elif valor_final >= 30_000:
+        resultado["recomendacoes"].append("🟡 Espécime Mítico — valor excepcional!")
+    elif valor_final >= 8_000:
         resultado["recomendacoes"].append("🎯 Espécime Excepcional!")
-    elif valor_final >= 5000:
+    elif valor_final >= 5_000:
         resultado["recomendacoes"].append("👍 Ótimo espécime")
     
     return resultado
@@ -794,7 +841,9 @@ class SearchDinoModal(ui.Modal):
         await interaction.response.defer()
         
         search_text = str(self.search_input).lower().strip()
-        dinos = self.dados.get("dinosaurs", {})
+        # Apenas dinos Vanilla (categorias base do jogo)
+        dinos = {k: v for k, v in self.dados.get("dinosaurs", {}).items()
+                 if v.get("category") in VANILLA_CATEGORIES}
         
         # Filtrar dinossauros que correspondem ao search (exato ou parcial)
         resultados = {}
@@ -1654,6 +1703,9 @@ class PFStatsModal(ui.Modal):
                 breakdown += f"{st.capitalize()}: `+{formatar_moeda(resultado['breakdown'][f'{st}_value'])}`\n"
         if self.castrado and "desconto_castrado" in resultado["breakdown"]:
             breakdown += f"**Castrado: `-{formatar_moeda(abs(resultado['breakdown']['desconto_castrado']))}`**\n"
+        pf_key = f"mult_primal_{self.primal_tier}"
+        if pf_key in resultado["breakdown"]:
+            breakdown += f"**Tier {self.primal_tier} (x{mult}): `+{formatar_moeda(resultado['breakdown'][pf_key])}`**\n"
 
         embed.add_field(name="📊 Breakdown", value=breakdown, inline=False)
 
@@ -1683,7 +1735,9 @@ class PFSearchDinoModal(ui.Modal):
         await interaction.response.defer()
 
         search_text = str(self.search_input).lower().strip()
-        dinos = self.dados.get("dinosaurs", {})
+        # Apenas dinos Primal Fear (categorias específicas do mod)
+        dinos = {k: v for k, v in self.dados.get("dinosaurs", {}).items()
+                 if v.get("category") in PRIMAL_FEAR_CATEGORIES}
 
         resultados = {}
         if search_text in dinos:
@@ -1953,6 +2007,17 @@ class OmegaStatsModal(ui.Modal):
         for st in ["melee", "health", "stamina", "weight"]:
             if f"{st}_value" in resultado["breakdown"] and stats.get(st, 0) > 0:
                 breakdown += f"{st.capitalize()}: `+{formatar_moeda(resultado['breakdown'][f'{st}_value'])}`\n"
+        tier_key = f"mult_tier_{self.omega_tier}"
+        if tier_key in resultado["breakdown"]:
+            breakdown += f"**Tier {self.omega_tier} (x{OMEGA_TIER_MULTIPLIERS.get(self.omega_tier,1)}): `+{formatar_moeda(resultado['breakdown'][tier_key])}`**\n"
+        if self.omega_variant:
+            var_key = f"mult_variant_{self.omega_variant}"
+            if var_key in resultado["breakdown"]:
+                breakdown += f"**Variante {self.omega_variant} (x{OMEGA_VARIANT_MULTIPLIERS.get(self.omega_variant,1)}): `+{formatar_moeda(resultado['breakdown'][var_key])}`**\n"
+        if omega_paragon > 0:
+            par_key = f"mult_paragon_P{omega_paragon}"
+            if par_key in resultado["breakdown"]:
+                breakdown += f"**Paragon P{omega_paragon} (x{OMEGA_PARAGON_MULTIPLIERS.get(omega_paragon,1)}): `+{formatar_moeda(resultado['breakdown'][par_key])}`**\n"
 
         embed.add_field(name="📊 Breakdown", value=breakdown, inline=False)
 
@@ -1967,7 +2032,7 @@ class OmegaSearchDinoModal(ui.Modal):
 
     search_input = ui.TextInput(
         label="Digite o nome do dinossauro",
-        placeholder="Ex: carc, rex, trike, allo...",
+        placeholder="Ex: black omega rex, black omega trike...",
         min_length=1,
         max_length=100,
         required=True,
@@ -1982,7 +2047,9 @@ class OmegaSearchDinoModal(ui.Modal):
         await interaction.response.defer()
 
         search_text = str(self.search_input).lower().strip()
-        dinos = self.dados.get("dinosaurs", {})
+        # Apenas dinos Black Omega (categoria específica do mod)
+        dinos = {k: v for k, v in self.dados.get("dinosaurs", {}).items()
+                 if v.get("category") in OMEGA_CATEGORIES}
 
         resultados = {}
         if search_text in dinos:
