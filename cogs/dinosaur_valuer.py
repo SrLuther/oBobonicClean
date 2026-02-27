@@ -87,6 +87,25 @@ def salvar_historico(historico: dict) -> None:
         json.dump(historico, f, indent=2, ensure_ascii=False)
 
 
+def registrar_avaliacao(user_id: int, username: str, resultado: dict, modo: str = "Vanilla") -> None:
+    """Salva uma avaliação no histórico (função standalone acessível por qualquer modal)"""
+    historico = carregar_historico()
+    # Remove entradas com estrutura legada (sub-dicts sem chave 'usuario')
+    historico = {k: v for k, v in historico.items() if isinstance(v, dict) and "usuario" in v}
+    aval_id = len(historico) + 1
+    historico[str(aval_id)] = {
+        "id": aval_id,
+        "usuario_id": user_id,
+        "usuario": username,
+        "especie": resultado.get("especie", "?"),
+        "valor_total": resultado.get("valor_total", 0),
+        "tier": resultado.get("tier", "?"),
+        "modo": modo,
+        "data": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    }
+    salvar_historico(historico)
+
+
 def carregar_painel_config() -> dict:
     """Carrega configuração do painel (IDs das mensagens)"""
     if not os.path.exists("data"):
@@ -686,6 +705,7 @@ class StryderStatsModal(ui.Modal):
         if resultado.get("recomendacoes"):
             embed.add_field(name="💡 Recomendações", value="\n".join(resultado["recomendacoes"]), inline=False)
         
+        registrar_avaliacao(interaction.user.id, interaction.user.display_name, resultado, "Vanilla")
         await interaction.followup.send(embed=embed, ephemeral=True)
     
     @staticmethod
@@ -804,6 +824,7 @@ class StatsModal(ui.Modal):
         if resultado.get("recomendacoes"):
             embed.add_field(name="💡 Recomendações", value="\n".join(resultado["recomendacoes"]), inline=False)
         
+        registrar_avaliacao(interaction.user.id, interaction.user.display_name, resultado, "Vanilla")
         await interaction.followup.send(embed=embed, ephemeral=True)
     
     @staticmethod
@@ -1713,6 +1734,7 @@ class PFStatsModal(ui.Modal):
         if resultado.get("recomendacoes"):
             embed.add_field(name="💡 Recomendações", value="\n".join(resultado["recomendacoes"]), inline=False)
 
+        registrar_avaliacao(interaction.user.id, interaction.user.display_name, resultado, "Primal Fear")
         await interaction.followup.send(embed=embed, ephemeral=True)
 
 
@@ -2025,6 +2047,7 @@ class OmegaStatsModal(ui.Modal):
         if resultado.get("recomendacoes"):
             embed.add_field(name="💡 Recomendações", value="\n".join(resultado["recomendacoes"]), inline=False)
 
+        registrar_avaliacao(interaction.user.id, interaction.user.display_name, resultado, "Omega")
         await interaction.followup.send(embed=embed, ephemeral=True)
 
 
@@ -2317,38 +2340,47 @@ class DinosaurValuerCog(commands.Cog):
     async def historico_comando(self, ctx: commands.Context):
         """Mostra o histórico de avaliações do servidor"""
         historico = carregar_historico()
-        
-        if not historico:
+
+        # Filtra apenas entradas reais (possuem a chave "usuario"), ignorando sub-dicts de modo antigo
+        avaliacoes_reais = [
+            v for v in historico.values()
+            if isinstance(v, dict) and "usuario" in v
+        ]
+
+        if not avaliacoes_reais:
             embed = discord.Embed(
                 title="📜 Histórico de Avaliações",
-                description="Nenhuma avaliação realizada ainda",
+                description="Nenhuma avaliação realizada ainda.",
                 color=discord.Color.greyple()
             )
             await ctx.send(embed=embed)
             return
-        
-        # Pegar últimas 10 avaliações
-        avaliacoes = list(historico.values())[-10:]
-        avaliacoes.reverse()
-        
+
+        # Pegar últimas 10 avaliações (mais recentes primeiro)
+        ultimas = avaliacoes_reais[-10:]
+        ultimas.reverse()
+
         embed = discord.Embed(
             title="📜 Histórico de Avaliações",
-            description=f"Últimas {len(avaliacoes)} avaliações",
+            description=f"Exibindo as últimas **{len(ultimas)}** de **{len(avaliacoes_reais)}** avaliações",
             color=discord.Color.gold()
         )
-        
-        for aval in avaliacoes:
+
+        for aval in ultimas:
             data = aval.get("data", "Data desconhecida")
             usuario = aval.get("usuario", "Desconhecido")
             especie = aval.get("especie", "?")
             valor = aval.get("valor_total", 0)
-            
+            tier = aval.get("tier", "")
+            modo = aval.get("modo", "")
+            modo_tag = f" `[{modo}]`" if modo else ""
+
             embed.add_field(
-                name=f"{especie} - {formatar_moeda(valor)}",
-                value=f"Por: {usuario} | {data}",
+                name=f"{especie}{modo_tag} — {formatar_moeda(valor)} {tier}",
+                value=f"Por: **{usuario}** | {data}",
                 inline=False
             )
-        
+
         await ctx.send(embed=embed)
     
     @commands.command(name="ajudacalc")
@@ -2595,10 +2627,13 @@ class DinosaurValuerCog(commands.Cog):
         embed6.set_footer(text="Sistema de Avaliação ARK | Escrito por SrLuther")
         await ctx.send(embed=embed6, ephemeral=True)
     
-    def _salvar_avaliacao(self, user_id: int, username: str, resultado: dict) -> None:
+    def _salvar_avaliacao(self, user_id: int, username: str, resultado: dict, modo: str = "Vanilla") -> None:
         """Salva avaliação no histórico"""
         historico = carregar_historico()
-        
+
+        # Remove entradas antigas com estrutura de sub-dict (legado) se existirem
+        historico = {k: v for k, v in historico.items() if isinstance(v, dict) and "usuario" in v}
+
         aval_id = len(historico) + 1
         historico[str(aval_id)] = {
             "id": aval_id,
@@ -2607,9 +2642,10 @@ class DinosaurValuerCog(commands.Cog):
             "especie": resultado.get("especie", "?"),
             "valor_total": resultado.get("valor_total", 0),
             "tier": resultado.get("tier", "?"),
+            "modo": modo,
             "data": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         }
-        
+
         salvar_historico(historico)
     
     def _get_tier_color(self, tier: str) -> discord.Color:
