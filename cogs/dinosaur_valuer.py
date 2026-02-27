@@ -116,9 +116,10 @@ def salvar_painel_config(config: dict) -> None:
 
 
 def formatar_moeda(valor: int) -> str:
-    """Retorna a moeda formatada com singular/plural correto"""
+    """Retorna a moeda formatada com separador de milhar e singular/plural correto"""
     moeda = "Arkium" if valor == 1 else "Arkiums"
-    return f"{valor} {moeda}"
+    valor_formatado = f"{int(valor):,}".replace(",", ".")
+    return f"{valor_formatado} {moeda}"
 
 
 def arredondar_valor_comercial(valor: int, multiplo: int = 500) -> int:
