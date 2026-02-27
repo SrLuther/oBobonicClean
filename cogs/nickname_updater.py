@@ -26,6 +26,7 @@ class NicknameUpdaterCog(commands.Cog):
     - [ADM] 1476370938969980928
     - [GM] 1440828412599210135
     - [VIP] 1476371640244899963
+    - [Tester] 1476780071090917416
     """
 
     def __init__(self, bot: commands.Bot):
@@ -123,7 +124,8 @@ class NicknameUpdaterCog(commands.Cog):
                     f"🔷 **[DEV]** - ID: 1440828410556321882\n"
                     f"🟥 **[ADM]** - ID: 1476370938969980928\n"
                     f"🟨 **[GM]** - ID: 1440828412599210135\n"
-                    f"💜 **[VIP]** - ID: 1476371640244899963"
+                    f"💜 **[VIP]** - ID: 1476371640244899963\n"
+                    f"🧪 **[Tester]** - ID: 1476780071090917416"
                 ),
                 inline=False
             )
@@ -182,13 +184,20 @@ class NicknameUpdaterCog(commands.Cog):
         )
         
         embed.add_field(
+            name="🧪 [Tester]",
+            value=f"`1476780071090917416`\nPrefixo: `[Tester]`",
+            inline=True
+        )
+        
+        embed.add_field(
             name="⚙️ Ordem de Prioridade",
             value=(
                 "Se você tiver múltiplos cargos, o de **maior prioridade** será usado:\n\n"
                 "1. **[DEV]** (Maior prioridade)\n"
                 "2. **[ADM]**\n"
                 "3. **[GM]**\n"
-                "4. **[VIP]** (Menor prioridade)"
+                "4. **[VIP]**\n"
+                "5. **[Tester]** (Menor prioridade)"
             ),
             inline=False
         )
@@ -226,7 +235,7 @@ class NicknameUpdaterCog(commands.Cog):
             return
 
         highest_prefix = get_highest_priority_prefix(member)
-        base_name = member.name
+        base_name = member.global_name or member.name
         current_nickname = member.nick or base_name
         
         embed = discord.Embed(

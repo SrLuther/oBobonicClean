@@ -83,18 +83,22 @@ def salvar_historico(historico: dict) -> None:
 
 
 def carregar_painel_config() -> dict:
-    """Carrega configuração do painel (ID da mensagem)"""
+    """Carrega configuração do painel (IDs das mensagens)"""
     if not os.path.exists("data"):
         os.makedirs("data")
     
     if not os.path.exists(PAINEL_CONFIG_FILE):
-        return {"painel_message_id": None}
+        return {"vanilla_message_id": None, "primal_message_id": None, "omega_message_id": None}
     
     try:
         with open(PAINEL_CONFIG_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+        # Compatibilidade com config antiga de chave única
+        if "painel_message_id" in data and "vanilla_message_id" not in data:
+            data = {"vanilla_message_id": data["painel_message_id"], "primal_message_id": None, "omega_message_id": None}
+        return data
     except json.JSONDecodeError:
-        return {"painel_message_id": None}
+        return {"vanilla_message_id": None, "primal_message_id": None, "omega_message_id": None}
 
 
 def salvar_painel_config(config: dict) -> None:
@@ -1447,23 +1451,645 @@ async def enviar_sugestao_dino(
     await interaction.followup.send(embed=confirm_embed, ephemeral=True)
 
 
-class ValuationPanelView(ui.View):
-    """View para o painel principal de avaliação"""
-    
+class VanillaPanelView(ui.View):
+    """View para o painel Vanilla"""
+
     def __init__(self, bot: commands.Bot, dados: dict):
         super().__init__(timeout=None)
         self.bot = bot
         self.dados = dados
-    
-    @ui.button(label="💎 Avaliar Dinossauro", style=discord.ButtonStyle.primary, custom_id="avaliar_dino_btn")
+
+    @ui.button(label="🦴 Avaliar Vanilla", style=discord.ButtonStyle.primary, custom_id="avaliar_vanilla_btn")
     async def avaliar_button(self, interaction: discord.Interaction, button: ui.Button):
-        """Abre o modal de busca de dinossauro"""
+        """Abre o modal de busca para modo Vanilla"""
         modal = SearchDinoModal(self.dados)
         await interaction.response.send_modal(modal)
-    
-    @ui.button(label="➕ Adicionar Dino", style=discord.ButtonStyle.success, custom_id="adicionar_dino_btn")
+
+    @ui.button(label="➕ Sugerir Dino", style=discord.ButtonStyle.secondary, custom_id="sugerir_vanilla_btn")
     async def adicionar_button(self, interaction: discord.Interaction, button: ui.Button):
         """Abre o modal para adicionar um novo dinossauro sugerido"""
+        modal = AdicionarDinoModal(self.bot)
+        await interaction.response.send_modal(modal)
+
+
+# ============================================
+# PRIMAL FEAR — FLUXO COMPLETO
+# ============================================
+
+class PFTierSelect(ui.Select):
+    """Select para escolher o tier Primal Fear"""
+
+    def __init__(self, dados: dict, dino_id: str):
+        self.dados = dados
+        self.dino_id = dino_id
+
+        opcoes = [
+            discord.SelectOption(label="🔴 Alpha", value="Alpha", description="Multiplicador x10"),
+            discord.SelectOption(label="🟠 Apex", value="Apex", description="Multiplicador x50"),
+            discord.SelectOption(label="🟡 Fabled", value="Fabled", description="Multiplicador x80"),
+            discord.SelectOption(label="🟣 Demonic", value="Demonic", description="Multiplicador x150"),
+            discord.SelectOption(label="✨ Celestial", value="Celestial", description="Multiplicador x500"),
+        ]
+
+        super().__init__(
+            placeholder="Selecione o Tier Primal Fear...",
+            min_values=1,
+            max_values=1,
+            options=opcoes
+        )
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        primal_tier = self.values[0]
+        dino_name = self.dados.get("dinosaurs", {}).get(self.dino_id, {}).get("name", self.dino_id)
+        dino_data = self.dados.get("dinosaurs", {}).get(self.dino_id, {})
+
+        # Se não pode ser castrado, pula direto para stats
+        if dino_data.get("no_castration", False):
+            modal = PFStatsModal(self.dino_id, self.dados, primal_tier=primal_tier, castrado=False)
+            await interaction.response.send_modal(modal)
+        else:
+            view = PFCastradoSelectView(self.dados, self.dino_id, primal_tier)
+            embed = discord.Embed(
+                title=f"💀 {dino_name} — Primal Fear [{primal_tier}]",
+                description="É castrado?",
+                color=discord.Color.purple()
+            )
+            await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+
+
+class PFTierSelectView(ui.View):
+    def __init__(self, dados: dict, dino_id: str):
+        super().__init__()
+        self.dados = dados
+        self.dino_id = dino_id
+        self.add_item(PFTierSelect(dados, dino_id))
+
+    async def on_timeout(self) -> None:
+        pass
+
+
+class PFCastradoSelect(ui.Select):
+    """Select para castrado no fluxo PF"""
+
+    def __init__(self, dados: dict, dino_id: str, primal_tier: str):
+        self.dados = dados
+        self.dino_id = dino_id
+        self.primal_tier = primal_tier
+
+        opcoes = [
+            discord.SelectOption(label="✅ Não Castrado", value="nao"),
+            discord.SelectOption(label="🔪 Castrado (-50%)", value="sim"),
+        ]
+
+        super().__init__(
+            placeholder="É castrado?",
+            min_values=1,
+            max_values=1,
+            options=opcoes
+        )
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        castrado = self.values[0] == "sim"
+        modal = PFStatsModal(self.dino_id, self.dados, primal_tier=self.primal_tier, castrado=castrado)
+        await interaction.response.send_modal(modal)
+
+
+class PFCastradoSelectView(ui.View):
+    def __init__(self, dados: dict, dino_id: str, primal_tier: str):
+        super().__init__()
+        self.add_item(PFCastradoSelect(dados, dino_id, primal_tier))
+
+    async def on_timeout(self) -> None:
+        pass
+
+
+class PFStatsModal(ui.Modal):
+    """Modal de stats para Primal Fear"""
+
+    def __init__(self, dino_id: str, dados: dict, primal_tier: str, castrado: bool = False):
+        super().__init__(title=f"Stats — Primal Fear [{primal_tier}]")
+        self.dino_id = dino_id
+        self.dados = dados
+        self.primal_tier = primal_tier
+        self.castrado = castrado
+
+    melee = ui.TextInput(label="Melee Damage", required=False, placeholder="0")
+    health = ui.TextInput(label="Health/Saúde", required=False, placeholder="0")
+    stamina = ui.TextInput(label="Stamina", required=False, placeholder="0")
+    weight = ui.TextInput(label="Weight/Peso", required=False, placeholder="0")
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer()
+
+        stats = {}
+        try:
+            if self.melee.value and self.melee.value.strip() not in ("", "0"):
+                stats["melee"] = int(self.melee.value)
+            if self.health.value and self.health.value.strip() not in ("", "0"):
+                stats["health"] = int(self.health.value)
+            if self.stamina.value and self.stamina.value.strip() not in ("", "0"):
+                stats["stamina"] = int(self.stamina.value)
+            if self.weight.value and self.weight.value.strip() not in ("", "0"):
+                stats["weight"] = int(self.weight.value)
+        except ValueError:
+            await interaction.followup.send(
+                embed=discord.Embed(title="❌ Erro", description="Valores inválidos!", color=discord.Color.red()),
+                ephemeral=True
+            )
+            return
+
+        if not stats:
+            await interaction.followup.send(
+                embed=discord.Embed(title="❌ Erro", description="Preencha ao menos um stat!", color=discord.Color.red()),
+                ephemeral=True
+            )
+            return
+
+        resultado = calcular_valor_dino(
+            self.dino_id, stats, None, self.dados,
+            castrado=self.castrado,
+            calculation_mode="PRIMAL_FEAR",
+            primal_tier=self.primal_tier
+        )
+
+        valor_comercial = arredondar_valor_comercial(resultado["valor_total"])
+
+        tier_colors = {
+            "Alpha": discord.Color.red(),
+            "Apex": discord.Color.orange(),
+            "Fabled": discord.Color.yellow(),
+            "Demonic": discord.Color.purple(),
+            "Celestial": discord.Color.gold(),
+        }
+
+        embed = discord.Embed(
+            title=f"💀 {resultado['especie']} — [{self.primal_tier}]",
+            description=f"**Categoria:** {resultado.get('categoria', 'Outros')}",
+            color=tier_colors.get(self.primal_tier, discord.Color.purple())
+        )
+
+        mult = PRIMAL_FEAR_MULTIPLIERS.get(self.primal_tier, 1)
+        if valor_comercial != resultado["valor_total"]:
+            valor_field = (
+                f"**Exato:** `{formatar_moeda(resultado['valor_total'])}`\n"
+                f"**Sugerido:** `{formatar_moeda(valor_comercial)}` *(comercial)*\n"
+                f"{resultado['tier']}"
+            )
+        else:
+            valor_field = f"`{formatar_moeda(resultado['valor_total'])}` {resultado['tier']}"
+
+        if self.castrado:
+            valor_field += " 🔪 **(Castrado -50%)**"
+
+        embed.add_field(name="💰 Valor Total", value=valor_field, inline=False)
+        embed.add_field(
+            name="⚙️ Multiplicadores PF",
+            value=f"Tier **{self.primal_tier}** → `x{mult}`",
+            inline=False
+        )
+
+        breakdown = f"Base: `{formatar_moeda(resultado['breakdown'].get('valor_base', 0))}`\n"
+        for st in ["melee", "health", "stamina", "weight"]:
+            if f"{st}_value" in resultado["breakdown"] and stats.get(st, 0) > 0:
+                breakdown += f"{st.capitalize()}: `+{formatar_moeda(resultado['breakdown'][f'{st}_value'])}`\n"
+        if self.castrado and "desconto_castrado" in resultado["breakdown"]:
+            breakdown += f"**Castrado: `-{formatar_moeda(abs(resultado['breakdown']['desconto_castrado']))}`**\n"
+
+        embed.add_field(name="📊 Breakdown", value=breakdown, inline=False)
+
+        if resultado.get("recomendacoes"):
+            embed.add_field(name="💡 Recomendações", value="\n".join(resultado["recomendacoes"]), inline=False)
+
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+
+class PFSearchDinoModal(ui.Modal):
+    """Modal de busca de dinossauro para Primal Fear"""
+
+    search_input = ui.TextInput(
+        label="Digite o nome do dinossauro",
+        placeholder="Ex: carc, rex, trike, allo...",
+        min_length=1,
+        max_length=100,
+        required=True,
+        style=discord.TextStyle.short
+    )
+
+    def __init__(self, dados: dict):
+        super().__init__(title="💀 Buscar Dino — Primal Fear")
+        self.dados = dados
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+
+        search_text = str(self.search_input).lower().strip()
+        dinos = self.dados.get("dinosaurs", {})
+
+        resultados = {}
+        if search_text in dinos:
+            resultados[search_text] = dinos[search_text]
+        for key, dino in dinos.items():
+            nome = dino.get("name", "").lower()
+            if search_text in key or search_text in nome:
+                resultados[key] = dino
+
+        if not resultados:
+            await interaction.followup.send(
+                embed=discord.Embed(
+                    title="❌ Nenhum Dinossauro Encontrado",
+                    description=f"Nenhum dino contém '{search_text}' no nome.",
+                    color=discord.Color.red()
+                ),
+                ephemeral=True
+            )
+            return
+
+        if len(resultados) == 1:
+            dino_id = list(resultados.keys())[0]
+            dino_name = resultados[dino_id].get("name", dino_id)
+            view = PFTierSelectView(self.dados, dino_id)
+            embed = discord.Embed(
+                title=f"💀 {dino_name} — Primal Fear",
+                description="Selecione o **Tier Primal Fear**:",
+                color=discord.Color.purple()
+            )
+            await interaction.followup.send(embed=embed, view=view, ephemeral=True)
+            return
+
+        view = PFDinoSearchSelectView(self.dados, resultados)
+        embed = discord.Embed(
+            title="💀 Resultados da Busca — Primal Fear",
+            description=f"Encontrei {len(resultados)} dino(s). Escolha um:",
+            color=discord.Color.purple()
+        )
+        await interaction.followup.send(embed=embed, view=view, ephemeral=True)
+
+
+class PFDinoSearchSelect(ui.Select):
+    def __init__(self, dados: dict, resultados: dict):
+        self.dados = dados
+        opcoes = [
+            discord.SelectOption(label=dino.get("name", k), value=k, description=f"Base: {dino.get('base_value', 0)} Arkiums")
+            for k, dino in list(resultados.items())[:25]
+        ]
+        super().__init__(placeholder="Selecione um dinossauro...", min_values=1, max_values=1, options=opcoes)
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        dino_id = self.values[0]
+        dino_name = self.dados.get("dinosaurs", {}).get(dino_id, {}).get("name", dino_id)
+        view = PFTierSelectView(self.dados, dino_id)
+        embed = discord.Embed(
+            title=f"💀 {dino_name} — Primal Fear",
+            description="Selecione o **Tier Primal Fear**:",
+            color=discord.Color.purple()
+        )
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+
+
+class PFDinoSearchSelectView(ui.View):
+    def __init__(self, dados: dict, resultados: dict):
+        super().__init__()
+        self.add_item(PFDinoSearchSelect(dados, resultados))
+
+    async def on_timeout(self) -> None:
+        pass
+
+
+# ============================================
+# OMEGA — FLUXO COMPLETO
+# ============================================
+
+class OmegaTierSelect(ui.Select):
+    """Select para o Tier Omega"""
+
+    TIERS = [
+        ("🔵 Basic", "Basic", "x1"),
+        ("🟢 Augmented", "Augmented", "x1.8"),
+        ("🟡 Superior", "Superior", "x3.5"),
+        ("🟠 Alpha", "Alpha", "x7"),
+        ("🔴 Omega", "Omega", "x15"),
+        ("🟣 Mythical", "Mythical", "x30"),
+        ("✨ Legendary", "Legendary", "x60"),
+        ("⚡ Godlike", "Godlike", "x120"),
+        ("🌟 Celestial", "Celestial", "x240"),
+        ("💀 Chaos", "Chaos", "x480"),
+        ("♾️ Eternal", "Eternal", "x960"),
+    ]
+
+    def __init__(self, dados: dict, dino_id: str):
+        self.dados = dados
+        self.dino_id = dino_id
+
+        opcoes = [
+            discord.SelectOption(label=label, value=value, description=desc)
+            for label, value, desc in self.TIERS
+        ]
+
+        super().__init__(
+            placeholder="Selecione o Tier Omega...",
+            min_values=1,
+            max_values=1,
+            options=opcoes
+        )
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        omega_tier = self.values[0]
+        dino_name = self.dados.get("dinosaurs", {}).get(self.dino_id, {}).get("name", self.dino_id)
+        view = OmegaVariantSelectView(self.dados, self.dino_id, omega_tier)
+        embed = discord.Embed(
+            title=f"⚡ {dino_name} — Omega [{omega_tier}]",
+            description="Selecione a **Variante Omega** (ou Nenhuma):",
+            color=discord.Color.from_rgb(255, 80, 0)
+        )
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+
+
+class OmegaTierSelectView(ui.View):
+    def __init__(self, dados: dict, dino_id: str):
+        super().__init__()
+        self.add_item(OmegaTierSelect(dados, dino_id))
+
+    async def on_timeout(self) -> None:
+        pass
+
+
+class OmegaVariantSelect(ui.Select):
+    """Select para a Variante Omega"""
+
+    def __init__(self, dados: dict, dino_id: str, omega_tier: str):
+        self.dados = dados
+        self.dino_id = dino_id
+        self.omega_tier = omega_tier
+
+        opcoes = [
+            discord.SelectOption(label="— Sem Variante", value="none", description="Sem multiplicador extra"),
+            discord.SelectOption(label="🔥 Fire", value="Fire", description="x1.2"),
+            discord.SelectOption(label="❄️ Ice", value="Ice", description="x1.2"),
+            discord.SelectOption(label="⚡ Lightning", value="Lightning", description="x1.3"),
+            discord.SelectOption(label="☠️ Poison", value="Poison", description="x1.2"),
+            discord.SelectOption(label="🌟 Celestial", value="Celestial", description="x1.5"),
+            discord.SelectOption(label="💀 Chaos", value="Chaos", description="x1.5"),
+        ]
+
+        super().__init__(
+            placeholder="Selecione a variante...",
+            min_values=1,
+            max_values=1,
+            options=opcoes
+        )
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        omega_variant = self.values[0]
+        variant_display = None if omega_variant == "none" else omega_variant
+        modal = OmegaStatsModal(self.dino_id, self.dados, omega_tier=self.omega_tier, omega_variant=variant_display)
+        await interaction.response.send_modal(modal)
+
+
+class OmegaVariantSelectView(ui.View):
+    def __init__(self, dados: dict, dino_id: str, omega_tier: str):
+        super().__init__()
+        self.add_item(OmegaVariantSelect(dados, dino_id, omega_tier))
+
+    async def on_timeout(self) -> None:
+        pass
+
+
+class OmegaStatsModal(ui.Modal):
+    """Modal de stats para Omega"""
+
+    def __init__(self, dino_id: str, dados: dict, omega_tier: str, omega_variant: Optional[str] = None):
+        tier_label = omega_tier
+        if omega_variant:
+            tier_label = f"{omega_tier} / {omega_variant}"
+        super().__init__(title=f"Stats — Omega [{tier_label}]")
+        self.dino_id = dino_id
+        self.dados = dados
+        self.omega_tier = omega_tier
+        self.omega_variant = omega_variant
+
+    melee = ui.TextInput(label="Melee Damage", required=False, placeholder="0")
+    health = ui.TextInput(label="Health/Saúde", required=False, placeholder="0")
+    stamina = ui.TextInput(label="Stamina", required=False, placeholder="0")
+    weight = ui.TextInput(label="Weight/Peso", required=False, placeholder="0")
+    paragon = ui.TextInput(label="Paragon (0 a 5)", required=False, placeholder="0")
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer()
+
+        stats = {}
+        omega_paragon = 0
+        try:
+            if self.melee.value and self.melee.value.strip() not in ("", "0"):
+                stats["melee"] = int(self.melee.value)
+            if self.health.value and self.health.value.strip() not in ("", "0"):
+                stats["health"] = int(self.health.value)
+            if self.stamina.value and self.stamina.value.strip() not in ("", "0"):
+                stats["stamina"] = int(self.stamina.value)
+            if self.weight.value and self.weight.value.strip() not in ("", "0"):
+                stats["weight"] = int(self.weight.value)
+            if self.paragon.value and self.paragon.value.strip() not in ("", "0"):
+                omega_paragon = max(0, min(5, int(self.paragon.value)))
+        except ValueError:
+            await interaction.followup.send(
+                embed=discord.Embed(title="❌ Erro", description="Valores inválidos!", color=discord.Color.red()),
+                ephemeral=True
+            )
+            return
+
+        if not stats:
+            await interaction.followup.send(
+                embed=discord.Embed(title="❌ Erro", description="Preencha ao menos um stat!", color=discord.Color.red()),
+                ephemeral=True
+            )
+            return
+
+        resultado = calcular_valor_dino(
+            self.dino_id, stats, None, self.dados,
+            castrado=False,
+            calculation_mode="OMEGA",
+            omega_tier=self.omega_tier,
+            omega_variant=self.omega_variant,
+            omega_paragon=omega_paragon
+        )
+
+        valor_comercial = arredondar_valor_comercial(resultado["valor_total"])
+
+        tier_title = f"⚡ {resultado['especie']} — [{self.omega_tier}"
+        if self.omega_variant:
+            tier_title += f" / {self.omega_variant}"
+        tier_title += "]"
+        if omega_paragon > 0:
+            tier_title += f" P{omega_paragon}"
+
+        embed = discord.Embed(
+            title=tier_title,
+            description=f"**Categoria:** {resultado.get('categoria', 'Outros')}",
+            color=discord.Color.from_rgb(255, 80, 0)
+        )
+
+        if valor_comercial != resultado["valor_total"]:
+            valor_field = (
+                f"**Exato:** `{formatar_moeda(resultado['valor_total'])}`\n"
+                f"**Sugerido:** `{formatar_moeda(valor_comercial)}` *(comercial)*\n"
+                f"{resultado['tier']}"
+            )
+        else:
+            valor_field = f"`{formatar_moeda(resultado['valor_total'])}` {resultado['tier']}"
+
+        embed.add_field(name="💰 Valor Total", value=valor_field, inline=False)
+
+        mult_tier = OMEGA_TIER_MULTIPLIERS.get(self.omega_tier, 1)
+        mult_variant = OMEGA_VARIANT_MULTIPLIERS.get(self.omega_variant, 1) if self.omega_variant else 1
+        mult_paragon = OMEGA_PARAGON_MULTIPLIERS.get(omega_paragon, 1)
+        mult_info = f"Tier **{self.omega_tier}** → `x{mult_tier}`"
+        if self.omega_variant:
+            mult_info += f"\nVariante **{self.omega_variant}** → `x{mult_variant}`"
+        if omega_paragon > 0:
+            mult_info += f"\nParagon **P{omega_paragon}** → `x{mult_paragon}`"
+
+        embed.add_field(name="⚙️ Multiplicadores Omega", value=mult_info, inline=False)
+
+        breakdown = f"Base: `{formatar_moeda(resultado['breakdown'].get('valor_base', 0))}`\n"
+        for st in ["melee", "health", "stamina", "weight"]:
+            if f"{st}_value" in resultado["breakdown"] and stats.get(st, 0) > 0:
+                breakdown += f"{st.capitalize()}: `+{formatar_moeda(resultado['breakdown'][f'{st}_value'])}`\n"
+
+        embed.add_field(name="📊 Breakdown", value=breakdown, inline=False)
+
+        if resultado.get("recomendacoes"):
+            embed.add_field(name="💡 Recomendações", value="\n".join(resultado["recomendacoes"]), inline=False)
+
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+
+class OmegaSearchDinoModal(ui.Modal):
+    """Modal de busca de dinossauro para Omega"""
+
+    search_input = ui.TextInput(
+        label="Digite o nome do dinossauro",
+        placeholder="Ex: carc, rex, trike, allo...",
+        min_length=1,
+        max_length=100,
+        required=True,
+        style=discord.TextStyle.short
+    )
+
+    def __init__(self, dados: dict):
+        super().__init__(title="⚡ Buscar Dino — Omega")
+        self.dados = dados
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+
+        search_text = str(self.search_input).lower().strip()
+        dinos = self.dados.get("dinosaurs", {})
+
+        resultados = {}
+        if search_text in dinos:
+            resultados[search_text] = dinos[search_text]
+        for key, dino in dinos.items():
+            nome = dino.get("name", "").lower()
+            if search_text in key or search_text in nome:
+                resultados[key] = dino
+
+        if not resultados:
+            await interaction.followup.send(
+                embed=discord.Embed(
+                    title="❌ Nenhum Dinossauro Encontrado",
+                    description=f"Nenhum dino contém '{search_text}' no nome.",
+                    color=discord.Color.red()
+                ),
+                ephemeral=True
+            )
+            return
+
+        if len(resultados) == 1:
+            dino_id = list(resultados.keys())[0]
+            dino_name = resultados[dino_id].get("name", dino_id)
+            view = OmegaTierSelectView(self.dados, dino_id)
+            embed = discord.Embed(
+                title=f"⚡ {dino_name} — Omega",
+                description="Selecione o **Tier Omega**:",
+                color=discord.Color.from_rgb(255, 80, 0)
+            )
+            await interaction.followup.send(embed=embed, view=view, ephemeral=True)
+            return
+
+        view = OmegaDinoSearchSelectView(self.dados, resultados)
+        embed = discord.Embed(
+            title="⚡ Resultados da Busca — Omega",
+            description=f"Encontrei {len(resultados)} dino(s). Escolha um:",
+            color=discord.Color.from_rgb(255, 80, 0)
+        )
+        await interaction.followup.send(embed=embed, view=view, ephemeral=True)
+
+
+class OmegaDinoSearchSelect(ui.Select):
+    def __init__(self, dados: dict, resultados: dict):
+        self.dados = dados
+        opcoes = [
+            discord.SelectOption(label=dino.get("name", k), value=k, description=f"Base: {dino.get('base_value', 0)} Arkiums")
+            for k, dino in list(resultados.items())[:25]
+        ]
+        super().__init__(placeholder="Selecione um dinossauro...", min_values=1, max_values=1, options=opcoes)
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        dino_id = self.values[0]
+        dino_name = self.dados.get("dinosaurs", {}).get(dino_id, {}).get("name", dino_id)
+        view = OmegaTierSelectView(self.dados, dino_id)
+        embed = discord.Embed(
+            title=f"⚡ {dino_name} — Omega",
+            description="Selecione o **Tier Omega**:",
+            color=discord.Color.from_rgb(255, 80, 0)
+        )
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+
+
+class OmegaDinoSearchSelectView(ui.View):
+    def __init__(self, dados: dict, resultados: dict):
+        super().__init__()
+        self.add_item(OmegaDinoSearchSelect(dados, resultados))
+
+    async def on_timeout(self) -> None:
+        pass
+
+
+class PrimalFearPanelView(ui.View):
+    """View para o painel Primal Fear"""
+
+    def __init__(self, bot: commands.Bot, dados: dict):
+        super().__init__(timeout=None)
+        self.bot = bot
+        self.dados = dados
+
+    @ui.button(label="💀 Avaliar Primal Fear", style=discord.ButtonStyle.danger, custom_id="avaliar_pf_btn")
+    async def avaliar_button(self, interaction: discord.Interaction, button: ui.Button):
+        """Abre o modal de busca para modo Primal Fear"""
+        modal = PFSearchDinoModal(self.dados)
+        await interaction.response.send_modal(modal)
+
+    @ui.button(label="➕ Sugerir Dino", style=discord.ButtonStyle.secondary, custom_id="sugerir_pf_btn")
+    async def adicionar_button(self, interaction: discord.Interaction, button: ui.Button):
+        modal = AdicionarDinoModal(self.bot)
+        await interaction.response.send_modal(modal)
+
+
+class OmegaPanelView(ui.View):
+    """View para o painel Omega"""
+
+    def __init__(self, bot: commands.Bot, dados: dict):
+        super().__init__(timeout=None)
+        self.bot = bot
+        self.dados = dados
+
+    @ui.button(label="⚡ Avaliar Omega", style=discord.ButtonStyle.primary, custom_id="avaliar_omega_btn")
+    async def avaliar_button(self, interaction: discord.Interaction, button: ui.Button):
+        """Abre o modal de busca para modo Omega"""
+        modal = OmegaSearchDinoModal(self.dados)
+        await interaction.response.send_modal(modal)
+
+    @ui.button(label="➕ Sugerir Dino", style=discord.ButtonStyle.secondary, custom_id="sugerir_omega_btn")
+    async def adicionar_button(self, interaction: discord.Interaction, button: ui.Button):
         modal = AdicionarDinoModal(self.bot)
         await interaction.response.send_modal(modal)
 
@@ -1475,165 +2101,92 @@ class DinosaurValuerCog(commands.Cog):
         self.dados = carregar_dados_dinos()
         self.painel_criado = False
     
-    async def cog_load(self):
-        """Ajusta a persistência do painel"""
+    async def cog_load(self) -> None:
+        """Ajusta a persistência dos 3 painéis"""
         print("[DINOSAUR] ✅ cog_load() foi chamado!")
-        self.bot.add_view(ValuationPanelView(self.bot, self.dados))
+        self.bot.add_view(VanillaPanelView(self.bot, self.dados))
+        self.bot.add_view(PrimalFearPanelView(self.bot, self.dados))
+        self.bot.add_view(OmegaPanelView(self.bot, self.dados))
     
     @commands.Cog.listener()
     async def on_ready(self):
-        """Verifica e cria o painel ao iniciar"""
+        """Verifica e cria os 3 painéis ao iniciar"""
         if self.painel_criado:
             return
-        
+
         self.painel_criado = True
         print("[PAINEL DINOSAURO] on_ready foi acionado!")
-        
+
         try:
-            print("[PAINEL DINOSAURO] Carregando configuração do painel...")
             config = carregar_painel_config()
-            print(f"[PAINEL DINOSAURO] Config carregada: {config}")
-            
             guild = self.bot.get_guild(1440802112601854159)
-            print(f"[PAINEL DINOSAURO] Guild obtida: {guild}")
-            
+
             if not guild:
                 print("[PAINEL] ❌ Guild não encontrada")
                 return
-            
+
             canal = guild.get_channel(VALUATION_CHANNEL_ID)
-            print(f"[PAINEL DINOSAURO] Canal obtido: {canal}")
-            
             if not canal or not isinstance(canal, discord.TextChannel):
-                print(f"[PAINEL] ❌ Canal {VALUATION_CHANNEL_ID} não encontrado ou não é TextChannel")
+                print(f"[PAINEL] ❌ Canal {VALUATION_CHANNEL_ID} não encontrado")
                 return
-            
-            # Verificar se o painel já existe
-            painel_msg_id = config.get("painel_message_id")
-            print(f"[PAINEL DINOSAURO] ID do painel na config: {painel_msg_id}")
-            
-            if painel_msg_id:
+
+            # Verificar se os 3 painéis já existem
+            ids_ok = all([
+                config.get("vanilla_message_id"),
+                config.get("primal_message_id"),
+                config.get("omega_message_id"),
+            ])
+
+            if ids_ok:
                 try:
-                    msg = await canal.fetch_message(painel_msg_id)
-                    print(f"✅ [PAINEL] Painel de dinossauros já existe (ID: {painel_msg_id})")
-                    self.bot.add_view(ValuationPanelView(self.bot, self.dados))
+                    await canal.fetch_message(config["vanilla_message_id"])
+                    await canal.fetch_message(config["primal_message_id"])
+                    await canal.fetch_message(config["omega_message_id"])
+                    print("✅ [PAINEL] Os 3 painéis já existem, registrando views...")
+                    self.bot.add_view(VanillaPanelView(self.bot, self.dados))
+                    self.bot.add_view(PrimalFearPanelView(self.bot, self.dados))
+                    self.bot.add_view(OmegaPanelView(self.bot, self.dados))
                     return
                 except discord.NotFound:
-                    print("[PAINEL] ❌ Painel anterior não encontrado, criando novo...")
-            else:
-                print("[PAINEL] Nenhum painel na config, criando novo...")
-            
-            # Criar novo painel
-            print("[PAINEL DINOSAURO] Criando novo painel...")
-            embed = discord.Embed(
-                title="🦖 CALCULADORA DE VALOR DE DINOSSAUROS",
-                description=(
-                    "⚠️ **AVISO:** Esta calculadora está em **processo de desenvolvimento** "
-                    "e ainda **não representa a versão final oficial**. "
-                    "Os valores e fórmulas podem sofrer alterações.\n\n"
-                    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                    "Bem-vindo ao sistema de avaliação de dinossauros!\n\n"
-                    "**Como usar:**\n"
-                    "1. Clique no botão abaixo\n"
-                    "2. Selecione o tipo de dinossauro\n"
-                    "3. Preencha os stats (Melee, Health, Stamina, etc)\n"
-                    "4. Receba a avaliação detalhada\n\n"
-                    "**Nossas Categorias:**\n"
-                    "⚔️ **PvP Combat** - Dinossauros de combate PvP (bonus x1.3)\n"
-                    "🐉 **PvE Combat** - Para derrotar bosses (bonus x1.2)\n"
-                    "⛏️ **Farming** - Para coletar recursos (bonus x1.15)\n"
-                    "🚚 **Transporte** - Para carregar/voar (bonus x1.25)\n"
-                    "🥚 **Criação** - Para reprodução (bonus x1.4)\n"
-                    "🔧 **Utilidade** - Funções especiais (bonus x1.1)\n\n"
-                    "**Dinossauros Disponíveis:** "
-                    f"{len(self.dados.get('dinosaurs', {}))} espécies diferentes!\n\n"
-                    "═══════════════════════════════════════"
-                ),
-                color=discord.Color.gold()
-            )
-            
-            embed.set_footer(text="⚠️ Em desenvolvimento — valores sujeitos a alteração | Clique no botão para começar!")
-            
-            view = ValuationPanelView(self.bot, self.dados)
-            msg = await canal.send(embed=embed, view=view)
-            await msg.pin()
-            
-            # Salvar ID do painel
-            salvar_painel_config({"painel_message_id": msg.id})
-            print(f"✅ [PAINEL] Painel de dinossauros criado automaticamente (ID: {msg.id})")
-        
+                    print("[PAINEL] Algum painel não encontrado, recriando todos...")
+
+            print("[PAINEL DINOSAURO] Criando/Recriando os 3 painéis...")
+            await criar_paineis_automaticos(self.bot, canal, self.dados)
+
         except Exception as e:
-            print(f"❌ [PAINEL] Erro ao criar painel: {e}")
+            print(f"❌ [PAINEL] Erro ao criar painéis: {e}")
             import traceback
             traceback.print_exc()
     
     @commands.command(name="criarcalc", aliases=["criarpainel"])
     @commands.has_permissions(administrator=True)
     async def criar_painel(self, ctx: commands.Context):
-        """Cria o painel de avaliação de dinossauros no canal designado"""
+        """Cria os 3 painéis de avaliação de dinossauros no canal designado"""
         try:
             canal = ctx.guild.get_channel(VALUATION_CHANNEL_ID)
-            
+
             if not canal or not isinstance(canal, discord.TextChannel):
-                embed = discord.Embed(
+                await ctx.send(embed=discord.Embed(
                     title="❌ Erro",
                     description=f"Canal com ID `{VALUATION_CHANNEL_ID}` não encontrado!",
                     color=discord.Color.red()
-                )
-                await ctx.send(embed=embed)
+                ))
                 return
-            
-            # Criar embed do painel
-            embed = discord.Embed(
-                title="🦖 CALCULADORA DE VALOR DE DINOSSAUROS",
-                description=(
-                    "⚠️ **AVISO:** Esta calculadora está em **processo de desenvolvimento** "
-                    "e ainda **não representa a versão final oficial**. "
-                    "Os valores e fórmulas podem sofrer alterações.\n\n"
-                    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                    "Bem-vindo ao sistema de avaliação de dinossauros!\n\n"
-                    "**Como usar:**\n"
-                    "1. Clique no botão abaixo\n"
-                    "2. Selecione o tipo de dinossauro\n"
-                    "3. Preencha os stats (Melee, Health, Stamina, etc)\n"
-                    "4. Receba a avaliação detalhada\n\n"
-                    "**Nossas Categorias:**\n"
-                    "⚔️ **PvP Combat** - Dinossauros de combate PvP (bonus x1.3)\n"
-                    "🐉 **PvE Combat** - Para derrotar bosses (bonus x1.2)\n"
-                    "⛏️ **Farming** - Para coletar recursos (bonus x1.15)\n"
-                    "🚚 **Transporte** - Para carregar/voar (bonus x1.25)\n"
-                    "🥚 **Criação** - Para reprodução (bonus x1.4)\n"
-                    "🔧 **Utilidade** - Funções especiais (bonus x1.1)\n\n"
-                    "**Dinossauros Disponíveis:** "
-                    f"{len(self.dados.get('dinosaurs', {}))} espécies diferentes!\n\n"
-                    "═══════════════════════════════════════"
-                ),
-                color=discord.Color.gold()
-            )
-            
-            embed.set_footer(text="⚠️ Em desenvolvimento — valores sujeitos a alteração | Clique no botão para começar!")
-            
-            view = ValuationPanelView(self.bot, self.dados)
-            msg = await canal.send(embed=embed, view=view)
-            await msg.pin()
-            
-            # Salvar ID do painel
-            salvar_painel_config({"painel_message_id": msg.id})
-            
-            confirm_embed = discord.Embed(
-                title="✅ Painel Criado",
-                description=f"Painel criado com sucesso no canal {canal.mention}!",
+
+            await criar_paineis_automaticos(self.bot, canal, self.dados)
+
+            await ctx.send(embed=discord.Embed(
+                title="✅ Painéis Criados",
+                description=f"Os 3 painéis (Vanilla, Primal Fear e Omega) foram criados em {canal.mention}!",
                 color=discord.Color.green()
-            )
-            await ctx.send(embed=confirm_embed)
-        
+            ))
+
         except Exception as e:
-            error_embed = discord.Embed(
-                title="❌ Erro ao criar painel",
+            await ctx.send(embed=discord.Embed(
+                title="❌ Erro ao criar painéis",
                 description=f"Erro: {str(e)}",
                 color=discord.Color.red()
-            )
-            await ctx.send(embed=error_embed)
+            ))
     
     @commands.command(name="tipos")
     async def tipos_comando(self, ctx: commands.Context):
@@ -2010,95 +2563,150 @@ async def setup(bot: commands.Bot):
     cog = DinosaurValuerCog(bot)
     await bot.add_cog(cog)
     print("[DINOSAUR] 🦖 Cog adicionado!")
-    
-    # Adicionar persistência do painel
-    bot.add_view(ValuationPanelView(bot, cog.dados))
-    print("[DINOSAUR] 🦖 View adicionada!")
-    
-    # Criar painel automaticamente
-    print("[DINOSAUR] 🦖 Iniciando criação do painel...")
+
+    # Registrar persistência dos 3 painéis
+    bot.add_view(VanillaPanelView(bot, cog.dados))
+    bot.add_view(PrimalFearPanelView(bot, cog.dados))
+    bot.add_view(OmegaPanelView(bot, cog.dados))
+    print("[DINOSAUR] 🦖 Views registradas!")
+
+    # Criar painéis automaticamente
+    print("[DINOSAUR] 🦖 Iniciando criação dos painéis...")
     try:
         guild = bot.get_guild(1440802112601854159)
-        print(f"[DINOSAUR] Guild obtida: {guild}")
-        
         if guild:
             canal = guild.get_channel(VALUATION_CHANNEL_ID)
-            print(f"[DINOSAUR] Canal obtido: {canal}")
-            
             if canal and isinstance(canal, discord.TextChannel):
                 config = carregar_painel_config()
-                painel_msg_id = config.get("painel_message_id")
-                
-                # SEMPRE deletar o painel anterior se existir
-                if painel_msg_id:
-                    try:
-                        msg = await canal.fetch_message(painel_msg_id)
-                        await msg.delete()
-                        print(f"[DINOSAUR] 🗑️ Painel anterior deletado (ID: {painel_msg_id})")
-                    except discord.NotFound:
-                        print("[DINOSAUR] Painel anterior não encontrado no Discord")
-                    except Exception as e:
-                        print(f"[DINOSAUR] ⚠️ Erro ao deletar painel anterior: {e}")
-                
-                # Criar novo painel
-                print("[DINOSAUR] 🆕 Criando novo painel...")
-                await criar_painel_automatico(bot, canal, cog.dados)
+
+                # Deletar painéis anteriores
+                for key in ("vanilla_message_id", "primal_message_id", "omega_message_id"):
+                    msg_id = config.get(key)
+                    if msg_id:
+                        try:
+                            msg = await canal.fetch_message(msg_id)
+                            await msg.delete()
+                            print(f"[DINOSAUR] 🗑️ Painel anterior deletado ({key}: {msg_id})")
+                        except discord.NotFound:
+                            pass
+                        except Exception as e:
+                            print(f"[DINOSAUR] ⚠️ Erro ao deletar painel {key}: {e}")
+
+                await criar_paineis_automaticos(bot, canal, cog.dados)
         else:
             print("[DINOSAUR] ❌ Guild não encontrada")
     except Exception as e:
-        print(f"[DINOSAUR] ❌ Erro ao criar painel no setup: {e}")
+        print(f"[DINOSAUR] ❌ Erro ao criar painéis no setup: {e}")
         import traceback
         traceback.print_exc()
 
 
-async def criar_painel_automatico(bot: commands.Bot, canal: discord.TextChannel, dados: dict):
-    """Cria o painel automaticamente"""
+async def criar_paineis_automaticos(bot: commands.Bot, canal: discord.TextChannel, dados: dict):
+    """Cria os 3 painéis de calculadora automaticamente no canal"""
     try:
-        print("[DINOSAUR] Criando painel...")
-        embed = discord.Embed(
-            title="🦖 CALCULADORA DE VALOR DE DINOSSAUROS",
+        print("[DINOSAUR] Criando 3 painéis...")
+        config_ids = {}
+
+        total_dinos = len(dados.get("dinosaurs", {}))
+        aviso = (
+            "⚠️ **AVISO:** Esta calculadora está em **processo de desenvolvimento** "
+            "e ainda **não representa a versão final oficial**. "
+            "Os valores e fórmulas podem sofrer alterações.\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        )
+
+        # ─── PAINEL 1: VANILLA ───────────────────────────────────────
+        embed_vanilla = discord.Embed(
+            title="🦴 ARK VANILLA — CALCULADORA DE DINOSSAUROS",
             description=(
-                "⚠️ **AVISO:** Esta calculadora está em **processo de desenvolvimento** "
-                "e ainda **não representa a versão final oficial**. "
-                "Os valores e fórmulas podem sofrer alterações.\n\n"
-                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                "Bem-vindo ao sistema de avaliação de dinossauros!\n\n"
+                f"{aviso}"
+                "Cálculo padrão do ARK Survival Evolved, sem mods de criatura.\n\n"
                 "**📖 Como usar:**\n"
-                "1. Clique no botão abaixo\n"
-                "2. Selecione o tipo de dinossauro\n"
-                "3. Preencha os stats (Melee, Health, Stamina, etc)\n"
-                "4. Receba a avaliação detalhada\n\n"
-                "**📚 Quer aprender como os cálculos funcionam?**\n"
-                "Use o comando `!ajudacalc` para ver o guia completo com:\n"
-                "• Fórmula principal e fundamentos\n"
-                "• Passo a passo detalhado\n"
-                "• Todas as 7 categorias explicadas\n"
-                "• Exemplos práticos\n"
-                "• Dicas importantes\n\n"
-                "**👑 Nossas Categorias:**\n"
-                "👑 **Apex Combat** (x1.30) - Elite de combate\n"
-                "🥚 **Criação** (x1.40) - Reprodução (MAIS VALIOSA!)\n"
-                "🚚 **Transporte** (x1.25) - Mobilidade\n"
-                "🐉 **PvE Combat** (x1.20) - Bosses\n"
-                "⛏️ **Farming** (x1.15) - Recursos\n"
-                "🔧 **Utilidade** (x1.10) - Especial\n"
-                "🦕 **Outros** (x1.00) - Sem função\n\n"
-                f"**🦖 Dinossauros:** {len(dados.get('dinosaurs', {}))} espécies!\n\n"
+                "1. Clique em **🦴 Avaliar Vanilla**\n"
+                "2. Digite o nome do dinossauro\n"
+                "3. Informe se é castrado\n"
+                "4. Preencha os stats\n\n"
+                "**👑 Categorias:**\n"
+                "👑 Apex Combat (x1.30) • 🥚 Criação (x1.40)\n"
+                "🚚 Transporte (x1.25) • 🐉 PvE Combat (x1.20)\n"
+                "⛏️ Farming (x1.15) • 🔧 Utilidade (x1.10)\n\n"
+                f"🦖 **{total_dinos} espécies disponíveis**\n\n"
                 "═══════════════════════════════════════"
             ),
-            color=discord.Color.gold()
+            color=discord.Color.green()
         )
-        
-        embed.set_footer(text="⚠️ Em desenvolvimento — valores sujeitos a alteração | Clique no botão para começar!")
-        
-        view = ValuationPanelView(bot, dados)
-        msg = await canal.send(embed=embed, view=view)
-        await msg.pin()
-        
-        # Salvar ID do painel
-        salvar_painel_config({"painel_message_id": msg.id})
-        print(f"[DINOSAUR] ✅ Painel criado automaticamente (ID: {msg.id})")
+        embed_vanilla.set_footer(text="Vanilla ARK | Clique no botão para calcular!")
+
+        view_vanilla = VanillaPanelView(bot, dados)
+        msg_v = await canal.send(embed=embed_vanilla, view=view_vanilla)
+        await msg_v.pin()
+        config_ids["vanilla_message_id"] = msg_v.id
+        print(f"[DINOSAUR] ✅ Painel Vanilla criado (ID: {msg_v.id})")
+
+        # ─── PAINEL 2: PRIMAL FEAR ────────────────────────────────────
+        embed_pf = discord.Embed(
+            title="💀 PRIMAL FEAR — CALCULADORA DE DINOSSAUROS",
+            description=(
+                f"{aviso}"
+                "Cálculo com multiplicadores de **Tier Primal Fear**.\n\n"
+                "**📖 Como usar:**\n"
+                "1. Clique em **💀 Avaliar Primal Fear**\n"
+                "2. Digite o nome do dinossauro\n"
+                "3. Selecione o **Tier Primal Fear**\n"
+                "4. Informe se é castrado\n"
+                "5. Preencha os stats\n\n"
+                "**🔺 Tiers Primal Fear:**\n"
+                "🔴 Alpha (x10) • 🟠 Apex (x50) • 🟡 Fabled (x80)\n"
+                "🟣 Demonic (x150) • ✨ Celestial (x500)\n\n"
+                f"🦖 **{total_dinos} espécies disponíveis**\n\n"
+                "═══════════════════════════════════════"
+            ),
+            color=discord.Color.purple()
+        )
+        embed_pf.set_footer(text="Primal Fear | Clique no botão para calcular!")
+
+        view_pf = PrimalFearPanelView(bot, dados)
+        msg_pf = await canal.send(embed=embed_pf, view=view_pf)
+        await msg_pf.pin()
+        config_ids["primal_message_id"] = msg_pf.id
+        print(f"[DINOSAUR] ✅ Painel Primal Fear criado (ID: {msg_pf.id})")
+
+        # ─── PAINEL 3: OMEGA ──────────────────────────────────────────
+        embed_omega = discord.Embed(
+            title="⚡ OMEGA — CALCULADORA DE DINOSSAUROS",
+            description=(
+                f"{aviso}"
+                "Cálculo com **Tier**, **Variante** e **Paragon** do mod Omega.\n\n"
+                "**📖 Como usar:**\n"
+                "1. Clique em **⚡ Avaliar Omega**\n"
+                "2. Digite o nome do dinossauro\n"
+                "3. Selecione o **Tier Omega**\n"
+                "4. Selecione a **Variante** (opcional)\n"
+                "5. Preencha os stats e o **Paragon** (0-5)\n\n"
+                "**⚡ Tiers Omega:**\n"
+                "🔵 Basic (x1) • 🟢 Augmented (x1.8) • 🟡 Superior (x3.5)\n"
+                "🟠 Alpha (x7) • 🔴 Omega (x15) • 🟣 Mythical (x30)\n"
+                "✨ Legendary (x60) • ⚡ Godlike (x120)\n"
+                "🌟 Celestial (x240) • 💀 Chaos (x480) • ♾️ Eternal (x960)\n\n"
+                "**🎨 Variantes:** Fire/Ice (x1.2) • Lightning (x1.3) • Celestial/Chaos (x1.5)\n"
+                "**🏆 Paragon:** P1(x2) • P2(x4) • P3(x8) • P4(x16) • P5(x32)\n\n"
+                f"🦖 **{total_dinos} espécies disponíveis**\n\n"
+                "═══════════════════════════════════════"
+            ),
+            color=discord.Color.from_rgb(255, 80, 0)
+        )
+        embed_omega.set_footer(text="Omega | Clique no botão para calcular!")
+
+        view_omega = OmegaPanelView(bot, dados)
+        msg_om = await canal.send(embed=embed_omega, view=view_omega)
+        await msg_om.pin()
+        config_ids["omega_message_id"] = msg_om.id
+        print(f"[DINOSAUR] ✅ Painel Omega criado (ID: {msg_om.id})")
+
+        salvar_painel_config(config_ids)
+        print("[DINOSAUR] ✅ Configuração dos 3 painéis salva!")
+
     except Exception as e:
-        print(f"[DINOSAUR] ❌ Erro ao criar painel: {e}")
+        print(f"[DINOSAUR] ❌ Erro ao criar painéis: {e}")
         import traceback
         traceback.print_exc()

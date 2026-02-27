@@ -9,12 +9,13 @@ import asyncio
 from typing import Optional
 
 # Mapa de cargos e seus prefixos correspondentes
-# Ordem de prioridade: DEV > ADM > GM > VIP
+# Ordem de prioridade: DEV > ADM > GM > VIP > Tester
 PREFIX_MAP = {
     '1440828410556321882': '[DEV]',
     '1476370938969980928': '[ADM]',
     '1440828412599210135': '[GM]',
-    '1476371640244899963': '[VIP]'
+    '1476371640244899963': '[VIP]',
+    '1476780071090917416': '[Tester]'
 }
 
 # Ordem de prioridade dos cargos (do mais alto para o mais baixo)
@@ -22,7 +23,8 @@ PRIORITY_ORDER = [
     '1440828410556321882',  # DEV
     '1476370938969980928',  # ADM
     '1440828412599210135',  # GM
-    '1476371640244899963'   # VIP
+    '1476371640244899963',  # VIP
+    '1476780071090917416'   # Tester
 ]
 
 
@@ -111,7 +113,7 @@ async def update_member_nickname(member) -> bool:
             return False
 
         highest_prefix = get_highest_priority_prefix(member)
-        base_name = member.name
+        base_name = member.global_name or member.name
         current_nickname = member.nick or base_name
 
         if highest_prefix:
@@ -186,7 +188,7 @@ async def sync_all_members_nicknames(guild) -> dict:
                     continue
 
                 highest_prefix = get_highest_priority_prefix(member)
-                base_name = member.name
+                base_name = member.global_name or member.name
                 current_nickname = member.nick or base_name
 
                 if highest_prefix:
