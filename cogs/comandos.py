@@ -1,77 +1,156 @@
 # cogs/comandos.py
 import discord
 from discord.ext import commands
-from typing import Any, Dict, List
+from typing import Any
+
 
 class ComandosCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.descriptions: Dict[str, str] = {
-            "bobo": "Exibe a lista de comandos disponível.",
-            "comandos": "Exibe a lista de comandos disponível.",
-            "ajuda": "Exibe a lista de comandos disponível.",
-            "echo": "Repete a mensagem enviada.",
-            "ia": "Chat com IA (Gemini).",
-            "chat": "Chat com IA (Gemini).",
-            "imagem": "Gera imagem via Gemini Imagen.",
-            "img": "Gera imagem via Gemini Imagen.",
-            "gerar": "Gera imagem via Gemini Imagen.",
-            "xp": "Mostra seu nível e XP.",
-            "level": "Mostra seu nível e XP.",
-            "lvl": "Mostra seu nível e XP.",
-            "promo": "Busca e publica promoções de jogos.",
-            "faxina": "Apaga todas as mensagens do canal.",
-            "limpar": "Apaga mensagens até atingir N caracteres.",
-            "limpezageral": "Purge global de mensagens de um usuário.",
-            "testar_boas_vindas": "Envia mensagem de boas-vindas de teste.",
-            "reload": "Recarrega uma extensão (admin).",
-            "load": "Carrega uma extensão (admin).",
-            "unload": "Descarrega uma extensão (admin).",
-            "restart": "Reinicia o bot (admin).",
-            "shutdown": "Desliga o bot (admin).",
-            "ticketpanel": "Envia o painel de tickets (admin)."
-        }
 
     @commands.command(name="bobo", aliases=["comandos", "ajuda"])
     async def help_command(self, ctx: commands.Context[Any]):
+        """Exibe todos os comandos do bot organizados por categoria."""
+
         try:
             resolved = await self.bot.get_prefix(ctx.message)
-            if isinstance(resolved, str):
-                prefix = resolved
-            else:
-                prefix = resolved[0] if resolved else "!"
+            p = resolved if isinstance(resolved, str) else (resolved[0] if resolved else "!")
         except Exception:
-            prefix = "!"
+            p = "!"
 
-        embed = discord.Embed(
-            title="📚 Comandos do Bot",
-            description="Lista dinâmica de comandos disponíveis por categoria.",
+        # ── embed 1: geral + calculadora + apelidos ────────────────────
+        e1 = discord.Embed(
+            title="📚 Comandos do Bobonic — Parte 1/3",
             color=discord.Color.blue()
         )
 
-        groups: Dict[str, List[str]] = {}
-        for cmd in sorted(self.bot.commands, key=lambda c: (c.cog_name or "", c.name)):
-            group = cmd.cog_name or "Outros"
-            aliases = f" (aliases: {', '.join(cmd.aliases)})" if getattr(cmd, "aliases", None) else ""
-            base = f"`{prefix}{cmd.name}`{aliases}"
-            desc = (cmd.help or "").strip() or self.descriptions.get(cmd.name) or "Sem descrição"
-            entry = f"{base} — {desc}"
-            groups.setdefault(group, []).append(entry)
+        e1.add_field(
+            name="📖 Geral",
+            value=(
+                f"`{p}bobo` / `{p}comandos` / `{p}ajuda` — Exibe este menu de ajuda\n"
+                f"`{p}echo <msg>` — Faz o bot repetir uma mensagem\n"
+                f"`{p}regras` / `{p}rules` — Exibe as regras do servidor\n"
+                f"`{p}xp` / `{p}level` / `{p}lvl` — Mostra seu nível e XP atual\n"
+                f"`{p}promo [steam]` — Busca e publica promoções de jogos gratuitos"
+            ),
+            inline=False
+        )
 
-        for group_name, items in groups.items():
-            value = "\n".join(items) if items else "Nenhum comando"
-            embed.add_field(name=group_name, value=value, inline=False)
+        e1.add_field(
+            name="🦕 Calculadora de Dinossauros",
+            value=(
+                f"`{p}criarcalc` / `{p}criarpainel` — Cria os 3 painéis (Vanilla, Primal Fear, Omega)\n"
+                f"`{p}tipos` — Lista as categorias de dinos e seus multiplicadores\n"
+                f"`{p}dinos [nome]` — Lista os dinos disponíveis por modo/busca\n"
+                f"`{p}historico` — Exibe o histórico de avaliações realizadas\n"
+                f"`{p}ajudacalc` — Guia detalhado de como usar a calculadora"
+            ),
+            inline=False
+        )
 
-        embed.set_footer(text=f"Prefixo atual: {prefix}")
-        await ctx.send(embed=embed)
+        e1.add_field(
+            name="🏷️ Apelidos",
+            value=(
+                f"`{p}sincapelidos` — Sincroniza apelidos de todos os membros com seus cargos *(admin)*\n"
+                f"`{p}cargosape` — Lista os cargos que afetam o apelido e sua prioridade\n"
+                f"`{p}meuapelido` — Mostra seu apelido atual e qual cargo o determina"
+            ),
+            inline=False
+        )
+
+        e1.set_footer(text=f"Prefixo: {p}  •  Página 1 de 3")
+
+        # ── embed 2: lojas + tickets + moderação + autoloop ────────────
+        e2 = discord.Embed(
+            title="📚 Comandos do Bobonic — Parte 2/3",
+            color=discord.Color.green()
+        )
+
+        e2.add_field(
+            name="🏪 Lojas",
+            value=(
+                f"`{p}lojastart` — Cria o painel de lojas no canal *(admin)*\n"
+                f"`{p}fecharloja` — Fecha e arquiva sua loja pessoal"
+            ),
+            inline=False
+        )
+
+        e2.add_field(
+            name="🎫 Tickets",
+            value=(
+                f"`{p}ticketstart` — Cria o painel de abertura de tickets no canal *(admin)*"
+            ),
+            inline=False
+        )
+
+        e2.add_field(
+            name="🧹 Moderação",
+            value=(
+                f"`{p}faxina` / `{p}purgeall` — Apaga **todas** as mensagens do canal *(manage_messages)*\n"
+                f"`{p}limpar <n>` / `{p}clear <n>` — Apaga mensagens até atingir N caracteres *(manage_messages)*\n"
+                f"`{p}limpezageral @user [limite]` — Purge global + quarentena de um usuário *(admin)*"
+            ),
+            inline=False
+        )
+
+        e2.add_field(
+            name="🔁 AutoLoop *(admin)*",
+            value=(
+                f"`{p}cadloop <msg>` — Adiciona mensagem ao loop automático (envia a cada 6h)\n"
+                f"`{p}listarloop` — Lista todas as mensagens cadastradas no loop\n"
+                f"`{p}removerloop <nº>` — Remove uma mensagem do loop pelo índice\n"
+                f"`{p}limparloop` — Remove **todas** as mensagens do loop (pede confirmação)\n"
+                f"`{p}enviarloop` — Força o envio imediato de uma mensagem do loop"
+            ),
+            inline=False
+        )
+
+        e2.set_footer(text=f"Prefixo: {p}  •  Página 2 de 3")
+
+        # ── embed 3: admin + testes ─────────────────────────────────────
+        e3 = discord.Embed(
+            title="📚 Comandos do Bobonic — Parte 3/3",
+            color=discord.Color.orange()
+        )
+
+        e3.add_field(
+            name="🔧 Administração do Bot *(admin)*",
+            value=(
+                f"`{p}reload <cog>` / `{p}recarregar <cog>` — Recarrega uma extensão sem reiniciar o bot\n"
+                f"`{p}load <cog>` / `{p}carregar <cog>` — Carrega uma extensão desativada\n"
+                f"`{p}unload <cog>` / `{p}descarregar <cog>` — Descarrega uma extensão ativa\n"
+                f"`{p}restart` / `{p}reboot` / `{p}reiniciar` — Reinicia o bot\n"
+                f"`{p}shutdown` / `{p}desligar` — Desliga o bot completamente"
+            ),
+            inline=False
+        )
+
+        e3.add_field(
+            name="🧪 Testes *(admin)*",
+            value=(
+                f"`{p}testar_boas_vindas` — Envia uma mensagem de boas-vindas de teste"
+            ),
+            inline=False
+        )
+
+        e3.add_field(
+            name="💡 Legenda",
+            value=(
+                "*(admin)* → requer permissão de Administrador\n"
+                "*(manage_messages)* → requer permissão de Gerenciar Mensagens"
+            ),
+            inline=False
+        )
+
+        e3.set_footer(text=f"Prefixo: {p}  •  Página 3 de 3")
+
+        await ctx.send(embeds=[e1, e2, e3])
 
     @commands.command(name="echo")
     async def echo_command(self, ctx: commands.Context[Any], *, message: str):
+        """Repete a mensagem enviada."""
         await ctx.send(message)
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ComandosCog(bot))
-
-# ============================================================
-# Atualizado em: 2025-11-23 22:41:53 (Horário de Brasília)
-# ============================================================
