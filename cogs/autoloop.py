@@ -6,11 +6,14 @@ import random
 import os
 from typing import Any
 import asyncio
+from datetime import datetime, timezone
 
 # Configurações
 LOOP_MESSAGES_FILE = "data/loop_messages.json"
 TARGET_CHANNEL_ID = 1440828454164631736
 TARGET_ROLE_ID = 1440828415103074356
+
+INTERVAL_HOURS = 6
 
 class AutoLoopCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -18,6 +21,7 @@ class AutoLoopCog(commands.Cog):
         self.current_messages: list[str] = []
         self.used_messages: list[str] = []
         self.last_sent_index = -1
+        self.last_sent_at: datetime | None = None
         
         # Carrega as mensagens ao iniciar
         self.load_messages()
@@ -37,14 +41,21 @@ class AutoLoopCog(commands.Cog):
                     data = json.load(f)
                     self.current_messages = data.get("messages", [])
                     self.used_messages = data.get("used_messages", [])
+                    last_sent_str = data.get("last_sent_at")
+                    if last_sent_str:
+                        self.last_sent_at = datetime.fromisoformat(last_sent_str)
+                    else:
+                        self.last_sent_at = None
             else:
                 self.current_messages = []
                 self.used_messages = []
+                self.last_sent_at = None
                 self.save_messages()
         except Exception as e:
             print(f"[AUTOLOOP] Erro ao carregar mensagens: {e}")
             self.current_messages = []
             self.used_messages = []
+            self.last_sent_at = None
     
     def save_messages(self):
         """Salva as mensagens no arquivo JSON"""
@@ -53,7 +64,8 @@ class AutoLoopCog(commands.Cog):
             with open(LOOP_MESSAGES_FILE, 'w', encoding='utf-8') as f:
                 json.dump({
                     "messages": self.current_messages,
-                    "used_messages": self.used_messages
+                    "used_messages": self.used_messages,
+                    "last_sent_at": self.last_sent_at.isoformat() if self.last_sent_at else None
                 }, f, indent=4, ensure_ascii=False)
         except Exception as e:
             print(f"[AUTOLOOP] Erro ao salvar mensagens: {e}")
@@ -84,10 +96,18 @@ class AutoLoopCog(commands.Cog):
         
         return message
     
-    @tasks.loop(hours=6)
+    @tasks.loop(hours=INTERVAL_HOURS)
     async def auto_send_message(self):
         """Task que envia uma mensagem a cada 6 horas"""
         try:
+            # Garante que o intervalo mínimo foi respeitado (proteção contra restart)
+            if self.last_sent_at is not None:
+                elapsed = (datetime.now(timezone.utc) - self.last_sent_at).total_seconds()
+                remaining = INTERVAL_HOURS * 3600 - elapsed
+                if remaining > 0:
+                    print(f"[AUTOLOOP] Muito cedo para enviar ainda. Aguardando {remaining/60:.1f} min.")
+                    return
+
             channel = self.bot.get_channel(TARGET_CHANNEL_ID)
             role = discord.utils.get(self.bot.guilds[0].roles, id=TARGET_ROLE_ID)
             
@@ -114,6 +134,8 @@ class AutoLoopCog(commands.Cog):
             role_mention = role.mention if role else f"<@&{TARGET_ROLE_ID}>"
             
             await channel.send(role_mention, embed=embed)
+            self.last_sent_at = datetime.now(timezone.utc)
+            self.save_messages()
             print(f"[AUTOLOOP] Mensagem enviada com sucesso no canal {TARGET_CHANNEL_ID}")
         
         except Exception as e:
@@ -121,8 +143,16 @@ class AutoLoopCog(commands.Cog):
     
     @auto_send_message.before_loop
     async def before_auto_send(self):
-        """Aguarda o bot estar pronto antes de iniciar a task"""
+        """Aguarda o bot estar pronto e respeita o intervalo após reinicializações"""
         await self.bot.wait_until_ready()
+
+        # Se existe um envio anterior, calcula quanto tempo falta para o próximo
+        if self.last_sent_at is not None:
+            elapsed = (datetime.now(timezone.utc) - self.last_sent_at).total_seconds()
+            remaining = INTERVAL_HOURS * 3600 - elapsed
+            if remaining > 0:
+                print(f"[AUTOLOOP] Bot reiniciado. Próxima mensagem em {remaining/60:.1f} min.")
+                await asyncio.sleep(remaining)
     
     @commands.command(name="cadloop")
     async def add_loop_message(self, ctx: commands.Context[Any]):

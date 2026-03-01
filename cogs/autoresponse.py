@@ -216,6 +216,7 @@ class AutoResponse(commands.Cog):
         await self.update_member_list_message(member.guild)
 
     @commands.command(name='testar_boas_vindas')
+    @commands.has_permissions(administrator=True)
     async def testar_boas_vindas(self, ctx):
         member_number = "TESTE"
         data_extenso, hora, _ = get_datetime_pt_br()

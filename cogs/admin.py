@@ -65,7 +65,26 @@ class Admin(commands.Cog):
     @commands.command(aliases=['reboot', 'reiniciar'])
     @commands.has_permissions(administrator=True)
     async def restart(self, ctx):
+        embed = discord.Embed(
+            title="⚠️ Confirmação Necessária",
+            description="Você está prestes a **reiniciar** o bot.\n\nReaja com ✅ para confirmar ou ❌ para cancelar.",
+            color=discord.Color.orange()
+        )
+        msg = await ctx.send(embed=embed)
+        await msg.add_reaction("✅")
+        await msg.add_reaction("❌")
+
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji) in ["✅", "❌"] and reaction.message.id == msg.id
+
         try:
+            import asyncio
+            reaction, _ = await self.bot.wait_for("reaction_add", timeout=30.0, check=check)
+
+            if str(reaction.emoji) != "✅":
+                await ctx.send("❌ Reinicialização cancelada.", delete_after=8)
+                return
+
             await ctx.send("🟠 Reiniciando o Bobonic... Voltarei em um instante.", delete_after=10)
 
             canal_logs = self.bot.get_channel(CANAL_LOGS_ID)
@@ -81,26 +100,51 @@ class Admin(commands.Cog):
             await self.bot.close()
             sys.exit(24)
 
+        except asyncio.TimeoutError:
+            await ctx.send("⏰ Tempo esgotado! Reinicialização cancelada.", delete_after=8)
         except Exception as e:
             await ctx.send(f"❌ Erro ao tentar reiniciar: {e}")
 
     @commands.command(aliases=['desligar'])
     @commands.has_permissions(administrator=True)
     async def shutdown(self, ctx):
-        await ctx.send("🔴 Desligando o Bobonic... Adeus.", delete_after=10)
+        embed = discord.Embed(
+            title="⚠️ Confirmação Necessária",
+            description="Você está prestes a **desligar** o bot permanentemente.\n\nReaja com ✅ para confirmar ou ❌ para cancelar.",
+            color=discord.Color.red()
+        )
+        msg = await ctx.send(embed=embed)
+        await msg.add_reaction("✅")
+        await msg.add_reaction("❌")
 
-        canal_logs = self.bot.get_channel(CANAL_LOGS_ID)
-        if canal_logs:
-            embed = discord.Embed(
-                title="🔴 Bot Desligado",
-                description=f"Bot desligado manualmente por {ctx.author.mention}.",
-                color=discord.Color.red()
-            )
-            embed.set_footer(text="Processo encerrado.")
-            embed.timestamp = datetime.now()
-            await canal_logs.send(embed=embed)
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji) in ["✅", "❌"] and reaction.message.id == msg.id
 
-        await self.bot.close()
+        try:
+            import asyncio
+            reaction, _ = await self.bot.wait_for("reaction_add", timeout=30.0, check=check)
+
+            if str(reaction.emoji) != "✅":
+                await ctx.send("❌ Desligamento cancelado.", delete_after=8)
+                return
+
+            await ctx.send("🔴 Desligando o Bobonic... Adeus.", delete_after=10)
+
+            canal_logs = self.bot.get_channel(CANAL_LOGS_ID)
+            if canal_logs:
+                embed = discord.Embed(
+                    title="🔴 Bot Desligado",
+                    description=f"Bot desligado manualmente por {ctx.author.mention}.",
+                    color=discord.Color.red()
+                )
+                embed.set_footer(text="Processo encerrado.")
+                embed.timestamp = datetime.now()
+                await canal_logs.send(embed=embed)
+
+            await self.bot.close()
+
+        except asyncio.TimeoutError:
+            await ctx.send("⏰ Tempo esgotado! Desligamento cancelado.", delete_after=8)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):

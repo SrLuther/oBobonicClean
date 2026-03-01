@@ -97,6 +97,7 @@ COGS = [
     'sales',
     'voicemanager',
     'autoloop',  # Sistema de mensagens automáticas a cada 6 horas
+    'music',     # Player de música via YouTube
 ]
 
 # ============================================================

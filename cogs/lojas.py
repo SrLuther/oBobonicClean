@@ -544,6 +544,7 @@ class Lojas(commands.Cog):
             )
     
     @commands.command(name="lojastart", description="Verifica e cria o painel de lojas se necessário")
+    @commands.has_permissions(administrator=True)
     async def lojastart(self, ctx: commands.Context) -> None:
         """Verifica se o painel existe e o cria se necessário"""
         

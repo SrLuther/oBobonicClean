@@ -363,7 +363,33 @@ async def criar_painel_ticket():
     print(f"✅ Painel persistente criado e fixado em {canal.name} ({canal.id})")
 
 # --------------------
-# 5. EVENTO on_ready
+# 5. HANDLER GLOBAL DE ERROS
+# --------------------
+@bot.event
+async def on_command_error(ctx: commands.Context, error: commands.CommandError):
+    # Ignora erros já tratados por handlers locais dos cogs
+    if hasattr(ctx.command, 'on_error'):
+        return
+    if ctx.cog and commands.Cog._get_overridden_method(ctx.cog.cog_command_error) is not None:
+        return
+
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send(
+            "❌ **Acesso Negado:** Você não tem a permissão de **Administrador** para usar este comando.",
+            delete_after=8
+        )
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(
+            f"⚠️ **Argumento faltando:** `{error.param.name}`. Use `!bobo` para ver como usar o comando.",
+            delete_after=8
+        )
+    elif isinstance(error, commands.CommandNotFound):
+        pass  # Ignora comandos inexistentes silenciosamente
+    else:
+        print(f"[ERRO] Comando `{ctx.command}` por {ctx.author}: {error}")
+
+# --------------------
+# 6. EVENTO on_ready
 # --------------------
 @bot.event
 async def on_ready():
@@ -424,7 +450,7 @@ async def on_ready():
     print(status_message)
 
 # --------------------
-# 6. EXECUÇÃO PRINCIPAL
+# 7. EXECUÇÃO PRINCIPAL
 # --------------------
 if __name__ == '__main__':
     try:

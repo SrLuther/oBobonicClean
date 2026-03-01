@@ -17,6 +17,10 @@ google-genai==1.15.0
 # --- Servidor Keep-Alive ---
 flask==3.0.3
 
+# --- Música (voz) ---
+yt-dlp
+PyNaCl
+
 # --- Otimizações (opcionais, mas muito úteis) ---
 ujson==5.10.0
 ruff==0.14.7

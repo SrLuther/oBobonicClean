@@ -155,6 +155,7 @@ class ComandosCog(commands.Cog):
         await ctx.send(embeds=[e1, e2, e3])
 
     @commands.command(name="echo")
+    @commands.has_permissions(administrator=True)
     async def echo_command(self, ctx: commands.Context[Any], *, message: str):
         """Repete a mensagem enviada."""
         await ctx.send(message)
