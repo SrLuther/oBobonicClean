@@ -41,6 +41,7 @@ CANAL_LOGS_ID = get_int_env("CANAL_LOGS_ID", 1440828555201216582)
 AI_CHANNEL_ID = get_int_env("AI_CHANNEL_ID", 1440828507931410543)
 CANAL_PROMO_ID = get_int_env("CANAL_PROMO_ID", 1442151789188350113) 
 LOBBY_CHANNEL_ID = get_int_env("LOBBY_CHANNEL_ID", 1440828526478491648)
+CANAL_CHANGELOG_ID = get_int_env("CANAL_CHANGELOG_ID", 1477571362636955681)
 
 # --- Tickets ---
 TICKET_CATEGORY_ID = get_int_env("TICKET_CATEGORY_ID", 1441644856429772962)
@@ -98,6 +99,7 @@ COGS = [
     'voicemanager',
     'autoloop',  # Sistema de mensagens automáticas a cada 6 horas
     'music',     # Player de música via YouTube
+    'changelog', # Sistema de changelog versionado do servidor
 ]
 
 # ============================================================

@@ -134,6 +134,15 @@ class ComandosCog(commands.Cog):
         )
 
         e3.add_field(
+            name="📋 Changelog *(admin)*",
+            value=(
+                f"`{p}chang <texto>` / `{p}changelog <texto>` — Publica changelog versionado (v0.1, v0.2…) no canal oficial\n"
+                f"`{p}versao` / `{p}version` — Exibe a versão atual e o histórico de changelogs"
+            ),
+            inline=False
+        )
+
+        e3.add_field(
             name="🧪 Testes *(admin)*",
             value=(
                 f"`{p}testar_boas_vindas` — Envia uma mensagem de boas-vindas de teste"
