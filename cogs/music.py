@@ -165,9 +165,15 @@ class GuildPlayer:
         self.panel_message: Optional[discord.Message] = None
         self._play_next_event = asyncio.Event()
         self.paused = False
+        self._loop_task: Optional[asyncio.Task] = None  # referência da task do loop
 
     def is_playing(self) -> bool:
         return self.voice_client is not None and self.voice_client.is_playing()
+
+    def cancel_loop(self):
+        """Cancela a task do loop de reprodução, se existir."""
+        if self._loop_task and not self._loop_task.done():
+            self._loop_task.cancel()
 
 
 # 
@@ -218,6 +224,7 @@ class NowPlayingView(discord.ui.View):
             await interaction.response.send_message(" Nada tocando.", ephemeral=True)
             return
 
+        player.cancel_loop()  # cancela o loop antes de desconectar
         player.queue.clear()
         player.current = None
         if player.voice_client:
@@ -307,56 +314,77 @@ class MusicCog(commands.Cog, name="Música"):
         """Loop principal que consome a fila e toca faixa por faixa."""
         player = self.get_player(guild_id)
 
-        while True:
-            player._play_next_event.clear()
+        try:
+            while True:
+                player._play_next_event.clear()
 
-            if not player.queue:
-                try:
-                    await asyncio.wait_for(player._play_next_event.wait(), timeout=180)
-                except asyncio.TimeoutError:
-                    if player.voice_client and player.voice_client.is_connected():
-                        await player.voice_client.disconnect()
+                if not player.queue:
+                    try:
+                        await asyncio.wait_for(player._play_next_event.wait(), timeout=180)
+                    except asyncio.TimeoutError:
+                        if player.voice_client and player.voice_client.is_connected():
+                            await player.voice_client.disconnect()
+                        await self._update_panel(guild_id, idle=True)
+                        self.players.pop(guild_id, None)
+                        return
+                    continue
+
+                track = player.queue.popleft()
+
+                # Se a faixa veio de playlist, ainda não tem source_url → resolve agora
+                if not track.source_url:
+                    try:
+                        resolved = await Track.resolve_url(track.webpage_url, track.requester, self.bot.loop)
+                        track.source_url = resolved.source_url
+                        track.thumbnail = track.thumbnail or resolved.thumbnail
+                        track.duration = track.duration or resolved.duration
+                    except Exception as e:
+                        print(f"[MUSIC] Falha ao resolver {track.title}: {e}")
+                        player._play_next_event.set()
+                        continue
+
+                # Verifica se o voice_client ainda está conectado antes de tocar
+                if not player.voice_client or not player.voice_client.is_connected():
+                    print(f"[MUSIC] voice_client desconectado antes de tocar '{track.title}'. Encerrando loop.")
                     await self._update_panel(guild_id, idle=True)
                     self.players.pop(guild_id, None)
                     return
-                continue
 
-            track = player.queue.popleft()
+                player.current = track
+                player.paused = False
 
-            # Se a faixa veio de playlist, ainda não tem source_url  resolve agora
-            if not track.source_url:
                 try:
-                    resolved = await Track.resolve_url(track.webpage_url, track.requester, self.bot.loop)
-                    track.source_url = resolved.source_url
-                    track.thumbnail = track.thumbnail or resolved.thumbnail
-                    track.duration = track.duration or resolved.duration
+                    raw_source = discord.FFmpegPCMAudio(
+                        track.source_url,
+                        before_options=FFMPEG_BEFORE_OPTIONS,
+                        options=FFMPEG_OPTIONS_STR,
+                    )
+                    source = discord.PCMVolumeTransformer(raw_source, volume=0.5)
+
+                    def after_play(error: Optional[Exception]):
+                        if error:
+                            print(f"[MUSIC] Erro ao reproduzir: {error}")
+                        self.bot.loop.call_soon_threadsafe(player._play_next_event.set)
+
+                    player.voice_client.play(source, after=after_play)  # type: ignore[union-attr]
                 except Exception as e:
-                    print(f"[MUSIC] Falha ao resolver {track.title}: {e}")
+                    print(f"[MUSIC] Erro ao iniciar reprodução de '{track.title}': {e}")
                     player._play_next_event.set()
                     continue
 
-            player.current = track
-            player.paused = False
+                await self._update_panel(guild_id, track=track)
 
-            raw_source = discord.FFmpegPCMAudio(
-                track.source_url,
-                before_options=FFMPEG_BEFORE_OPTIONS,
-                options=FFMPEG_OPTIONS_STR,
-            )
-            source = discord.PCMVolumeTransformer(raw_source, volume=0.5)
+                await player._play_next_event.wait()
 
-            def after_play(error: Optional[Exception]):
-                if error:
-                    print(f"[MUSIC] Erro ao reproduzir: {error}")
-                self.bot.loop.call_soon_threadsafe(player._play_next_event.set)
-
-            player.voice_client.play(source, after=after_play)  # type: ignore[union-attr]
-
-            await self._update_panel(guild_id, track=track)
-
-            await player._play_next_event.wait()
-
-        player.current = None
+        except asyncio.CancelledError:
+            # Loop cancelado via stop — comportamento esperado
+            print(f"[MUSIC] Loop cancelado para guild {guild_id}.")
+        except Exception as e:
+            print(f"[MUSIC] Erro inesperado no loop da guild {guild_id}: {e}")
+            await self._update_panel(guild_id, idle=True)
+            self.players.pop(guild_id, None)
+        finally:
+            player.current = None
 
     # 
     # Comandos
@@ -437,7 +465,8 @@ class MusicCog(commands.Cog, name="Música"):
             await ctx.send(f" **{len(tracks)} músicas** da playlist adicionadas à fila!", delete_after=8)
 
         if not player.is_playing() and player.current is None:
-            self.bot.loop.create_task(self._play_loop(ctx.guild.id))  # type: ignore[union-attr]
+            task = self.bot.loop.create_task(self._play_loop(ctx.guild.id))  # type: ignore[union-attr]
+            player._loop_task = task
 
         player._play_next_event.set()
 
@@ -477,6 +506,7 @@ class MusicCog(commands.Cog, name="Música"):
     async def stop(self, ctx: commands.Context[Any]):
         """Para a música e limpa a fila."""
         player = self.get_player(ctx.guild.id)  # type: ignore[union-attr]
+        player.cancel_loop()  # cancela o loop antes de desconectar
         player.queue.clear()
         player.current = None
         if player.voice_client:
@@ -491,6 +521,7 @@ class MusicCog(commands.Cog, name="Música"):
         """Faz o bot sair do canal de voz."""
         player = self.get_player(ctx.guild.id)  # type: ignore[union-attr]
         if player.voice_client and player.voice_client.is_connected():
+            player.cancel_loop()  # cancela o loop antes de desconectar
             player.queue.clear()
             player.voice_client.stop()
             await player.voice_client.disconnect()
