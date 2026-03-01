@@ -2,6 +2,7 @@
 import discord
 from discord.ext import commands
 import asyncio
+import os
 from collections import deque
 from typing import Any, Optional
 
@@ -13,6 +14,15 @@ except ImportError:
 # Canal dedicado onde o painel "Tocando agora" fica fixo
 MUSIC_PANEL_CHANNEL_ID = 1477466434593493074
 
+# Caminho do arquivo de cookies (opcional — necessário em VPS para contornar bloqueio do YouTube)
+_COOKIES_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "cookies.txt")
+_COOKIES_OPTS: dict[str, Any] = {"cookiefile": _COOKIES_FILE} if os.path.isfile(_COOKIES_FILE) else {}
+
+# Usa o client iOS do YouTube — contorna detecção de bot em servidores de datacenter
+_YT_EXTRACTOR_ARGS: dict[str, Any] = {
+    "extractor_args": {"youtube": {"player_client": ["ios", "web"]}},
+}
+
 YTDL_OPTIONS_SINGLE: dict[str, Any] = {
     "format": "bestaudio/best",
     "noplaylist": True,
@@ -20,6 +30,8 @@ YTDL_OPTIONS_SINGLE: dict[str, Any] = {
     "no_warnings": True,
     "default_search": "ytsearch",
     "source_address": "0.0.0.0",
+    **_YT_EXTRACTOR_ARGS,
+    **_COOKIES_OPTS,
 }
 
 YTDL_OPTIONS_PLAYLIST: dict[str, Any] = {
@@ -29,6 +41,8 @@ YTDL_OPTIONS_PLAYLIST: dict[str, Any] = {
     "quiet": True,
     "no_warnings": True,
     "source_address": "0.0.0.0",
+    **_YT_EXTRACTOR_ARGS,
+    **_COOKIES_OPTS,
 }
 
 YTDL_OPTIONS_TRACK: dict[str, Any] = {
@@ -37,6 +51,8 @@ YTDL_OPTIONS_TRACK: dict[str, Any] = {
     "quiet": True,
     "no_warnings": True,
     "source_address": "0.0.0.0",
+    **_YT_EXTRACTOR_ARGS,
+    **_COOKIES_OPTS,
 }
 
 FFMPEG_BEFORE_OPTIONS = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
@@ -323,7 +339,7 @@ class MusicCog(commands.Cog, name="Música"):
             def after_play(error: Optional[Exception]):
                 if error:
                     print(f"[MUSIC] Erro ao reproduzir: {error}")
-                player._play_next_event.set()
+                self.bot.loop.call_soon_threadsafe(player._play_next_event.set)
 
             player.voice_client.play(source, after=after_play)  # type: ignore[union-attr]
 
