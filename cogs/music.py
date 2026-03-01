@@ -18,10 +18,13 @@ MUSIC_PANEL_CHANNEL_ID = 1477466434593493074
 _COOKIES_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "cookies.txt")
 _COOKIES_OPTS: dict[str, Any] = {"cookiefile": _COOKIES_FILE} if os.path.isfile(_COOKIES_FILE) else {}
 
-# Usa o client iOS do YouTube — contorna detecção de bot em servidores de datacenter
-_YT_EXTRACTOR_ARGS: dict[str, Any] = {
-    "extractor_args": {"youtube": {"player_client": ["ios", "web"]}},
-}
+# Quando cookies estão presentes, usa apenas "web" (ios não suporta cookies)
+# Node.js na VPS resolve o n-challenge do YouTube automaticamente
+_YT_EXTRACTOR_ARGS: dict[str, Any] = (
+    {"extractor_args": {"youtube": {"player_client": ["web"]}}}
+    if _COOKIES_OPTS
+    else {"extractor_args": {"youtube": {"player_client": ["ios", "web"]}}}
+)
 
 YTDL_OPTIONS_SINGLE: dict[str, Any] = {
     "format": "bestaudio/best",
