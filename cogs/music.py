@@ -18,6 +18,9 @@ MUSIC_PANEL_CHANNEL_ID = 1477466434593493074
 _COOKIES_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "cookies.txt")
 _COOKIES_OPTS: dict[str, Any] = {"cookiefile": _COOKIES_FILE} if os.path.isfile(_COOKIES_FILE) else {}
 
+# Habilita download do solver de n-challenge do GitHub (necessário em VPS com deno)
+_REMOTE_COMPONENTS: dict[str, Any] = {"remote_components": ["ejs:github"]} if _COOKIES_OPTS else {}
+
 # Quando cookies estão presentes, usa apenas "web" (ios não suporta cookies)
 # Node.js na VPS resolve o n-challenge do YouTube automaticamente
 _YT_EXTRACTOR_ARGS: dict[str, Any] = (
@@ -35,6 +38,7 @@ YTDL_OPTIONS_SINGLE: dict[str, Any] = {
     "source_address": "0.0.0.0",
     **_YT_EXTRACTOR_ARGS,
     **_COOKIES_OPTS,
+    **_REMOTE_COMPONENTS,
 }
 
 YTDL_OPTIONS_PLAYLIST: dict[str, Any] = {
@@ -46,6 +50,7 @@ YTDL_OPTIONS_PLAYLIST: dict[str, Any] = {
     "source_address": "0.0.0.0",
     **_YT_EXTRACTOR_ARGS,
     **_COOKIES_OPTS,
+    **_REMOTE_COMPONENTS,
 }
 
 YTDL_OPTIONS_TRACK: dict[str, Any] = {
@@ -56,6 +61,7 @@ YTDL_OPTIONS_TRACK: dict[str, Any] = {
     "source_address": "0.0.0.0",
     **_YT_EXTRACTOR_ARGS,
     **_COOKIES_OPTS,
+    **_REMOTE_COMPONENTS,
 }
 
 FFMPEG_BEFORE_OPTIONS = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
