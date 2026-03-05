@@ -81,9 +81,41 @@ LEADERBOARD_CHANNEL_ID = get_int_env("LEADERBOARD_CHANNEL_ID", 12345678901234567
 LOG_SEPARATOR = os.getenv("LOG_SEPARATOR", "--------------------------------------------------------")
 
 # ======================================================================
-# 4. LISTA DE COGS (AJUSTADO PARA TICKETS DIVIDIDOS)
+# 5. ARK: SURVIVAL EVOLVED — RCON
+# ======================================================================
+# Senha e host padrão para todos os mapas (pode ser sobrescrito por mapa)
+ARK_DEFAULT_HOST = os.getenv("ARK_HOST", "127.0.0.1")
+ARK_DEFAULT_PASSWORD = os.getenv("ARK_RCON_PASSWORD", "")
+
+# Canal exclusivo onde os comandos ARK RCON podem ser usados
+ARK_CANAL_RCON_ID = get_int_env("ARK_CANAL_RCON_ID", 1479003271623610428)
+
+# Carrega mapas dinamicamente a partir das variáveis:
+#   ARK_MAP1_NAME, ARK_MAP1_PORT, ARK_MAP1_HOST (opc.), ARK_MAP1_PASSWORD (opc.)
+#   ARK_MAP2_NAME, ARK_MAP2_PORT, ...
+ARK_MAPS: dict[str, dict] = {}
+_i = 1
+while True:
+    _name = os.getenv(f"ARK_MAP{_i}_NAME")
+    _port = os.getenv(f"ARK_MAP{_i}_PORT")
+    if not _name or not _port:
+        break
+    ARK_MAPS[_name.lower()] = {
+        "name": _name,
+        "host": os.getenv(f"ARK_MAP{_i}_HOST", ARK_DEFAULT_HOST),
+        "port": int(_port),
+        "password": os.getenv(f"ARK_MAP{_i}_PASSWORD", ARK_DEFAULT_PASSWORD),
+        # Nome do serviço systemd que controla este mapa (opcional)
+        # Exemplo: "ark-theisland.service" ou "ark@theisland.service"
+        "service": os.getenv(f"ARK_MAP{_i}_SERVICE", ""),
+    }
+    _i += 1
+
+# ======================================================================
+# 6. LISTA DE COGS (AJUSTADO PARA TICKETS DIVIDIDOS)
 # ======================================================================
 COGS = [
+    'ark',       # Integração RCON com servidores ARK: Survival Evolved
     'tickets',   # Só o pacote tickets
     'lojas',     # Sistema de lojas pessoais
     'dinosaur_valuer',  # Calculadora de valor de dinossauros

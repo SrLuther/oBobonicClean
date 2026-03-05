@@ -122,6 +122,21 @@ class ComandosCog(commands.Cog):
         )
 
         e3.add_field(
+            name="🦕 ARK: Survival Evolved *(admin)*",
+            value=(
+                f"`{p}arkmapas` — Lista os mapas e portas RCON configurados\n"
+                f"`{p}arkstatus [mapa]` — Status dos servidores (online/offline e jogadores)\n"
+                f"`{p}arkplayers <mapa>` — Lista jogadores conectados em um mapa\n"
+                f"`{p}rcon <mapa> <comando>` — Envia qualquer comando RCON diretamente\n"
+                f"`{p}arkligar <mapa>` — Inicia o servidor via systemctl\n"
+                f"`{p}arkdesligar <mapa>` — Salva mundo e para o servidor *(pede confirmação)*\n"
+                f"`{p}arkreinicia <mapa>` — Avisa, salva e reinicia *(pede confirmação)*\n"
+                f"Mapas: `Ragnarok Omega` · `The Island` · `Genesis 2` · `Fjordur`"
+            ),
+            inline=False
+        )
+
+        e3.add_field(
             name="🔧 Administração do Bot *(admin)*",
             value=(
                 f"`{p}reload <cog>` / `{p}recarregar <cog>` — Recarrega uma extensão sem reiniciar o bot\n"

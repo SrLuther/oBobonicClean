@@ -21,6 +21,9 @@ flask==3.0.3
 yt-dlp
 PyNaCl
 
+# --- ARK: Survival Evolved RCON ---
+rcon
+
 # --- Otimizações (opcionais, mas muito úteis) ---
 ujson==5.10.0
 ruff==0.14.7
