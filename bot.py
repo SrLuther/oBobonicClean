@@ -1,6 +1,6 @@
 # bot.py
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import os
 from dotenv import load_dotenv
 import time
@@ -77,6 +77,55 @@ intents.members = True
 intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
+
+# ===============================
+# ARK PLAYER STATUS AUTO TASK
+# ===============================
+import asyncio
+from cogs.ark import rcon_run
+
+ARK_STATUS_CHANNEL_ID = 1482108203453124770  # Canal para status dos jogadores ARK
+ARK_STATUS_MESSAGE_ID = None  # Guardar o ID da mensagem para editar
+
+async def get_ark_players_status():
+    status_msgs = []
+    for map_info in config.ARK_MAPS.values():
+        name = map_info["name"]
+        try:
+            response = await asyncio.wait_for(
+                rcon_run(map_info["host"], map_info["port"], map_info["password"], "listplayers"),
+                timeout=12,
+            )
+            raw = response.strip()
+            if not raw or "No Players Connected" in raw:
+                status_msgs.append(f"**{name.upper()}**\n*Players: 0*\n")
+            else:
+                lines = [l.strip() for l in raw.splitlines() if l.strip()]
+                players = "\n".join(lines)
+                status_msgs.append(f"**{name.upper()}**\n*Players: {len(lines)}*\n\n{players}\n")
+        except Exception as e:
+            status_msgs.append(f"**{name.upper()}**\n*Erro ao consultar jogadores: {e}*\n")
+    return "--------------------\n".join(status_msgs)
+
+@tasks.loop(seconds=30)
+async def ark_status_task():
+    await bot.wait_until_ready()
+    channel = bot.get_channel(ARK_STATUS_CHANNEL_ID)
+    if not isinstance(channel, discord.TextChannel):
+        return
+    global ARK_STATUS_MESSAGE_ID
+    status_text = await get_ark_players_status()
+    embed = discord.Embed(title="Status dos Jogadores ARK", description=status_text, color=discord.Color.blue())
+    if ARK_STATUS_MESSAGE_ID:
+        try:
+            msg = await channel.fetch_message(ARK_STATUS_MESSAGE_ID)
+            await msg.edit(embed=embed)
+            return
+        except Exception:
+            ARK_STATUS_MESSAGE_ID = None
+    # Se não existe mensagem, envia nova
+    msg = await channel.send(embed=embed)
+    ARK_STATUS_MESSAGE_ID = msg.id
 
 COGS = config.COGS
 
@@ -448,6 +497,10 @@ async def on_ready():
 
     status_message = "✅ Bot pronto e rodando!" if cogs_loaded_successfully else "⚠️ Bot rodando (com falhas)!"
     print(status_message)
+
+    # Inicia a task de status ARK
+    if not ark_status_task.is_running():
+        ark_status_task.start()
 
 # --------------------
 # 7. EXECUÇÃO PRINCIPAL

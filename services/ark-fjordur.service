@@ -1,0 +1,15 @@
+[Unit]
+Description=ARK: Survival Evolved - Fjordur
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5
+User=multimax
+WorkingDirectory=/opt/obobonicclean
+# Ajuste o ExecStart para o comando correto do servidor ARK Fjordur
+ExecStart=/opt/obobonicclean/venv/bin/python /opt/obobonicclean/bot.py --map Fjordur
+
+[Install]
+WantedBy=multi-user.target

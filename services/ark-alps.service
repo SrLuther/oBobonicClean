@@ -1,0 +1,14 @@
+[Unit]
+Description=ARK: Survival Evolved - Alps
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5
+User=multimax
+WorkingDirectory=/opt/obobonicclean
+ExecStart=/opt/obobonicclean/venv/bin/python /opt/obobonicclean/bot.py --map Alps
+
+[Install]
+WantedBy=multi-user.target
