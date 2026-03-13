@@ -1,4 +1,5 @@
 @echo off
 cd /d "C:\Users\Ciano\Documents\oBobonicClean"
-python bot.py
+start /min cmd /c "call venv\Scripts\activate && python bot.py"
+exit
 pause
