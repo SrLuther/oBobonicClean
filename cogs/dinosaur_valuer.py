@@ -2267,8 +2267,8 @@ class DinosaurValuerCog(commands.Cog):
             await criar_paineis_automaticos(self.bot, canal, self.dados)
 
             await ctx.send(embed=discord.Embed(
-                title="✅ Painéis Criados",
-                description=f"Os 3 painéis (Vanilla, Primal Fear e Omega) foram criados em {canal.mention}!",
+                title="✅ Painel Criado",
+                description=f"O painel Vanilla foi criado em {canal.mention}!",
                 color=discord.Color.green()
             ))
 
@@ -2668,10 +2668,8 @@ async def setup(bot: commands.Bot):
     await bot.add_cog(cog)
     print("[DINOSAUR] 🦖 Cog adicionado!")
 
-    # Registrar persistência dos 3 painéis
+    # Registrar persistência do painel Vanilla
     bot.add_view(VanillaPanelView(bot, cog.dados))
-    bot.add_view(PrimalFearPanelView(bot, cog.dados))
-    bot.add_view(OmegaPanelView(bot, cog.dados))
     print("[DINOSAUR] 🦖 Views registradas!")
 
     # Criar painéis automaticamente
@@ -2683,18 +2681,17 @@ async def setup(bot: commands.Bot):
             if canal and isinstance(canal, discord.TextChannel):
                 config = carregar_painel_config()
 
-                # Deletar painéis anteriores
-                for key in ("vanilla_message_id", "primal_message_id", "omega_message_id"):
-                    msg_id = config.get(key)
-                    if msg_id:
-                        try:
-                            msg = await canal.fetch_message(msg_id)
-                            await msg.delete()
-                            print(f"[DINOSAUR] 🗑️ Painel anterior deletado ({key}: {msg_id})")
-                        except discord.NotFound:
-                            pass
-                        except Exception as e:
-                            print(f"[DINOSAUR] ⚠️ Erro ao deletar painel {key}: {e}")
+                # Deletar painel anterior
+                msg_id = config.get("vanilla_message_id")
+                if msg_id:
+                    try:
+                        msg = await canal.fetch_message(msg_id)
+                        await msg.delete()
+                        print(f"[DINOSAUR] 🗑️ Painel anterior deletado (vanilla_message_id: {msg_id})")
+                    except discord.NotFound:
+                        pass
+                    except Exception as e:
+                        print(f"[DINOSAUR] ⚠️ Erro ao deletar painel: {e}")
 
                 await criar_paineis_automaticos(bot, canal, cog.dados)
         else:
@@ -2706,9 +2703,18 @@ async def setup(bot: commands.Bot):
 
 
 async def criar_paineis_automaticos(bot: commands.Bot, canal: discord.TextChannel, dados: dict):
-    """Cria os 3 painéis de calculadora automaticamente no canal"""
+    """Cria o painel Vanilla de calculadora automaticamente no canal"""
     try:
-        print("[DINOSAUR] Criando 3 painéis...")
+        # LIMPAR CANAL ANTES DE CRIAR OS PAINÉIS
+        print("[DINOSAUR] Limpando canal...")
+        async for msg in canal.history(limit=None):
+            try:
+                await msg.delete()
+            except:
+                pass
+        print("[DINOSAUR] ✅ Canal limpo!")
+
+        print("[DINOSAUR] Criando painel Vanilla...")
         config_ids = {}
 
         total_dinos = len(dados.get("dinosaurs", {}))
@@ -2719,7 +2725,7 @@ async def criar_paineis_automaticos(bot: commands.Bot, canal: discord.TextChanne
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
         )
 
-        # ─── PAINEL 1: VANILLA ───────────────────────────────────────
+        # ─── PAINEL VANILLA ────────────────────────────────────────
         embed_vanilla = discord.Embed(
             title="🦴 ARK VANILLA — CALCULADORA DE DINOSSAUROS",
             description=(
@@ -2750,87 +2756,10 @@ async def criar_paineis_automaticos(bot: commands.Bot, canal: discord.TextChanne
         config_ids["vanilla_message_id"] = msg_v.id
         print(f"[DINOSAUR] ✅ Painel Vanilla criado (ID: {msg_v.id})")
 
-        # ─── PAINEL 2: PRIMAL FEAR ────────────────────────────────────
-        embed_pf = discord.Embed(
-            title="💀 PRIMAL FEAR — CALCULADORA DE DINOSSAUROS",
-            description=(
-                f"{aviso}"
-                "Cálculo com multiplicadores de **Tier Primal Fear**.\n\n"
-                "**📖 Como usar:**\n"
-                "1. Clique em **💀 Avaliar Primal Fear**\n"
-                "2. Digite o nome do dinossauro\n"
-                "3. Selecione o **Tier Primal Fear**\n"
-                "4. Informe se é castrado\n"
-                "5. Preencha os stats\n\n"
-                "**🔺 Tiers Primal Fear:**\n"
-                "🔴 Alpha — x10\n"
-                "🟠 Apex — x50\n"
-                "🟡 Fabled — x80\n"
-                "🟣 Demonic — x150\n"
-                "✨ Celestial — x500\n\n"
-                f"🦖 **{total_dinos} espécies disponíveis**\n\n"
-                "═══════════════════════════════════════"
-            ),
-            color=discord.Color.purple()
-        )
-        embed_pf.set_footer(text="Primal Fear | Clique no botão para calcular!")
-
-        view_pf = PrimalFearPanelView(bot, dados)
-        msg_pf = await canal.send(embed=embed_pf, view=view_pf)
-        await msg_pf.pin()
-        config_ids["primal_message_id"] = msg_pf.id
-        print(f"[DINOSAUR] ✅ Painel Primal Fear criado (ID: {msg_pf.id})")
-
-        # ─── PAINEL 3: OMEGA ──────────────────────────────────────────
-        embed_omega = discord.Embed(
-            title="⚡ OMEGA — CALCULADORA DE DINOSSAUROS",
-            description=(
-                f"{aviso}"
-                "Cálculo com **Tier**, **Variante** e **Paragon** do mod Omega.\n\n"
-                "**📖 Como usar:**\n"
-                "1. Clique em **⚡ Avaliar Omega**\n"
-                "2. Digite o nome do dinossauro\n"
-                "3. Selecione o **Tier Omega**\n"
-                "4. Selecione a **Variante** (opcional)\n"
-                "5. Preencha os stats e o **Paragon** (0-5)\n\n"
-                "**⚡ Tiers Omega:**\n"
-                "🔵 Basic — x1\n"
-                "🟢 Augmented — x1.8\n"
-                "🟡 Superior — x3.5\n"
-                "🟠 Alpha — x7\n"
-                "🔴 Omega — x15\n"
-                "🟣 Mythical — x30\n"
-                "✨ Legendary — x60\n"
-                "⚡ Godlike — x120\n"
-                "🌟 Celestial — x240\n"
-                "💀 Chaos — x480\n"
-                "♾️ Eternal — x960\n\n"
-                "**🎨 Variantes:**\n"
-                "🔥 Fire — x1.2\n"
-                "❄️ Ice — x1.2\n"
-                "⚡ Lightning — x1.3\n"
-                "☠️ Poison — x1.2\n"
-                "🌟 Celestial — x1.5\n"
-                "💀 Chaos — x1.5\n\n"
-                "**🏆 Paragon:**\n"
-                "P1 — x2 | P2 — x4 | P3 — x8 | P4 — x16 | P5 — x32\n\n"
-                f"🦖 **{total_dinos} espécies disponíveis**\n\n"
-                "═══════════════════════════════════════"
-            ),
-            color=discord.Color.from_rgb(255, 80, 0)
-        )
-        embed_omega.set_footer(text="Omega | Clique no botão para calcular!")
-
-        view_omega = OmegaPanelView(bot, dados)
-        msg_om = await canal.send(embed=embed_omega, view=view_omega)
-        await msg_om.pin()
-        config_ids["omega_message_id"] = msg_om.id
-        print(f"[DINOSAUR] ✅ Painel Omega criado (ID: {msg_om.id})")
-
         salvar_painel_config(config_ids)
-        print("[DINOSAUR] ✅ Configuração dos 3 painéis salva!")
+        print("[DINOSAUR] ✅ Configuração do painel salva!")
 
     except Exception as e:
-        print(f"[DINOSAUR] ❌ Erro ao criar painéis: {e}")
+        print(f"[DINOSAUR] ❌ Erro ao criar painel: {e}")
         import traceback
         traceback.print_exc()

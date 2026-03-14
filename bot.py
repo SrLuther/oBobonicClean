@@ -161,28 +161,9 @@ async def recriar_todos_os_painels():
             print("⚠️ [REINICIO] Guild não encontrada, pulando limpeza de painels")
             return
         
-        # ========== LIMPAR E RECRIAR PAINEL DE CALCULADORA ==========
-        try:
-            VALUATION_CHANNEL_ID = 1474164587141271709
-            from cogs.dinosaur_valuer import criar_painel_automatico, carregar_dados_dinos
-            
-            canal_calcula = guild.get_channel(VALUATION_CHANNEL_ID)
-            if isinstance(canal_calcula, discord.TextChannel):
-                # Limpar todo o canal
-                async for msg in canal_calcula.history(limit=None):
-                    try:
-                        await msg.delete()
-                    except:
-                        pass
-                print(f"✅ [REINICIO] Canal de calculadora ({VALUATION_CHANNEL_ID}) limpado")
-                
-                # Recriar painel
-                await asyncio.sleep(1)
-                dados_dinos = carregar_dados_dinos()
-                await criar_painel_automatico(bot, canal_calcula, dados_dinos)
-                print("✅ [REINICIO] Painel de calculadora recriado com sucesso!")
-        except Exception as e:
-            print(f"⚠️ [REINICIO] Erro ao recriar painel de calculadora: {e}")
+        # ========== NOTA: PAINEL DE CALCULADORA JÁ É CRIADO AUTOMATICAMENTE PELO COGS/DINOSAUR_VALUER.PY ==========
+        # O cog dinosaur_valuer.py agora gerencia a criação e manutenção do painel automaticamente via cog_load()
+        # Nenhuma ação manual é necessária aqui
         
         # ========== LIMPAR E RECRIAR PAINEL DE LOJAS ==========
         try:
