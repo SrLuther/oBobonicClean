@@ -14,8 +14,8 @@
       "status": "online",
       "player_count": 0,
       "online_players": [],
-      "last_check": "2026-04-12T16:33:54.862822",
-      "last_online": "2026-04-12T16:33:54.862822",
+      "last_check": "2026-04-12T16:35:54.879611",
+      "last_online": "2026-04-12T16:35:54.879611",
       "last_offline": "2026-04-12T14:20:50.932850",
       "consecutive_timeouts": 0,
       "message_id": null
@@ -36,8 +36,8 @@
       "status": "online",
       "player_count": 0,
       "online_players": [],
-      "last_check": "2026-04-12T16:33:54.873334",
-      "last_online": "2026-04-12T16:33:54.873334",
+      "last_check": "2026-04-12T16:35:54.858832",
+      "last_online": "2026-04-12T16:35:54.858832",
       "last_offline": "2026-04-12T14:20:50.917019",
       "consecutive_timeouts": 0,
       "message_id": null
@@ -52,8 +52,8 @@
         "LUCAS FARIAS",
         "Its_Harux"
       ],
-      "last_check": "2026-04-12T16:33:54.876337",
-      "last_online": "2026-04-12T16:33:54.876337",
+      "last_check": "2026-04-12T16:35:54.875090",
+      "last_online": "2026-04-12T16:35:54.875090",
       "last_offline": "2026-04-12T14:20:50.903415",
       "consecutive_timeouts": 0,
       "message_id": null
@@ -279,12 +279,12 @@
     }
   ],
   "dashboard_messages": {
-    "Ragnarok Omega": 1492937634471874560,
-    "Rotativo": 1492937636359180378,
-    "Genesis 2": 1492937643519115434,
+    "Ragnarok Omega": 1492971371565940928,
+    "Rotativo": 1492971374460010717,
+    "Genesis 2": 1492971376804368595,
     "Fjordur": 1492334859174285313,
     "Alps": 1492334884516270090
   },
-  "last_updated": "2026-04-12T16:33:54.876337",
+  "last_updated": "2026-04-12T16:35:54.879611",
   "monitoring_started": "2026-04-10T22:23:06.559981"
 }
