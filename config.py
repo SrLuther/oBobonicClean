@@ -90,6 +90,9 @@ ARK_DEFAULT_PASSWORD = os.getenv("ARK_RCON_PASSWORD", "")
 # Canal exclusivo onde os comandos ARK RCON podem ser usados
 ARK_CANAL_RCON_ID = get_int_env("ARK_CANAL_RCON_ID", 1479003271623610428)
 
+# Canal de painéis automáticos (status dos servidores em tempo real)
+RCON_DASHBOARDS_CHANNEL_ID = get_int_env("RCON_DASHBOARDS_CHANNEL_ID", 1489699180619239628)
+
 # Carrega mapas dinamicamente a partir das variáveis:
 #   ARK_MAP1_NAME, ARK_MAP1_PORT, ARK_MAP1_HOST (opc.), ARK_MAP1_PASSWORD (opc.)
 #   ARK_MAP2_NAME, ARK_MAP2_PORT, ...
