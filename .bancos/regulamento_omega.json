@@ -1,0 +1,53 @@
+{
+  "titulo": "🗺️ ArkLand Brasil • Omega • Ragnarok",
+  "subtitulo": "Versão Atualizada - Obrigatório para todos em progressão avançada/endgame",
+  "aviso_principal": "⚠️ AVISO PRINCIPAL\nMesmo sendo **TOTALMENTE PvE**, suas criaturas, invocações e construções podem:\n• Matar outros jogadores\n• Destruir bases e progresso alheio\n• Causar lag no servidor\n\n**VOCÊ É 100% RESPONSÁVEL** por TUDO que causar.\nPvE ≠ Sem regras ou consequências.\n**Respeito mútuo é lei aqui.**",
+  "regras": [
+    {
+      "numero": 1,
+      "titulo": "ÁREAS PROTEGIDAS (Ragnarok)",
+      "conteudo": "🚫 PROIBIDO construir, colocar estruturas, teleporters ou deixar criaturas em:\n• Desert Arena\n• Lava Golem Arena\n• Ice Queen Arena\n• Dragon Arena\n• Wyvern Trench\n• **Qualquer spawn de Boss ou Artefato**\n\n**Distância mínima:** **100 fundações** (em linha reta).\n\n**Motivo:** Essencial para progressão de **TODOS**.\n**Penalidade:** Remoção imediata + advertência/ban."
+    },
+    {
+      "numero": 2,
+      "titulo": "CRIATURAS DE ALTO RISCO",
+      "conteudo": "*(Omega, Unique, Godlike, Ancient, Group Godlike e upgrades com almas de God/Group God do mod Omega)*\n\nEssas são **EXTREMAMENTE perigosas** mesmo em PvE.\n\n**✅ OBRIGATÓRIO:**\n• Sempre em **Passive**\n• **NUNCA** em Aggressive/Wandering\n• **NUNCA** soltas fora da base (sem supervisão)\n• **Soultrap** ao sair/logoff\n• Use **Dino Storage** para excesso\n\n**🚫 PROIBIDO:** Deixar sem supervisão ou soltas.\n\n**Penalidade:** Remoção das criaturas + ban em reincidência."
+    },
+    {
+      "numero": 3,
+      "titulo": "INVOCAÇÃO DE BOSSES & EVENTOS",
+      "conteudo": "**Permitido**, mas:\n• **Distância mínima de QUALQUER base:** **150 fundações**\n• **Somente** em áreas isoladas ou arenas próprias\n• **🚫 NUNCA** em áreas públicas/protegidas/rotas\n\n**Você responde por TODO dano** (mortes, destruição, lag).\n**Penalidade:** Remoção + reparação + ban."
+    },
+    {
+      "numero": 4,
+      "titulo": "GRIEFING (PROIBIDO - MESMO PvE)",
+      "conteudo": "**Exemplos:**\n• Atrair mobs/bosses para bases alheias\n• Invocações perto de outros\n• Trollar iniciantes com OP dinos\n• Bloquear recursos/spawns\n• Teleporters públicos em áreas protegidas\n\n**Penalidade:** **BAN PERMANENTE** (sem aviso)."
+    },
+    {
+      "numero": 5,
+      "titulo": "BASES, CONSTRUÇÃO & LAG",
+      "conteudo": "**🚫 PROIBIDO:**\n• Spam de estruturas/fundações (incluindo S+)\n• Bases gigantes desnecessárias\n• Excesso de entidades (tochas, dinos renderizados)\n\nAdmins removem **sem aviso** se causar lag.\n**Dica:** Otimize com S+ e Dino Storage."
+    },
+    {
+      "numero": 6,
+      "titulo": "LIMITE DE CRIATURAS ENDGAME",
+      "conteudo": "• Máximo de **50 criaturas** fora da Soultrap por tribo (inclui farm, exposição, tudo)\n• Soultrap para o resto\n• Se passar: advertência\n• **Terceira vez:** advertência rigorosa + possível ban"
+    },
+    {
+      "numero": 7,
+      "titulo": "BUGS & EXPLOITS",
+      "conteudo": "• Todo bug deve ser reportado aos admins\n• Abuso identificado (tribo ou jogador): **ban imediato**"
+    },
+    {
+      "numero": 8,
+      "titulo": "PODER DOS ADMINS",
+      "conteudo": "• Remover criaturas/bases/estruturas para proteger servidor\n• Reverter danos causados por irresponsabilidade\n• **Sem discussão** em casos claros."
+    },
+    {
+      "numero": 9,
+      "titulo": "REGRA FINAL",
+      "conteudo": "**PvE = Progressão + Respeito.**\nSeu poder **NÃO** pode foder a experiência dos outros.\n\n**Reaja com ☠️ para confirmar!**"
+    }
+  ],
+  "assinatura": "🗺️ ArkLand Brasil • Omega • Ragnarok PvE\n*Mods: [Acessar oficina](<https://steamcommunity.com/sharedfiles/filedetails/?id=3239651918>)*"
+}

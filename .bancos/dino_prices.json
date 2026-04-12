@@ -1,0 +1,2367 @@
+{
+  "dinosaurs": {
+    "achatina": {
+      "name": "Achatina",
+      "base_value": 1500,
+      "stat_multipliers": {
+        "melee": 130,
+        "health": 81,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "acrocanthosaurus": {
+      "name": "Acrocanthosaurus",
+      "base_value": 6500,
+      "stat_multipliers": {
+        "melee": 195,
+        "health": 128,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "allosaurus": {
+      "name": "Allosaurus",
+      "base_value": 3500,
+      "stat_multipliers": {
+        "melee": 170,
+        "health": 110,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "amargasaurus": {
+      "name": "Amargasaurus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "andrewsarchus": {
+      "name": "Andrewsarchus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "anglerfish": {
+      "name": "Anglerfish",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "ankylosaurus": {
+      "name": "Ankylosaurus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "farming"
+    },
+    "araneo": {
+      "name": "Araneo",
+      "base_value": 1500,
+      "stat_multipliers": {
+        "melee": 130,
+        "health": 81,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "archaeopteryx": {
+      "name": "Archaeopteryx",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "utilidade"
+    },
+    "archelon": {
+      "name": "Archelon",
+      "base_value": 3500,
+      "stat_multipliers": {
+        "melee": 170,
+        "health": 110,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "argentavis": {
+      "name": "Argentavis",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "transporte"
+    },
+    "armadillo": {
+      "name": "Armadillo",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "farming"
+    },
+    "armaedron": {
+      "name": "Armaedron",
+      "base_value": 8000,
+      "stat_multipliers": {
+        "melee": 215,
+        "health": 137,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "arthropluera": {
+      "name": "Arthropluera",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "astrocetus": {
+      "name": "Astrocetus",
+      "base_value": 5500,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 138,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "transporte"
+    },
+    "astrodelphis": {
+      "name": "Astrodelphis",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "baryonyx": {
+      "name": "Baryonyx",
+      "base_value": 3500,
+      "stat_multipliers": {
+        "melee": 170,
+        "health": 110,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "basilisk": {
+      "name": "Basilisk",
+      "base_value": 6000,
+      "stat_multipliers": {
+        "melee": 220,
+        "health": 145,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "basilosaurus": {
+      "name": "Basilosaurus",
+      "base_value": 3500,
+      "stat_multipliers": {
+        "melee": 170,
+        "health": 110,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "beelzebufo": {
+      "name": "Beelzebufo",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "utilidade"
+    },
+    "bloodstalker": {
+      "name": "Bloodstalker",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 200,
+        "health": 131,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "brachiosaurus": {
+      "name": "Brachiosaurus",
+      "base_value": 3500,
+      "stat_multipliers": {
+        "melee": 170,
+        "health": 110,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "transporte"
+    },
+    "brontosaurus": {
+      "name": "Brontosaurus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "transporte"
+    },
+    "bulbdog": {
+      "name": "Bulbdog",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "utilidade"
+    },
+    "carbonemys": {
+      "name": "Carbonemys",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "criacao"
+    },
+    "carcharadontosaurus": {
+      "name": "Carcharadontosaurus",
+      "base_value": 20000,
+      "stat_multipliers": {
+        "melee": 400,
+        "health": 250,
+        "stamina": 45,
+        "weight": 35,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "carnotaurus": {
+      "name": "Carnotaurus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "castoroides": {
+      "name": "Castoroides",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "farming"
+    },
+    "ceratosaurus": {
+      "name": "Ceratosaurus",
+      "base_value": 5500,
+      "stat_multipliers": {
+        "melee": 185,
+        "health": 122,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "chalicotherium": {
+      "name": "Chalicotherium",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "coelacanth": {
+      "name": "Coelacanth",
+      "base_value": 1500,
+      "stat_multipliers": {
+        "melee": 130,
+        "health": 81,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "compy": {
+      "name": "Compy",
+      "base_value": 1500,
+      "stat_multipliers": {
+        "melee": 130,
+        "health": 81,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "utilidade"
+    },
+    "concavenator": {
+      "name": "Concavenator",
+      "base_value": 4800,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 120,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "cryolophosaurus": {
+      "name": "Cryolophosaurus",
+      "base_value": 4200,
+      "stat_multipliers": {
+        "melee": 175,
+        "health": 115,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "daeodon": {
+      "name": "Daeodon",
+      "base_value": 3500,
+      "stat_multipliers": {
+        "melee": 170,
+        "health": 110,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "criacao"
+    },
+    "deinonychus": {
+      "name": "Deinonychus",
+      "base_value": 3500,
+      "stat_multipliers": {
+        "melee": 170,
+        "health": 110,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "deinosuchus": {
+      "name": "Deinosuchus",
+      "base_value": 5200,
+      "stat_multipliers": {
+        "melee": 182,
+        "health": 121,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "deinotherium": {
+      "name": "Deinotherium",
+      "base_value": 4000,
+      "stat_multipliers": {
+        "melee": 170,
+        "health": 110,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "farming"
+    },
+    "desmodus": {
+      "name": "Desmodus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "dilophosaur": {
+      "name": "Dilophosaur",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "dinopithecus": {
+      "name": "Dinopithecus",
+      "base_value": 3500,
+      "stat_multipliers": {
+        "melee": 170,
+        "health": 110,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "diplocaulus": {
+      "name": "Diplocaulus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "transporte"
+    },
+    "diplodocus": {
+      "name": "Diplodocus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "criacao"
+    },
+    "direbear": {
+      "name": "Direbear",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "direwolf": {
+      "name": "Direwolf",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "dodo": {
+      "name": "Dodo",
+      "base_value": 1500,
+      "stat_multipliers": {
+        "melee": 130,
+        "health": 81,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "doedicurus": {
+      "name": "Doedicurus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "farming"
+    },
+    "dunkleosteus": {
+      "name": "Dunkleosteus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "farming"
+    },
+    "electrophorus": {
+      "name": "Electrophorus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "enforcer": {
+      "name": "Enforcer",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "equus": {
+      "name": "Equus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "transporte"
+    },
+    "featherlight": {
+      "name": "Featherlight",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "utilidade"
+    },
+    "ferox": {
+      "name": "Ferox",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 200,
+        "health": 131,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "fjordhawk": {
+      "name": "Fjordhawk",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "gacha": {
+      "name": "Gacha",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "gallimimus": {
+      "name": "Gallimimus",
+      "base_value": 1500,
+      "stat_multipliers": {
+        "melee": 130,
+        "health": 81,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "transporte"
+    },
+    "gasbags": {
+      "name": "Gasbags",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "giganotosaurus": {
+      "name": "Giganotosaurus",
+      "base_value": 22500,
+      "stat_multipliers": {
+        "melee": 410,
+        "health": 260,
+        "stamina": 45,
+        "weight": 35,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "gigantopithecus": {
+      "name": "Gigantopithecus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "farming"
+    },
+    "glowtail": {
+      "name": "Glowtail",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "utilidade"
+    },
+    "griffin": {
+      "name": "Griffin",
+      "base_value": 4500,
+      "stat_multipliers": {
+        "melee": 190,
+        "health": 125,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "transporte"
+    },
+    "helicoprion": {
+      "name": "Helicoprion",
+      "base_value": 3800,
+      "stat_multipliers": {
+        "melee": 168,
+        "health": 108,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "hesperornis": {
+      "name": "Hesperornis",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "hyaenodon": {
+      "name": "Hyaenodon",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "ichthyornis": {
+      "name": "Ichthyornis",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "utilidade"
+    },
+    "ichthyosaurus": {
+      "name": "Ichthyosaurus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "iguanodon": {
+      "name": "Iguanodon",
+      "base_value": 1500,
+      "stat_multipliers": {
+        "melee": 130,
+        "health": 81,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "jerboa": {
+      "name": "Jerboa",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "kairuku": {
+      "name": "Kairuku",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "kaprosuchus": {
+      "name": "Kaprosuchus",
+      "base_value": 3500,
+      "stat_multipliers": {
+        "melee": 170,
+        "health": 110,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "karkinos": {
+      "name": "Karkinos",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "farming"
+    },
+    "kentrosaurus": {
+      "name": "Kentrosaurus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "liopleurodon": {
+      "name": "Liopleurodon",
+      "base_value": 3500,
+      "stat_multipliers": {
+        "melee": 170,
+        "health": 110,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "lymantria": {
+      "name": "Lymantria",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "lystrosaurus": {
+      "name": "Lystrosaurus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "utilidade"
+    },
+    "maewing": {
+      "name": "Maewing",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "criacao"
+    },
+    "magmasaur": {
+      "name": "Magmasaur",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 200,
+        "health": 131,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "farming"
+    },
+    "mammoth": {
+      "name": "Mammoth",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "farming"
+    },
+    "managarmr": {
+      "name": "Managarmr",
+      "base_value": 4800,
+      "stat_multipliers": {
+        "melee": 195,
+        "health": 128,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "manta": {
+      "name": "Manta",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "mantis": {
+      "name": "Mantis",
+      "base_value": 3500,
+      "stat_multipliers": {
+        "melee": 170,
+        "health": 110,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "farming"
+    },
+    "megachelon": {
+      "name": "Megachelon",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "criacao"
+    },
+    "megalania": {
+      "name": "Megalania",
+      "base_value": 3500,
+      "stat_multipliers": {
+        "melee": 170,
+        "health": 110,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "megaloceros": {
+      "name": "Megaloceros",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "megalodon": {
+      "name": "Megalodon",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "megalosaurus": {
+      "name": "Megalosaurus",
+      "base_value": 3500,
+      "stat_multipliers": {
+        "melee": 170,
+        "health": 110,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "megatherium": {
+      "name": "Megatherium",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "mesopithecus": {
+      "name": "Mesopithecus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "utilidade"
+    },
+    "microraptor": {
+      "name": "Microraptor",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "morellatops": {
+      "name": "Morellatops",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "mosasaurus": {
+      "name": "Mosasaurus",
+      "base_value": 3500,
+      "stat_multipliers": {
+        "melee": 170,
+        "health": 110,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "moschops": {
+      "name": "Moschops",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "noglin": {
+      "name": "Noglin",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "onyc": {
+      "name": "Onyc",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "otter": {
+      "name": "Otter",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "utilidade"
+    },
+    "oviraptor": {
+      "name": "Oviraptor",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "criacao"
+    },
+    "ovis": {
+      "name": "Ovis",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "pachy": {
+      "name": "Pachy",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "pachyrhinosaurus": {
+      "name": "Pachyrhinosaurus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "paraceratherium": {
+      "name": "Paraceratherium",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "criacao"
+    },
+    "parasaur": {
+      "name": "Parasaur",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "pegomastax": {
+      "name": "Pegomastax",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "pelagornis": {
+      "name": "Pelagornis",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "phiomia": {
+      "name": "Phiomia",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "criacao"
+    },
+    "phoenix": {
+      "name": "Phoenix",
+      "base_value": 6000,
+      "stat_multipliers": {
+        "melee": 220,
+        "health": 145,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "plesiosaur": {
+      "name": "Plesiosaur",
+      "base_value": 3500,
+      "stat_multipliers": {
+        "melee": 170,
+        "health": 110,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "procoptodon": {
+      "name": "Procoptodon",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "criacao"
+    },
+    "pteranodon": {
+      "name": "Pteranodon",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "transporte"
+    },
+    "pulmonoscorpius": {
+      "name": "Pulmonoscorpius",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "puretotokage": {
+      "name": "Puretotokage",
+      "base_value": 4300,
+      "stat_multipliers": {
+        "melee": 173,
+        "health": 113,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "quetzal": {
+      "name": "Quetzal",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "transporte"
+    },
+    "raptor": {
+      "name": "Raptor",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "ravager": {
+      "name": "Ravager",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "sabertooth": {
+      "name": "Sabertooth",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "sarcosuchus": {
+      "name": "Sarcosuchus",
+      "base_value": 5500,
+      "stat_multipliers": {
+        "melee": 180,
+        "health": 120,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "shinehorn": {
+      "name": "Shinehorn",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "utilidade"
+    },
+    "sinomacrops": {
+      "name": "Sinomacrops",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "spinosaur": {
+      "name": "Spinosaur",
+      "base_value": 7500,
+      "stat_multipliers": {
+        "melee": 230,
+        "health": 150,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "spinosaurus": {
+      "name": "Spinosaurus",
+      "base_value": 3500,
+      "stat_multipliers": {
+        "melee": 170,
+        "health": 110,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "stegosaurus": {
+      "name": "Stegosaurus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "tapejara": {
+      "name": "Tapejara",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "transporte"
+    },
+    "therizinosaur": {
+      "name": "Therizinosaur",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "therizinosaurus": {
+      "name": "Therizinosaurus",
+      "base_value": 7000,
+      "stat_multipliers": {
+        "melee": 220,
+        "health": 145,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "thylacoleo": {
+      "name": "Thylacoleo",
+      "base_value": 3500,
+      "stat_multipliers": {
+        "melee": 170,
+        "health": 110,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "titanoboa": {
+      "name": "Titanoboa",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "triceratops": {
+      "name": "Triceratops",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "troodon": {
+      "name": "Troodon",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "utilidade"
+    },
+    "tropeognathus": {
+      "name": "Tropeognathus",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "tusoteuthis": {
+      "name": "Tusoteuthis",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "velonasaur": {
+      "name": "Velonasaur",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "vulture": {
+      "name": "Vulture",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 95,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "utilidade"
+    },
+    "wyvern": {
+      "name": "Wyvern",
+      "base_value": 6000,
+      "stat_multipliers": {
+        "melee": 190,
+        "health": 125,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "xiphactinus": {
+      "name": "Xiphactinus",
+      "base_value": 4100,
+      "stat_multipliers": {
+        "melee": 172,
+        "health": 112,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "yutyrannus": {
+      "name": "Yutyrannus",
+      "base_value": 5000,
+      "stat_multipliers": {
+        "melee": 200,
+        "health": 131,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "diru_ya_ku": {
+      "name": "Diru-Ya-Ku",
+      "base_value": 2500,
+      "stat_multipliers": {
+        "melee": 160,
+        "health": 105,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "outros"
+    },
+    "domination_rex": {
+      "name": "Domination Rex",
+      "base_value": 18000,
+      "stat_multipliers": {
+        "melee": 205,
+        "health": 132,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "kutsu_ya_ku": {
+      "name": "Kutsu-Ya-Ku",
+      "base_value": 3200,
+      "stat_multipliers": {
+        "melee": 165,
+        "health": 107,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "moro_raptor": {
+      "name": "Moro Raptor",
+      "base_value": 6500,
+      "stat_multipliers": {
+        "melee": 200,
+        "health": 125,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+    "moro_rex": {
+      "name": "Moro Rex",
+      "base_value": 8500,
+      "stat_multipliers": {
+        "melee": 210,
+        "health": 135,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    }
+  }
+}

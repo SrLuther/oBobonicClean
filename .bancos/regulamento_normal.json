@@ -1,0 +1,48 @@
+{
+  "titulo": "🗺️ ArkLand Brasil",
+  "subtitulo": "Versão Atualizada - Regras pra todo mundo jogar tranquilo",
+  "aviso_principal": "⚠️ AVISO PRINCIPAL\nMesmo sendo **TOTALMENTE PvE**, suas criaturas e construções podem:\n• Matar outros jogadores\n• Destruir bases e progresso alheio\n• Causar lag no servidor\n\n**VOCÊ É 100% RESPONSÁVEL** por TUDO que causar.\nPvE ≠ Sem regras ou consequências.\n**Respeito mútuo é lei aqui.**",
+  "regras": [
+    {
+      "numero": 1,
+      "titulo": "ÁREAS PROTEGIDAS",
+      "conteudo": "🚫 PROIBIDO construir, colocar estruturas, teleporters ou deixar criaturas em:\n• Arenas de boss\n• Spawns de artefato ou boss\n\n**Distância mínima:** **100 fundações** (em linha reta).\n\n**Motivo:** Essencial para progressão de **TODOS**.\n**Penalidade:** Remoção imediata + advertência/ban."
+    },
+    {
+      "numero": 2,
+      "titulo": "CRIATURAS & COMPORTAMENTO",
+      "conteudo": "• Sempre em **Passive** (exceto pra farmar com cuidado).\n• **NUNCA** em Aggressive/Wandering sem supervisão.\n• **Dino Storage** ou **Soul Gun** pra excesso.\n• **Proibido** deixar dinos soltos fora da base.\n\n**Penalidade:** Remoção automática + advertência em reincidência."
+    },
+    {
+      "numero": 3,
+      "titulo": "INVOCAÇÃO DE BOSSES & EVENTOS",
+      "conteudo": "**Permitido**, mas:\n• **Distância mínima de QUALQUER base:** **150 fundações**\n• **Somente** em áreas isoladas ou arenas próprias\n• **🚫 NUNCA** em rotas públicas ou protegidas\n\n**Você responde por TODO dano** (mortes, destruição, lag).\n**Penalidade:** Remoção + reparação + possível ban."
+    },
+    {
+      "numero": 4,
+      "titulo": "GRIEFING (PROIBIDO - MESMO PvE)",
+      "conteudo": "**Exemplos:**\n• Atrair mobs/bosses pra base alheia\n• Trollar novatos com dinos fortes\n• Bloquear recursos/spawns\n• Teleporters públicos em áreas protegidas\n\n**Penalidade:** **BAN PERMANENTE** (sem aviso)."
+    },
+    {
+      "numero": 5,
+      "titulo": "BASES, CONSTRUÇÃO & LAG",
+      "conteudo": "**🚫 PROIBIDO:**\n• Spam de estruturas/fundações (incluindo S+)\n• Bases gigantes desnecessárias\n• Excesso de entidades (tochas, dinos renderizados)\n\nAdmins removem **sem aviso** se causar lag.\n**Dica:** Otimize com S+ e Dino Storage."
+    },
+    {
+      "numero": 6,
+      "titulo": "LIMITE DE CRIATURAS",
+      "conteudo": "• Máximo de **50 criaturas** fora da Dino Storage por tribo (inclui farm, exposição, tudo)\n• O resto no storage\n• Se passar: advertência\n• **Terceira vez:** advertência rigorosa + possível ban"
+    },
+    {
+      "numero": 7,
+      "titulo": "PODER DOS ADMINS",
+      "conteudo": "• Remover criaturas/bases/estruturas para proteger servidor\n• Reverter danos causados por irresponsabilidade\n• **Sem discussão** em casos claros."
+    },
+    {
+      "numero": 8,
+      "titulo": "REGRA FINAL",
+      "conteudo": "**PvE = Progressão + Respeito.**\nSeu poder **NÃO** pode foder a experiência dos outros.\n\n**Reaja com ☠️ para confirmar!**"
+    }
+  ],
+  "assinatura": "🗺️ ArkLand Brasil • Vanilla+ PvE\n*Mods: [Acessar oficina](<https://steamcommunity.com/sharedfiles/filedetails/?id=3205869831>)*"
+}

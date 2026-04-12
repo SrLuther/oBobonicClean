@@ -1,0 +1,221 @@
+{
+  "servers": {
+    "Rotativo": {
+      "status": "offline",
+      "player_count": 0,
+      "online_players": [],
+      "last_check": "2026-04-12T14:20:15.809662",
+      "last_online": "2026-04-12T01:12:05.428057",
+      "last_offline": "2026-04-12T14:20:15.809662",
+      "consecutive_timeouts": 1,
+      "message_id": null
+    },
+    "Alps": {
+      "status": "online",
+      "player_count": 1,
+      "online_players": [
+        "Felipe Matt"
+      ],
+      "last_check": "2026-04-12T00:16:21.420420",
+      "last_online": "2026-04-12T00:16:21.420420",
+      "last_offline": null,
+      "consecutive_timeouts": 0,
+      "message_id": null
+    },
+    "Genesis 2": {
+      "status": "offline",
+      "player_count": 0,
+      "online_players": [],
+      "last_check": "2026-04-12T14:20:16.999576",
+      "last_online": "2026-04-12T01:12:05.422006",
+      "last_offline": "2026-04-12T14:20:16.999576",
+      "consecutive_timeouts": 1,
+      "message_id": null
+    },
+    "Ragnarok Omega": {
+      "status": "offline",
+      "player_count": 0,
+      "online_players": [],
+      "last_check": "2026-04-12T14:20:16.643435",
+      "last_online": "2026-04-12T01:12:05.440523",
+      "last_offline": "2026-04-12T14:20:16.643435",
+      "consecutive_timeouts": 1,
+      "message_id": null
+    },
+    "Fjordur": {
+      "status": "offline",
+      "player_count": 0,
+      "online_players": [],
+      "last_check": "2026-04-12T00:16:18.208830",
+      "last_online": null,
+      "last_offline": "2026-04-12T00:16:18.208830",
+      "consecutive_timeouts": 51,
+      "message_id": null
+    }
+  },
+  "events": [
+    {
+      "timestamp": "2026-04-11T23:38:30.503114",
+      "server": "Rotativo",
+      "type": "server_online",
+      "details": "Servidor voltou online (0 players)",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-11T23:38:30.587938",
+      "server": "Alps",
+      "type": "server_online",
+      "details": "Servidor voltou online (2 players)",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-11T23:38:30.590464",
+      "server": "Alps",
+      "type": "player_joined",
+      "details": "Player joined: F?rza",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-11T23:38:30.606628",
+      "server": "Alps",
+      "type": "player_joined",
+      "details": "Player joined: Felipe Matt",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-11T23:38:30.625899",
+      "server": "Genesis 2",
+      "type": "server_online",
+      "details": "Servidor voltou online (0 players)",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-11T23:38:31.348640",
+      "server": "Ragnarok Omega",
+      "type": "server_online",
+      "details": "Servidor voltou online (5 players)",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-11T23:38:31.354194",
+      "server": "Ragnarok Omega",
+      "type": "player_joined",
+      "details": "Player joined: Its_Harux",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-11T23:38:31.357726",
+      "server": "Ragnarok Omega",
+      "type": "player_joined",
+      "details": "Player joined: Erisvander",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-11T23:38:31.361240",
+      "server": "Ragnarok Omega",
+      "type": "player_joined",
+      "details": "Player joined: vzs",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-11T23:38:31.363792",
+      "server": "Ragnarok Omega",
+      "type": "player_joined",
+      "details": "Player joined: ShinKusuo",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-11T23:38:31.365309",
+      "server": "Ragnarok Omega",
+      "type": "player_joined",
+      "details": "Player joined: sergeismitt",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-11T23:39:11.186090",
+      "server": "Fjordur",
+      "type": "server_offline",
+      "details": "Servidor offline (era 0 players)",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-11T23:51:03.314452",
+      "server": "Ragnarok Omega",
+      "type": "player_joined",
+      "details": "Player joined: Maykel 2011",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-11T23:57:01.505588",
+      "server": "Ragnarok Omega",
+      "type": "player_left",
+      "details": "Player left: Maykel 2011",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-12T00:05:09.147170",
+      "server": "Ragnarok Omega",
+      "type": "player_left",
+      "details": "Player left: Erisvander",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-12T00:10:19.760966",
+      "server": "Alps",
+      "type": "player_left",
+      "details": "Player left: F?rza",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-12T00:11:04.640137",
+      "server": "Genesis 2",
+      "type": "player_joined",
+      "details": "Player joined: F?rza",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-12T00:34:35.455938",
+      "server": "Ragnarok Omega",
+      "type": "player_left",
+      "details": "Player left: ShinKusuo",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-12T00:59:05.438826",
+      "server": "Ragnarok Omega",
+      "type": "player_joined",
+      "details": "Player joined: Erisvander",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-12T14:20:15.810666",
+      "server": "Rotativo",
+      "type": "server_offline",
+      "details": "Servidor offline (era 0 players)",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-12T14:20:16.643435",
+      "server": "Ragnarok Omega",
+      "type": "server_offline",
+      "details": "Servidor offline (era 4 players)",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-12T14:20:16.999576",
+      "server": "Genesis 2",
+      "type": "server_offline",
+      "details": "Servidor offline (era 1 players)",
+      "level": "INFO"
+    }
+  ],
+  "dashboard_messages": {
+    "Ragnarok Omega": 1492739117119705128,
+    "Rotativo": 1492739119288291380,
+    "Genesis 2": 1492739121897013398,
+    "Fjordur": 1492724496082145520,
+    "Alps": 1492724518207356980
+  },
+  "last_updated": "2026-04-12T14:20:16.999576",
+  "monitoring_started": "2026-04-11T23:38:28.167991"
+}
