@@ -130,9 +130,20 @@ REFERRALS_FORM_CHANNEL_ID = get_int_env("REFERRALS_FORM_CHANNEL_ID", 14907644754
 REFERRALS_PENDING_CHANNEL_ID = get_int_env("REFERRALS_PENDING_CHANNEL_ID", 1490764547936489564)
 REFERRALS_APPROVED_CHANNEL_ID = get_int_env("REFERRALS_APPROVED_CHANNEL_ID", 1490764608342851594)
 REFERRALS_LOGS_CHANNEL_ID = get_int_env("REFERRALS_LOGS_CHANNEL_ID", 1490764665167548457)
+REFERRALS_RANKING_CHANNEL_ID = get_int_env("REFERRALS_RANKING_CHANNEL_ID", 1490764720518594611)
+REFERRALS_ADMIN_ROLE_IDS = [1440828412599210135]  # Cargos que podem gerenciar referências
 
 # ======================================================================
-# 7. LISTA DE COGS
+# 7. TWITCH MONITOR
+# ======================================================================
+TWITCH_CHANNEL_REQUEST = get_int_env("TWITCH_CHANNEL_REQUEST", 1490765000000000000)
+TWITCH_CHANNEL_APPROVAL = get_int_env("TWITCH_CHANNEL_APPROVAL", 1490765100000000000)
+TWITCH_CHANNEL_NOTIF = get_int_env("TWITCH_CHANNEL_NOTIF", 1490765200000000000)
+TWITCH_CLIENT_ID = os.getenv("TWITCH_CLIENT_ID", "")
+TWITCH_ACCESS_TOKEN = os.getenv("TWITCH_ACCESS_TOKEN", "")
+
+# ======================================================================
+# 8. LISTA DE COGS
 # ======================================================================
 COGS = [
     'rcon_monitor',  # Monitoramento RCON automático e painéis

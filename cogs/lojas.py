@@ -227,7 +227,7 @@ class ModalCriarLoja(discord.ui.Modal):
             try:
                 if not dicas_ja_foram_enviadas():
                     canal_tips = interaction.guild.get_channel(TIPS_CHANNEL_ID)
-                    if canal_tips:
+                    if canal_tips and isinstance(canal_tips, discord.TextChannel):
                         embed_tips = discord.Embed(
                             title=f"📝 Dicas de Formatação - CianoStore",
                             description=f"Guia de formatação para deixar suas lojas mais atrativas!",

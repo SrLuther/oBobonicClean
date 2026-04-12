@@ -4,10 +4,11 @@
 
 import discord
 from discord.ext import commands, tasks
+from discord.ext.tasks import Loop
 import asyncio
 import os
 from datetime import datetime
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Any
 import logging
 
 import config
@@ -39,6 +40,10 @@ class RconMonitor(commands.Cog):
         self.last_poll_time = None
         # Flag para sincronizar startup: after-loop aguarda que isso seja True
         self.startup_cleanup_completed = False
+        
+        # Type hint para discord.py task loop
+        self.monitor_loop: Loop[Any]
+        self.auto_recovery_loop: Loop[Any]
         print(f"[Monitor] ✅ RconMonitor.__init__() concluído")
     
     def load_server_config(self):
