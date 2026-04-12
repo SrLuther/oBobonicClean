@@ -23,7 +23,6 @@ def get_int_env(var_name, default_value):
 # ======================================================================
 # 2. CHAVES E SECRETS
 # ======================================================================
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "chave_gemini_falsa_para_dev")
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN", "token_falso_para_dev")
 
 # ======================================================================

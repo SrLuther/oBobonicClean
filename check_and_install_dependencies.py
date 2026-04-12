@@ -54,7 +54,6 @@ def is_package_installed(package_name):
         'pycryptodome': 'Crypto',
         'python-dotenv': 'dotenv',
         'pynacl': 'nacl',
-        'google-genai': 'google.generativeai',
         'yt-dlp': 'yt_dlp',
     }
     

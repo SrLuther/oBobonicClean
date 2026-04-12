@@ -10,9 +10,6 @@ beautifulsoup4==4.12.3
 python-dotenv==1.0.0
 pytz==2024.1
 
-# --- IA ---
-google-genai==1.15.0
-
 # --- Servidor Keep-Alive ---
 flask==3.0.3
 
