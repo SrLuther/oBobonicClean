@@ -117,9 +117,12 @@ while True:
 # 6. LISTA DE COGS (AJUSTADO PARA TICKETS DIVIDIDOS)
 # ======================================================================
 COGS = [
+    'rcon_monitor',  # Monitoramento RCON automático e painéis
     'ark',       # Integração RCON com servidores ARK: Survival Evolved
+    'events',    # Sistema de broadcasts automáticos
     'tickets',   # Só o pacote tickets
     'lojas',     # Sistema de lojas pessoais
+    'twitch_monitor', # Monitor de streamers Twitch
     # 'dinosaur_valuer',  # ❌ DESABILITADO: módulo dino_calculator removido
     # 'nickname_updater',  # ❌ DESABILITADO: módulo nicknameUpdater removido
     'vip',       # Painel VIP com link para a loja
@@ -130,6 +133,7 @@ COGS = [
     'comandos',
     'rules',     # Sistema de gerenciamento de regras
     'sales',
+    'referrals',  # Sistema de indicações e ranking de referências
     'voicemanager',
     'autoloop',  # Sistema de mensagens automáticas a cada 6 horas
     'music',     # Player de música via YouTube
