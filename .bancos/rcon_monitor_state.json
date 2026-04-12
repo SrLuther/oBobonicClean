@@ -1,22 +1,22 @@
 {
   "servers": {
     "Fjordur": {
-      "status": "offline",
+      "status": "online",
       "player_count": 0,
       "online_players": [],
-      "last_check": "2026-04-12T15:42:32.541500",
+      "last_check": "2026-04-10T22:25:48.614472",
       "last_online": "2026-04-10T22:25:48.614472",
-      "last_offline": "2026-04-12T15:42:32.541500",
-      "consecutive_timeouts": 98,
+      "last_offline": null,
+      "consecutive_timeouts": 0,
       "message_id": null
     },
     "Genesis 2": {
       "status": "online",
       "player_count": 0,
       "online_players": [],
-      "last_check": "2026-04-12T15:41:51.757066",
-      "last_online": "2026-04-12T15:41:51.757066",
-      "last_offline": "2026-04-12T14:20:38.168376",
+      "last_check": "2026-04-12T15:42:54.877386",
+      "last_online": "2026-04-12T15:42:54.877386",
+      "last_offline": "2026-04-12T14:20:50.932850",
       "consecutive_timeouts": 0,
       "message_id": null
     },
@@ -26,9 +26,9 @@
       "online_players": [
         "Felipe Matt"
       ],
-      "last_check": "2026-04-12T15:41:51.759594",
-      "last_online": "2026-04-12T15:41:51.759594",
-      "last_offline": "2026-04-12T14:20:38.233684",
+      "last_check": "2026-04-10T22:25:48.629147",
+      "last_online": "2026-04-10T22:25:48.629147",
+      "last_offline": null,
       "consecutive_timeouts": 0,
       "message_id": null
     },
@@ -36,9 +36,9 @@
       "status": "online",
       "player_count": 0,
       "online_players": [],
-      "last_check": "2026-04-12T15:41:51.743960",
-      "last_online": "2026-04-12T15:41:51.743960",
-      "last_offline": "2026-04-12T14:20:38.149324",
+      "last_check": "2026-04-12T15:42:54.874039",
+      "last_online": "2026-04-12T15:42:54.874039",
+      "last_offline": "2026-04-12T14:20:50.917019",
       "consecutive_timeouts": 0,
       "message_id": null
     },
@@ -52,9 +52,9 @@
         "Its_Harux",
         "LUCAS FARIAS"
       ],
-      "last_check": "2026-04-12T15:41:51.740441",
-      "last_online": "2026-04-12T15:41:51.740441",
-      "last_offline": "2026-04-12T14:20:38.118560",
+      "last_check": "2026-04-12T15:42:54.904368",
+      "last_online": "2026-04-12T15:42:54.904368",
+      "last_offline": "2026-04-12T14:20:50.903415",
       "consecutive_timeouts": 0,
       "message_id": null
     }
@@ -145,133 +145,105 @@
       "level": "INFO"
     },
     {
-      "timestamp": "2026-04-12T14:20:38.118560",
+      "timestamp": "2026-04-12T14:20:50.903415",
       "server": "Ragnarok Omega",
       "type": "server_offline",
       "details": "Servidor offline (era 4 players)",
       "level": "INFO"
     },
     {
-      "timestamp": "2026-04-12T14:20:38.149324",
+      "timestamp": "2026-04-12T14:20:50.917019",
       "server": "Rotativo",
       "type": "server_offline",
       "details": "Servidor offline (era 0 players)",
       "level": "INFO"
     },
     {
-      "timestamp": "2026-04-12T14:20:38.168376",
+      "timestamp": "2026-04-12T14:20:50.932850",
       "server": "Genesis 2",
       "type": "server_offline",
       "details": "Servidor offline (era 0 players)",
       "level": "INFO"
     },
     {
-      "timestamp": "2026-04-12T14:20:38.210074",
-      "server": "Fjordur",
-      "type": "server_offline",
-      "details": "Servidor offline (era 0 players)",
-      "level": "INFO"
-    },
-    {
-      "timestamp": "2026-04-12T14:20:38.233684",
-      "server": "Alps",
-      "type": "server_offline",
-      "details": "Servidor offline (era 1 players)",
-      "level": "INFO"
-    },
-    {
-      "timestamp": "2026-04-12T14:20:38.506193",
-      "server": "Alps",
+      "timestamp": "2026-04-12T14:20:51.221350",
+      "server": "Rotativo",
       "type": "server_online",
-      "details": "Servidor voltou online (1 players)",
+      "details": "Servidor voltou online (0 players)",
       "level": "INFO"
     },
     {
-      "timestamp": "2026-04-12T14:20:38.510183",
-      "server": "Alps",
-      "type": "player_joined",
-      "details": "Player joined: Felipe Matt",
+      "timestamp": "2026-04-12T14:20:51.234042",
+      "server": "Genesis 2",
+      "type": "server_online",
+      "details": "Servidor voltou online (0 players)",
       "level": "INFO"
     },
     {
-      "timestamp": "2026-04-12T14:20:38.514652",
+      "timestamp": "2026-04-12T14:20:51.290375",
       "server": "Ragnarok Omega",
       "type": "server_online",
       "details": "Servidor voltou online (3 players)",
       "level": "INFO"
     },
     {
-      "timestamp": "2026-04-12T14:20:38.517412",
-      "server": "Ragnarok Omega",
-      "type": "player_joined",
-      "details": "Player joined: PROPL@YER013",
-      "level": "INFO"
-    },
-    {
-      "timestamp": "2026-04-12T14:20:38.518408",
-      "server": "Ragnarok Omega",
-      "type": "player_joined",
-      "details": "Player joined: Its_Harux",
-      "level": "INFO"
-    },
-    {
-      "timestamp": "2026-04-12T14:20:38.520541",
+      "timestamp": "2026-04-12T14:20:51.292825",
       "server": "Ragnarok Omega",
       "type": "player_joined",
       "details": "Player joined: sergeismitt",
       "level": "INFO"
     },
     {
-      "timestamp": "2026-04-12T14:20:38.526282",
-      "server": "Rotativo",
-      "type": "server_online",
-      "details": "Servidor voltou online (0 players)",
-      "level": "INFO"
-    },
-    {
-      "timestamp": "2026-04-12T14:20:38.533652",
-      "server": "Genesis 2",
-      "type": "server_online",
-      "details": "Servidor voltou online (0 players)",
-      "level": "INFO"
-    },
-    {
-      "timestamp": "2026-04-12T14:37:23.142464",
+      "timestamp": "2026-04-12T14:20:51.294900",
       "server": "Ragnarok Omega",
       "type": "player_joined",
-      "details": "Player joined: Mineiro_FPS",
+      "details": "Player joined: PROPL@YER013",
       "level": "INFO"
     },
     {
-      "timestamp": "2026-04-12T14:39:40.702528",
-      "server": "Ragnarok Omega",
-      "type": "player_left",
-      "details": "Player left: Its_Harux",
-      "level": "INFO"
-    },
-    {
-      "timestamp": "2026-04-12T14:42:39.968475",
+      "timestamp": "2026-04-12T14:20:51.298340",
       "server": "Ragnarok Omega",
       "type": "player_joined",
       "details": "Player joined: Its_Harux",
       "level": "INFO"
     },
     {
-      "timestamp": "2026-04-12T14:51:04.928803",
+      "timestamp": "2026-04-12T14:37:24.897941",
+      "server": "Ragnarok Omega",
+      "type": "player_joined",
+      "details": "Player joined: Mineiro_FPS",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-12T14:39:24.874874",
+      "server": "Ragnarok Omega",
+      "type": "player_left",
+      "details": "Player left: Its_Harux",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-12T14:42:24.884617",
+      "server": "Ragnarok Omega",
+      "type": "player_joined",
+      "details": "Player joined: Its_Harux",
+      "level": "INFO"
+    },
+    {
+      "timestamp": "2026-04-12T14:50:24.884494",
       "server": "Ragnarok Omega",
       "type": "player_joined",
       "details": "Player joined: LUCAS FARIAS",
       "level": "INFO"
     },
     {
-      "timestamp": "2026-04-12T14:54:53.941666",
+      "timestamp": "2026-04-12T14:54:54.884847",
       "server": "Ragnarok Omega",
       "type": "player_joined",
       "details": "Player joined: matheuus.F",
       "level": "INFO"
     },
     {
-      "timestamp": "2026-04-12T15:40:09.793241",
+      "timestamp": "2026-04-12T15:40:27.731990",
       "server": "Ragnarok Omega",
       "type": "player_left",
       "details": "Player left: matheuus.F",
@@ -279,12 +251,12 @@
     }
   ],
   "dashboard_messages": {
-    "Ragnarok Omega": 1492937752084484247,
-    "Rotativo": 1492937753506218135,
-    "Genesis 2": 1492937755465089256,
-    "Fjordur": 1492937757440475429,
-    "Alps": 1492937761102237736
+    "Ragnarok Omega": 1492937634471874560,
+    "Rotativo": 1492937636359180378,
+    "Genesis 2": 1492937643519115434,
+    "Fjordur": 1492334859174285313,
+    "Alps": 1492334884516270090
   },
-  "last_updated": "2026-04-12T15:42:32.541500",
+  "last_updated": "2026-04-12T15:42:54.904368",
   "monitoring_started": "2026-04-10T22:23:06.559981"
 }
