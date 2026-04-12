@@ -95,6 +95,12 @@ RCON_DASHBOARDS_CHANNEL_ID = get_int_env("RCON_DASHBOARDS_CHANNEL_ID", 148969918
 # Intervalo de monitoramento RCON (em segundos)
 RCON_MONITOR_INTERVAL_SECONDS = get_int_env("RCON_MONITOR_INTERVAL_SECONDS", 30)
 
+# Habilita/desabilita o monitoramento RCON
+RCON_MONITOR_ENABLED = os.getenv("RCON_MONITOR_ENABLED", "true").lower() in ("true", "1", "yes")
+
+# Habilita/desabilita o sistema de auto-recovery
+RCON_AUTO_RECOVERY_ENABLED = os.getenv("RCON_AUTO_RECOVERY_ENABLED", "true").lower() in ("true", "1", "yes")
+
 # Carrega mapas dinamicamente a partir das variáveis:
 #   ARK_MAP1_NAME, ARK_MAP1_PORT, ARK_MAP1_HOST (opc.), ARK_MAP1_PASSWORD (opc.)
 #   ARK_MAP2_NAME, ARK_MAP2_PORT, ...
