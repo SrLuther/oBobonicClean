@@ -92,6 +92,9 @@ ARK_CANAL_RCON_ID = get_int_env("ARK_CANAL_RCON_ID", 1479003271623610428)
 # Canal de painéis automáticos (status dos servidores em tempo real)
 RCON_DASHBOARDS_CHANNEL_ID = get_int_env("RCON_DASHBOARDS_CHANNEL_ID", 1489699180619239628)
 
+# Intervalo de monitoramento RCON (em segundos)
+RCON_MONITOR_INTERVAL_SECONDS = get_int_env("RCON_MONITOR_INTERVAL_SECONDS", 30)
+
 # Carrega mapas dinamicamente a partir das variáveis:
 #   ARK_MAP1_NAME, ARK_MAP1_PORT, ARK_MAP1_HOST (opc.), ARK_MAP1_PASSWORD (opc.)
 #   ARK_MAP2_NAME, ARK_MAP2_PORT, ...
@@ -114,7 +117,16 @@ while True:
     _i += 1
 
 # ======================================================================
-# 6. LISTA DE COGS (AJUSTADO PARA TICKETS DIVIDIDOS)
+# 6. SISTEMA DE INDICAÇÕES (REFERRALS)
+# ======================================================================
+REFERRALS_GENERATE_ID_CHANNEL_ID = get_int_env("REFERRALS_GENERATE_ID_CHANNEL_ID", 1490764410845790331)
+REFERRALS_FORM_CHANNEL_ID = get_int_env("REFERRALS_FORM_CHANNEL_ID", 1490764475442139248)
+REFERRALS_PENDING_CHANNEL_ID = get_int_env("REFERRALS_PENDING_CHANNEL_ID", 1490764547936489564)
+REFERRALS_APPROVED_CHANNEL_ID = get_int_env("REFERRALS_APPROVED_CHANNEL_ID", 1490764608342851594)
+REFERRALS_LOGS_CHANNEL_ID = get_int_env("REFERRALS_LOGS_CHANNEL_ID", 1490764665167548457)
+
+# ======================================================================
+# 7. LISTA DE COGS
 # ======================================================================
 COGS = [
     'rcon_monitor',  # Monitoramento RCON automático e painéis

@@ -14,7 +14,7 @@ from typing import Dict, Any, Optional, cast
 from datetime import datetime, timezone
 
 import config
-from nicknameUpdater import update_member_nickname
+# from nicknameUpdater import update_member_nickname  # ❌ DESABILITADO: módulo removido
 
 logger = logging.getLogger(__name__)
 
@@ -443,7 +443,7 @@ class TwitchMonitorCog(commands.Cog):
                         logger.info(f"[TWITCH] Cargo 🔴 adicionado a {member}")
                     
                     # Atualiza nickname
-                    await update_member_nickname(member)
+                    # await update_member_nickname(member)  # ❌ DESABILITADO: módulo removido
                     logger.info(f"[TWITCH] Nickname atualizado para {member}")
             except Exception as e:
                 logger.warning(f"[TWITCH] Erro ao adicionar cargo/nickname: {e}")

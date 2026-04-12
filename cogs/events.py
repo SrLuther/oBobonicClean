@@ -9,7 +9,7 @@ import logging
 import random
 
 import config
-from utils import rcon_execute_with_retry
+from utils.rcon_client import rcon_execute_with_retry
 
 logger = logging.getLogger(__name__)
 
