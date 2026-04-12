@@ -118,8 +118,8 @@ COGS = [
     'ark',       # Integração RCON com servidores ARK: Survival Evolved
     'tickets',   # Só o pacote tickets
     'lojas',     # Sistema de lojas pessoais
-    'dinosaur_valuer',  # Calculadora de valor de dinossauros
-    'nickname_updater',  # Sistema de atualização automática de apelidos
+    # 'dinosaur_valuer',  # ❌ DESABILITADO: módulo dino_calculator removido
+    # 'nickname_updater',  # ❌ DESABILITADO: módulo nicknameUpdater removido
     'vip',       # Painel VIP com link para a loja
     'admin', 
     'autoresponse', 
