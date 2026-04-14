@@ -632,7 +632,7 @@ class TwitchMonitorCog(commands.Cog):
                            "• 100% seguro e verificado",
                 color=discord.Color.from_rgb(145, 70, 255)
             )
-            embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/3670/3670147.png")
+            embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/5968/5968819.png")
             embed.set_footer(text="Monitor Twitch 📺 • Criado automaticamente ao iniciar o bot")
             
             print(f"[TWITCH]     - Enviando painel...")
