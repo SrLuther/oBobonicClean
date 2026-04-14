@@ -20,6 +20,9 @@ PyNaCl
 # --- ARK: Survival Evolved RCON ---
 rcon
 
+# --- TikTok Monitor (API não-oficial via WebSocket) ---
+TikTokLive>=6.0.0
+
 # --- Otimizações (opcionais, mas muito úteis) ---
 ujson==5.10.0
 ruff==0.14.7

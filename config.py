@@ -149,6 +149,13 @@ TWITCH_CLIENT_SECRET = os.getenv("TWITCH_CLIENT_SECRET", "")
 TWITCH_ACCESS_TOKEN = os.getenv("TWITCH_ACCESS_TOKEN", "")
 
 # ======================================================================
+# 7b. TIKTOK MONITOR
+# ======================================================================
+TIKTOK_CHANNEL_REQUEST  = get_int_env("TIKTOK_CHANNEL_REQUEST",  1490765000000000000)
+TIKTOK_CHANNEL_APPROVAL = get_int_env("TIKTOK_CHANNEL_APPROVAL", 1490765100000000000)
+TIKTOK_CHANNEL_NOTIF    = get_int_env("TIKTOK_CHANNEL_NOTIF",    1490765200000000000)
+
+# ======================================================================
 # 8. LISTA DE COGS
 # ======================================================================
 COGS = [
@@ -158,6 +165,7 @@ COGS = [
     'tickets',   # Só o pacote tickets
     'lojas',     # Sistema de lojas pessoais
     'twitch_monitor', # Monitor de streamers Twitch
+    'tiktok_monitor', # Monitor de streamers TikTok
     'dinosaur_valuer',  # ✅ Sistema de avaliação de dinossauros (Vanilla only)
     # 'nickname_updater',  # ❌ DESABILITADO: módulo nicknameUpdater removido
     'vip',       # Painel VIP com link para a loja
