@@ -783,50 +783,63 @@ class TwitchMonitorCog(commands.Cog):
             channel = cast(discord.TextChannel, self.bot.get_channel(CHANNEL_NOTIF))
             if not channel:
                 return
-            
+
             username = stream_info.get("user_name", "?")
             title = stream_info.get("title", "Sem título")
-            game = stream_info.get("game_name", "Jogo misterioso")
+            game = stream_info.get("game_name", "Sem categoria")
             viewers = stream_info.get("viewer_count", 0)
             thumbnail = stream_info.get("thumbnail_url", "")
-            
-            # Mensagens bem-humoradas
-            mensagens_humor = [
-                f"🚨 ALERTA VERMELHO! {username.upper()} COMEÇOU A TRANSMITIR! 🚨",
-                f"🎮 SAIAM DO BURACO! {username} está ao vivo na Twitch!",
-                f"📢 ATENÇÃO CIDADÃOS! Temos uma transmissão ao vivo de {username}!",
-                f"🔴 TRANSMISSÃO ATIVA! {username} está dominando a Twitch!",
-                f"⚡ CHOQUE! {username} apareceu na Twitch! Todos os olhos em cima!",
-                f"🎬 LIVE DETECTADA! {username} está tirando a galera do soco!",
-            ]
-            
+
             import random
-            mensagem = random.choice(mensagens_humor)
-            
+
+            frases_chamada = [
+                f"**{username}** abriu a transmissão — bora assistir!",
+                f"**{username}** está ao vivo agora. Não perde!",
+                f"A live de **{username}** acabou de começar. Cola lá!",
+                f"**{username}** ligou a câmera. Tá esperando o quê?",
+                f"Sinal de fumaça detectado — **{username}** está transmitindo!",
+            ]
+            frase = random.choice(frases_chamada)
+
             embed = discord.Embed(
-                title=f"🔴 {username}",
-                description=f"**{title}**",
+                description=(
+                    f"### 🔴 Ao Vivo agora na Twitch\n"
+                    f"{frase}\n\n"
+                    f"**{title}**"
+                ),
                 color=discord.Color.from_rgb(145, 70, 255),
-                url=f"https://www.twitch.tv/{username}"
+                url=f"https://www.twitch.tv/{username}",
+                timestamp=datetime.now(timezone.utc)
             )
-            embed.add_field(name="🎮 Jogo", value=game, inline=True)
-            embed.add_field(name="👥 Espectadores", value=f"{viewers:,}", inline=True)
-            
+
+            embed.set_author(
+                name=username,
+                url=f"https://www.twitch.tv/{username}",
+                icon_url="https://static.twitchcdn.net/assets/favicon-32-e29e246c157142c1.png"
+            )
+
+            embed.add_field(name="🎮 Jogando", value=f"`{game}`", inline=True)
+            embed.add_field(name="👥 Espectadores", value=f"`{viewers:,}`", inline=True)
+            embed.add_field(
+                name="📺 Canal",
+                value=f"[twitch.tv/{username}](https://www.twitch.tv/{username})",
+                inline=True
+            )
+
             if thumbnail:
-                thumb = thumbnail.replace("{width}", "320").replace("{height}", "180")
-                embed.set_thumbnail(url=thumb)
-            
-            embed.timestamp = datetime.now(timezone.utc)
-            embed.set_footer(text="Monitor Twitch 📺 • Clique no botão para ir à live!")
-            
-            mention = f"<@{user_id_discord}>" if user_id_discord else username
-            
+                thumb = thumbnail.replace("{width}", "1280").replace("{height}", "720")
+                embed.set_image(url=f"{thumb}?t={int(datetime.now().timestamp())}")
+
+            embed.set_footer(text="Twitch • Monitor de Lives")
+
+            mention = f"<@{user_id_discord}>" if user_id_discord else f"**{username}**"
+
             await channel.send(
-                f"{mention} 👋",
+                content=f"{mention} está **ao vivo**! 🔴",
                 embed=embed,
                 view=LiveButtonView(username)
             )
-            
+
             logger.info(f"[TWITCH] 🔴 Notificação ao vivo: {username}")
         except Exception as e:
             logger.error(f"[TWITCH] Erro ao notificar: {e}")
