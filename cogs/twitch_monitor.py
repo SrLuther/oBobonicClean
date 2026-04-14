@@ -164,15 +164,16 @@ class TwitchMonitorCog(commands.Cog):
                 print("[TWITCH] ⚠️ Credenciais incompletas (CLIENT_ID ou CLIENT_SECRET vazios)")
                 logger.warning("[TWITCH] ⚠️ Credenciais incompletas")
 
+            # Limpa o estado salvo para que o primeiro ciclo detecte lives ativas e notifique
+            self.stream_state = {}
+            self.save_data()
+            print("[TWITCH] 🔄 Estado resetado - lives ativas serão notificadas na primeira varredura")
+
             # Inicia monitor SEMPRE que houver canais aprovados (independente do token)
             # _get_stream_info trata token inválido internamente
             if not self.check_streams.is_running():
                 self.check_streams.start()
                 logger.info(f"[TWITCH] ✅ Monitor iniciado. {len(self.approved_channels)} canal(is) aprovado(s)")
-
-            # Sincroniza estado na inicialização (sem enviar notificações)
-            # Evita que estado "preso" como ao-vivo bloqueie futuras notificações
-            await self._sync_state_on_startup()
 
             # Cria painéis
             await self._create_panels_internal()
@@ -184,43 +185,6 @@ class TwitchMonitorCog(commands.Cog):
             logger.error(f"[TWITCH] ❌ Erro no startup: {e}")
             import traceback
             traceback.print_exc()
-
-    async def _sync_state_on_startup(self) -> None:
-        """Sincroniza o estado de todos os canais aprovados sem enviar notificações.
-        Resolve o caso onde o estado ficou 'preso' como ao-vivo após restart."""
-        if not self.approved_channels:
-            return
-        if not config.TWITCH_CLIENT_ID or not self._access_token:
-            return
-
-        print(f"[TWITCH] 🔄 Sincronizando estado de {len(self.approved_channels)} canal(is)...")
-        changed = False
-        for username in list(self.approved_channels.keys()):
-            try:
-                stream_info = await self._get_stream_info(username)
-                is_live = stream_info is not None
-                old_state = self.stream_state.get(username, {}).get("is_live", False)
-                if is_live != old_state:
-                    print(f"[TWITCH] 🔄 Estado corrigido: {username} {'online' if is_live else 'offline'} (era {'online' if old_state else 'offline'})")
-                if is_live and stream_info:
-                    self.stream_state[username] = {
-                        "is_live": True,
-                        "title": stream_info.get("title", ""),
-                        "game": stream_info.get("game_name", ""),
-                        "viewers": stream_info.get("viewer_count", 0),
-                        "last_checked": datetime.now(timezone.utc).isoformat()
-                    }
-                else:
-                    self.stream_state[username] = {
-                        "is_live": False,
-                        "last_checked": datetime.now(timezone.utc).isoformat()
-                    }
-                changed = True
-            except Exception as e:
-                logger.warning(f"[TWITCH] Erro ao sincronizar estado de {username}: {e}")
-        if changed:
-            self.save_data()
-            print("[TWITCH] ✅ Estado sincronizado!")
 
     async def force_create_panels(self):
         """Força recriação dos painéis."""
