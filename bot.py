@@ -166,53 +166,10 @@ async def recriar_todos_os_painels():
             print("⚠️ [REINICIO] Guild não encontrada, pulando limpeza de painels")
             return
         
-        # ========== NOTA: PAINEL DE CALCULADORA JÁ É CRIADO AUTOMATICAMENTE PELO COGS/DINOSAUR_VALUER.PY ==========
-        # O cog dinosaur_valuer.py agora gerencia a criação e manutenção do painel automaticamente via cog_load()
-        # Nenhuma ação manual é necessária aqui
-        
-        # ========== LIMPAR E RECRIAR PAINEL DE LOJAS ==========
-        try:
-            from cogs.lojas import ViewCriarLoja
-            
-            canal_lojas = guild.get_channel(1473763773805363414)  # PANEL_CHANNEL_ID de lojas
-            if isinstance(canal_lojas, discord.TextChannel):
-                # Limpar todo o canal
-                async for msg in canal_lojas.history(limit=None):
-                    try:
-                        await msg.delete()
-                    except:
-                        pass
-                print(f"✅ [REINICIO] Canal de lojas (1473763773805363414) limpado")
-                
-                # Recriar painel de lojas
-                await asyncio.sleep(1)
-                painel_lojas = await canal_lojas.send(
-                    "🏪 **SISTEMA DE LOJAS PESSOAIS**\n\n"
-                    "═══════════════════════════════════════\n\n"
-                    "**Bem-vindo ao sistema de lojas!**\n\n"
-                    "Clique no botão abaixo para criar sua própria loja "
-                    "e começar a vender seus recursos, dinossauros e serviços.\n\n"
-                    "**✨ Como Funciona:**\n"
-                    "1️⃣ Clique em \"Criar Minha Loja\"\n"
-                    "2️⃣ Defina um nome para sua loja\n"
-                    "3️⃣ Um canal exclusivo será criado para você\n"
-                    "4️⃣ Publique seus produtos!\n\n"
-                    "**⚙️ Gerenciamento:**\n"
-                    "• Use `!fecharloja` para encerrar sua loja\n"
-                    "• Você é o único que pode postar em sua loja\n"
-                    "• Lojas inativas podem ser reabertas\n\n"
-                    "**💡 Dicas:**\n"
-                    "• Descreva bem seus produtos\n"
-                    "• Inclua preços e disponibilidade\n"
-                    "• Seja claro na comunicação\n\n"
-                    "═══════════════════════════════════════",
-                    view=ViewCriarLoja(bot)
-                )
-                await painel_lojas.pin()
-                print("✅ [REINICIO] Painel de lojas recriado com sucesso!")
-        except Exception as e:
-            print(f"⚠️ [REINICIO] Erro ao recriar painel de lojas: {e}")
-        
+        # NOTA: Painel de lojas é gerenciado pelo cogs/lojas.py (on_ready → atualizar_painel_lojas)
+        # NOTA: Painel de calculadora é gerenciado pelo cogs/dinosaur_valuer.py (on_ready)
+        # Nenhuma ação manual é necessária aqui para esses painéis.
+
         # ========== LIMPAR E RECRIAR PAINEL DE TICKETS ==========
         try:
             from cogs.tickets.tickets_views import gerar_view_ticket
