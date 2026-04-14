@@ -11,8 +11,7 @@ from typing import Dict, Optional, List
 import logging
 
 import config
-from utils.rcon_client import rcon_execute_with_retry
-from utils.ark_monitor_state import ArkMonitorState
+from utils import get_ark_state
 
 logger = logging.getLogger(__name__)
 logger.info("[Monitor] 🎯 Módulo rcon_monitor.py importado com sucesso")
@@ -28,7 +27,7 @@ class RconMonitor(commands.Cog):
         print(f"[Monitor] 🔧 RconMonitor.__init__() chamado")
         self.bot = bot
         # Usa .bancos para consistência com outros cogs
-        self.state = ArkMonitorState(data_dir=".bancos")
+        self.state = get_ark_state()
         
         # Mapa de servidores (carregado de config)
         self.servers: Dict[str, Dict] = {}
@@ -36,9 +35,8 @@ class RconMonitor(commands.Cog):
         
         # Controle do loop
         self.monitoring_active = False
-        self.last_poll_time = None
-        # Flag para sincronizar startup: after-loop aguarda que isso seja True
-        self.startup_cleanup_completed = False
+        # Task de startup (padrão seguro contra recarga do cog)
+        self._startup_task: Optional[asyncio.Task] = None
         print(f"[Monitor] ✅ RconMonitor.__init__() concluído")
     
     def load_server_config(self):
@@ -68,10 +66,10 @@ class RconMonitor(commands.Cog):
         logger.info("[Monitor] ⏳ Iniciando loop de monitoramento...")
         
         if config.RCON_MONITOR_ENABLED:
-            print(f"[Monitor] 🔄 Iniciando monitor_loop...")
-            self.monitor_loop.start()
-            print(f"[Monitor] ✅ monitor_loop iniciado!")
-            logger.info("[Monitor] ✅ Monitor loop iniciado!")
+            print(f"[Monitor] 🔄 Criando task de startup...")
+            self._startup_task = asyncio.create_task(self._startup())
+            print(f"[Monitor] ✅ Task de startup criada!")
+            logger.info("[Monitor] ✅ Task de startup criada!")
         else:
             print(f"[Monitor] ⚠️ Monitor desabilitado em config")
             logger.warning("[Monitor] ⚠️ Monitor desabilitado em config")
@@ -80,6 +78,8 @@ class RconMonitor(commands.Cog):
         """Executado quando o cog é descarregado."""
         print(f"[Monitor] ⚙️ cog_unload() chamado")
         logger.info("[Monitor] Parando loop de monitoramento...")
+        if self._startup_task and not self._startup_task.done():
+            self._startup_task.cancel()
         if self.monitor_loop.is_running():
             self.monitor_loop.cancel()
         print(f"[Monitor] ✅ cog_unload() concluído")
@@ -88,261 +88,95 @@ class RconMonitor(commands.Cog):
     # MONITOR LOOP — Polling Automático
     # ─────────────────────────────────────────────────────────────
     
-    @tasks.loop(seconds=config.RCON_MONITOR_INTERVAL_SECONDS)
-    async def monitor_loop(self):
-        """Loop principal: a cada 30s, poll todos os servidores."""
-        if not config.RCON_MONITOR_ENABLED:
-            return
+    async def _startup(self) -> None:
+        """Task de startup: aguarda bot pronto, limpa canal, cria painel e inicia o monitor_loop.
         
-        # ⏸️ IMPEDE race condition: não executa enquanto startup não termina
-        if not self.startup_cleanup_completed:
-            print(f"[Monitor] ⏸️  Monitor aguardando conclusão do startup...")
-            return
-        
+        Usando asyncio.create_task() em vez de before_loop para evitar execuções
+        concorrentes quando o cog é recarregado (on_ready pode disparar várias vezes).
+        """
         try:
-            self.last_poll_time = datetime.now()
-            print(f"[Monitor] 🔄 Iniciando poll de {len(self.servers)} servidor(es)...")
-            logger.debug(f"[Monitor] Iniciando poll de {len(self.servers)} servidor(es)...")
-            
-            # Poll todos em paralelo
-            tasks = [
-                self._poll_single_server(server_name, server_info)
-                for server_name, server_info in self.servers.items()
-            ]
-            
-            await asyncio.gather(*tasks, return_exceptions=True)
-            
-            # Atualiza painéis
-            print(f"[Monitor] 📊 Atualizando painéis...")
-            await self._update_all_dashboards()
-            print(f"[Monitor] ✅ Ciclo concluído")
-            
-        except Exception as e:
-            print(f"[Monitor] ❌ Erro: {e}")
-            logger.error(f"[Monitor] Erro no monitor loop: {e}")
-    
-    @monitor_loop.before_loop
-    async def before_monitor_loop(self):
-        """Aguarda bot estar pronto, limpa canal completamente e recria todos os painéis."""
-        print(f"[Monitor] ⏳ before_monitor_loop: Aguardando bot ficar pronto...")
-        await self.bot.wait_until_ready()
-        print(f"[Monitor] ✅ before_monitor_loop: Bot pronto! Limpando canal de dashboards...")
-        logger.info("[Monitor] Bot pronto! Limpando canal de dashboards...")
-        
-        # ANTES DE QUALQUER COISA: Limpa TODOS os IDs antigos do estado
-        print(f"\n[Monitor] 🔍 ESTADO ANTERIOR (IDs que estavam salvos):")
-        old_ids = self.state.state.get("dashboard_messages", {})
-        if old_ids:
-            for server, msg_id in old_ids.items():
-                print(f"[Monitor]   • {server}: {msg_id}")
-        else:
-            print(f"[Monitor]   • (nenhum ID salvo anteriormente)")
-        
-        # LIMPA CANAL COMPLETAMENTE
-        try:
+            await self.bot.wait_until_ready()
+            print(f"[Monitor] ✅ Bot pronto! Iniciando setup do monitor...")
+            logger.info("[Monitor] Bot pronto! Limpando canal de dashboards...")
+
             channel_id = config.RCON_DASHBOARDS_CHANNEL_ID
-            print(f"\n[Monitor] 🔍 Procurando canal ID: {channel_id}")
             channel = self.bot.get_channel(channel_id)
-            
+
             if not isinstance(channel, discord.TextChannel):
                 print(f"[Monitor] ❌ Canal {channel_id} não encontrado ou inválido")
                 logger.error(f"[Monitor] Canal {channel_id} não encontrado ou inválido")
                 return
-            
-            print(f"[Monitor] 🧹 Deletando TODAS as mensagens do canal: {channel.name}")
-            logger.info(f"[Monitor] 🧹 Deletando TODAS as mensagens do canal: {channel.name}")
-            
+
+            # Limpa TODOS os IDs antigos do estado
+            self.state.state["dashboard_messages"].clear()
+            self.state._save_state()
+
+            # Purge do canal
+            print(f"[Monitor] 🧹 Limpando canal: {channel.name}")
             deleted_total = 0
-            # Continua deletando até não haver mais mensagens (sem limite)
             while True:
                 batch_deleted = 0
-                async for msg in channel.history(limit=100):  # Pega 100 por vez
+                async for msg in channel.history(limit=100):
                     try:
                         await msg.delete()
                         batch_deleted += 1
                         deleted_total += 1
-                        # ⏸️ IMPORTANTE: Aguarda para evitar rate limit do Discord
-                        # Discord permite ~5 deletes por 5 segundos
-                        await asyncio.sleep(0.2)  # 200ms entre cada delete
-                    except discord.errors.NotFound:
-                        # Mensagem já foi deletada
+                        await asyncio.sleep(0.2)
+                    except discord.NotFound:
                         pass
-                    except discord.errors.HTTPException as e:
-                        if e.status == 429:  # Rate limited
-                            print(f"[Monitor] ⏱️ Rate limited! Esperando 5 segundos...")
+                    except discord.HTTPException as e:
+                        if e.status == 429:
+                            print(f"[Monitor] ⏱️ Rate limited! Esperando 5s...")
                             await asyncio.sleep(5)
                         else:
                             logger.warning(f"[Monitor] Erro ao deletar mensagem: {e}")
-                    except Exception as e:
-                        logger.warning(f"[Monitor] Erro ao deletar mensagem: {e}")
-                
-                # Se não deletou nada neste lote, não há mais mensagens
                 if batch_deleted == 0:
                     break
-                
-                print(f"[Monitor]   → Lote: deletadas {batch_deleted} mensagens (total: {deleted_total})")
-                await asyncio.sleep(1)  # 1 segundo entre lotes
-            
-            print(f"[Monitor] ✅ {deleted_total} mensagem(ns) deletada(s) NO TOTAL")
+                await asyncio.sleep(1)
+
             if deleted_total > 0:
-                logger.info(f"[Monitor] ✅ {deleted_total} mensagem(ns) deletada(s) NO TOTAL")
+                print(f"[Monitor] ✅ {deleted_total} mensagem(ns) deletada(s)")
+                await asyncio.sleep(2)  # Garante que o Discord processou as deleções
             else:
                 print(f"[Monitor] ✅ Canal já estava vazio")
-            
-            # Aguarda um pouco para garantir que Discord processou as deleções
-            await asyncio.sleep(2)
-            
-            # INICIALIZA ESTADO DE TODOS OS SERVIDORES
-            print(f"\n[Monitor] 📊 Inicializando {len(self.servers)} servidor(es)...")
-            logger.info(f"[Monitor] 📊 Inicializando {len(self.servers)} servidor(es)...")
+
+            # Inicializa estado dos servidores
             for server_name in self.servers.keys():
                 self.state.update_server_status(server_name, is_online=False)
-                self.state.set_dashboard_message_id(server_name, None)  # Limpa IDs antigos
-                print(f"[Monitor]   → {server_name}: ID resetado para None")
-            
-            print(f"[Monitor] ✅ Estado limpo - nenhum ID de painel ativo")
-            
-            # Verifica que está limpo
-            print(f"\n[Monitor] 🔍 ESTADO APÓS LIMPEZA (deve estar vazio):")
-            new_ids = self.state.state.get("dashboard_messages", {})
-            if new_ids:
-                print(f"[Monitor] ⚠️  IDs AINDA PRESENTES (não deveria!)")
-                for server, msg_id in new_ids.items():
-                    print(f"[Monitor]   • {server}: {msg_id}")
-            else:
-                print(f"[Monitor]   • (vazio - correto!)")
-            
-            # FAZ POLL ÚNICO PARA PREENCHER ESTADOS
-            print(f"\n[Monitor] 📡 Fazendo poll inicial para preencher informações...")
-            logger.info("[Monitor] 📡 Fazendo poll inicial para preencher informações...")
-            tasks = [
-                self._poll_single_server(server_name, server_info)
-                for server_name, server_info in self.servers.items()
-            ]
-            await asyncio.gather(*tasks, return_exceptions=True)
-            
-            # RECRIA TODOS OS PAINÉIS
-            print(f"\n[Monitor] 🎨 Recriando todos os painéis...")
-            logger.info("[Monitor] 🎨 Recriando todos os painéis...")
+
+            # Cria painel inicial
+            print(f"[Monitor] 🎨 Criando painel inicial...")
             await self._update_all_dashboards()
-            
-            print(f"\n[Monitor] ✅ PAINÉIS RECRIADOS COM SUCESSO!")
-            logger.info("[Monitor] ✅ PAINÉIS RECRIADOS COM SUCESSO!")
-            
-            # Verifica IDs criados
-            print(f"\n[Monitor] 🔍 ESTADO FINAL (IDs dos novos painéis):")
-            final_ids = self.state.state.get("dashboard_messages", {})
-            if final_ids:
-                for server, msg_id in final_ids.items():
-                    print(f"[Monitor]   • {server}: {msg_id}")
-            else:
-                print(f"[Monitor]   • (vazio - pode haver erro na criação)")
-            
-            # ✅ MARCA QUE STARTUP TERMINOU - monitor_loop pode começar!
-            self.startup_cleanup_completed = True
-            print(f"\n[Monitor] 🚀 STARTUP CONCLUÍDO - monitor_loop liberado para iniciar!")
-            logger.info("[Monitor] 🚀 STARTUP CONCLUÍDO - monitor_loop liberado para iniciar!")
-            
+
+            print(f"[Monitor] 🚀 STARTUP CONCLUÍDO - iniciando monitor_loop!")
+            logger.info("[Monitor] 🚀 STARTUP CONCLUÍDO - iniciando monitor_loop!")
+
+        except asyncio.CancelledError:
+            print(f"[Monitor] ⚠️ Startup cancelado (cog recarregado)")
+            return
+        except Exception as e:
+            print(f"[Monitor] ❌ Erro no startup: {e}")
+            logger.error(f"[Monitor] Erro no startup: {e}", exc_info=True)
+
+        # Inicia o loop SOMENTE após o setup (ou após erro, para não travar)
+        if not self.monitor_loop.is_running():
+            self.monitor_loop.start()
+
+    @tasks.loop(seconds=config.RCON_MONITOR_INTERVAL_SECONDS)
+    async def monitor_loop(self):
+        """Loop principal: a cada 30s, lê o estado atualizado pelo ark.py e atualiza o painel."""
+        if not config.RCON_MONITOR_ENABLED:
+            return
+
+        try:
+            print(f"[Monitor] 📊 Atualizando painel com dados do ark.py...")
+            await self._update_all_dashboards()
+            print(f"[Monitor] ✅ Ciclo concluído")
+
         except Exception as e:
             print(f"[Monitor] ❌ Erro: {e}")
-            logger.error(f"[Monitor] Erro ao limpar/recriar painéis: {e}", exc_info=True)
-            # Mesmo com erro, marca como completo para evitar travamento
-            self.startup_cleanup_completed = True
-        
-        print(f"[Monitor] ✅ Iniciando monitor_loop")
-        logger.info("[Monitor] ✅ Iniciando monitor_loop")
-    
-    async def _poll_single_server(self, server_name: str, server_info: Dict):
-        """Poll um servidor específico: executa listplayers, getgameinfo."""
-        try:
-            # Executa listplayers
-            response = await rcon_execute_with_retry(
-                host=server_info["host"],
-                port=server_info["port"],
-                password=server_info["password"],
-                command="listplayers",
-                max_retries=2,
-                timeout=20.0
-            )
-            
-            if response is None:
-                # Timeout/falha
-                self.state.update_server_status(server_name, is_online=False)
-                logger.warning(f"[Monitor] {server_name}: OFFLINE (timeout)")
-                return
-            
-            # Parse resposta
-            player_list = self._parse_listplayers(response)
-            player_count = len(player_list)
-            
-            # Atualiza estado
-            self.state.update_server_status(
-                server_name,
-                is_online=True,
-                player_count=player_count,
-                online_players=player_list
-            )
-            
-            logger.debug(f"[Monitor] {server_name}: ONLINE ({player_count} players)")
-            
-            # Se online, pode fazer health check adicional
-            
-        except Exception as e:
-            logger.error(f"[Monitor] Erro ao fazer poll de {server_name}: {e}")
-            self.state.update_server_status(server_name, is_online=False)
-    
-    def _parse_listplayers(self, response: str) -> List[str]:
-        """
-        Parse da resposta RCON 'listplayers'.
-        
-        Formato real:
-         0. PROPL@YER013, 76561198133059796
-         1. AnotherPlayer, 76561198987654321
-        
-        Extrai o NOME do jogador (parte antes da vírgula).
-        """
-        player_names = []
-        
-        for line in response.split('\n'):
-            line = line.strip()
-            if not line:  # Ignora linhas vazias
-                continue
-            
-            # Tenta encontrar padrão: "N. NAME, STEAMID" ou com "SteamID:" label
-            try:
-                # Se tem vírgula, tenta extrair Nome e validar SteamID
-                if "," in line:
-                    parts = line.split(",")
-                    if len(parts) >= 2:
-                        # Nome é a primeira parte antes da vírgula
-                        # Formato: "0. PROPL@YER013" -> remover "0. "
-                        name_part = parts[0].strip()
-                        
-                        # Remove índice do começo (ex: "0. " ou "123. ")
-                        if ". " in name_part:
-                            name_part = name_part.split(". ", 1)[1].strip()
-                        
-                        # Última parte pode ser "SteamID: 76561..."  ou só "76561..."
-                        steam_part = parts[-1].strip()
-                        
-                        # Remove "SteamID:" prefix se existir
-                        if steam_part.startswith("SteamID:"):
-                            steam_id = steam_part.replace("SteamID:", "").strip()
-                        else:
-                            steam_id = steam_part
-                        
-                        # Extrai apenas números (ignora possível ", Tribe: ..." no final)
-                        steam_id = "".join(c for c in steam_id if c.isdigit())
-                        
-                        # Válido SteamID tem 17 dígitos, e nome não vazio
-                        if len(steam_id) == 17 and name_part:
-                            player_names.append(name_part)
-                            logger.debug(f"[Monitor] Jogador encontrado: {name_part} ({steam_id})")
-            except Exception as e:
-                logger.debug(f"[Monitor] Erro ao parsear linha: {repr(line)} - {e}")
-        
-        return player_names
-    
+            logger.error(f"[Monitor] Erro no monitor loop: {e}")
+
     # ─────────────────────────────────────────────────────────────
     # DASHBOARDS — Painéis Informativos
     # ─────────────────────────────────────────────────────────────
@@ -368,22 +202,40 @@ class RconMonitor(commands.Cog):
         try:
             if message_id:
                 try:
-                    # Tenta buscar e editar
                     message = await channel.fetch_message(message_id)
                     await message.edit(embed=embed)
                     print(f"[Monitor] ✅ Painel EDITADO (ID: {message_id})")
                     return
                 except discord.NotFound:
-                    print(f"[Monitor] - Mensagem antiga não encontrada, criando nova...")
-            
-            # Cria nova mensagem
+                    print(f"[Monitor] - Mensagem salva não encontrada, buscando no canal...")
+                    self.state.set_dashboard_message_id("__COMBINED__", None)
+
+            # Busca mensagem existente do bot no canal (evita duplicatas)
+            existing: Optional[discord.Message] = None
+            async for msg in channel.history(limit=20):
+                if msg.author == self.bot.user and msg.embeds:
+                    if existing is None:
+                        existing = msg
+                    else:
+                        # Remove duplicata extra
+                        try:
+                            await msg.delete()
+                            print(f"[Monitor] 🗑️ Duplicata removida (ID: {msg.id})")
+                        except Exception:
+                            pass
+
+            if existing:
+                await existing.edit(embed=embed)
+                self.state.set_dashboard_message_id("__COMBINED__", existing.id)
+                print(f"[Monitor] ✅ Painel RECUPERADO e editado (ID: {existing.id})")
+                return
+
+            # Nenhuma mensagem encontrada: cria nova
             print(f"[Monitor] - Criando novo painel combinado...")
             message = await channel.send(embed=embed)
-            print(f"[Monitor] ✅ Painel CRIADO (ID: {message.id})")
-            
-            # Salva ID para próximas edições
             self.state.set_dashboard_message_id("__COMBINED__", message.id)
-            
+            print(f"[Monitor] ✅ Painel CRIADO (ID: {message.id})")
+
         except Exception as e:
             print(f"[Monitor] ❌ Erro ao atualizar painel: {e}")
             logger.error(f"[Monitor] Erro ao atualizar painel combinado: {e}", exc_info=True)
@@ -680,9 +532,9 @@ class RconMonitor(commands.Cog):
                     f"Tentado restart de {service_name}"
                 )
                 
-                # Aguarda 30s e refaz poll
+                # Aguarda 30s e atualiza painel
                 await asyncio.sleep(30)
-                await self._poll_single_server(server_name, server_info)
+                await self._update_all_dashboards()
                 
             except Exception as e:
                 logger.error(f"[Monitor] Erro no auto-recovery de {server_name}: {e}")
@@ -790,13 +642,6 @@ class RconMonitor(commands.Cog):
         # Inicializa estado de todos os servidores
         for server_name in self.servers.keys():
             self.state.update_server_status(server_name, is_online=False)
-        
-        # Faz poll uma vez
-        tasks = [
-            self._poll_single_server(server_name, server_info)
-            for server_name, server_info in self.servers.items()
-        ]
-        await asyncio.gather(*tasks, return_exceptions=True)
         
         # Atualiza painéis
         await self._update_all_dashboards()

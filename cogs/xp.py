@@ -7,6 +7,8 @@ from operator import itemgetter
 import config
 from typing import Optional, Any, Dict, Tuple, List
 import asyncio
+import time
+import random
 try:
     from utils.json_utils import load_json_async, save_json_async, load_json_sync, save_json_sync
 except ImportError:
@@ -39,8 +41,12 @@ XP_MIN = config.XP_MIN
 XP_MAX = config.XP_MAX
 XP_COOLDOWN = config.XP_COOLDOWN
 LEVEL_REWARDS = config.LEVEL_REWARDS
+VOICE_XP_GAIN = config.VOICE_XP_GAIN
+VOICE_XP_INTERVAL_MIN = config.VOICE_XP_INTERVAL_MIN
+MOD_ROLE_IDS: List[int] = config.MOD_ROLE_IDS
 
-XP_FILE = "xp.json"
+XP_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".bancos", "xp.json")
+_OLD_XP_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "xp.json")
 
 # Cache em memória para dados de XP (evita múltiplas leituras)
 _xp_data_cache: Optional[Dict[str, Any]] = None
@@ -94,11 +100,26 @@ class XPSystem(commands.Cog):
         # Batch save para evitar escritas excessivas
         self._pending_saves: Dict[str, Dict[str, Any]] = {}
         self._save_task: Optional[asyncio.Task] = None
+        # XP por voz: controla quando cada membro entrou no canal (timestamp)
+        self._voice_join_times: Dict[int, float] = {}
+        # Mensagem do painel de ranking (criada no startup)
+        self._leaderboard_message: Optional[discord.Message] = None
+        # Task de startup
+        self._startup_task: Optional[asyncio.Task] = None
+
+    async def cog_load(self) -> None:
+        """Inicia a task de startup ao cog ser carregado."""
+        self._startup_task = asyncio.create_task(self._startup())
+        print("[xp] 🚀 Task de startup criada.")
 
     async def cog_unload(self) -> None:
         """Cleanup ao descarregar o cog."""
+        if self._startup_task and not self._startup_task.done():
+            self._startup_task.cancel()
         if hasattr(self, "update_leaderboard_task") and self.update_leaderboard_task.is_running():  # type: ignore
             self.update_leaderboard_task.cancel()  # type: ignore
+        if self.voice_xp_task.is_running():
+            self.voice_xp_task.cancel()
         # Salva dados pendentes
         if self._pending_saves:
             await self._flush_pending_saves()
@@ -131,16 +152,133 @@ class XPSystem(commands.Cog):
             except Exception as e:
                 print(f"[xp] Erro no auto-save: {e}")
 
+    async def _startup(self) -> None:
+        """Task de startup: aguarda bot pronto, envia painel e inicia tasks."""
+        try:
+            await self.bot.wait_until_ready()
+            print("[xp] ⏳ Bot pronto! Iniciando XP startup...")
+
+            # Migra xp.json antigo para .bancos/xp.json se necessário
+            if os.path.isfile(_OLD_XP_FILE) and not os.path.isfile(self.xp_file):
+                try:
+                    import shutil
+                    os.makedirs(os.path.dirname(self.xp_file), exist_ok=True)
+                    shutil.copy2(_OLD_XP_FILE, self.xp_file)
+                    # Invalida cache para forçar leitura do novo arquivo
+                    global _xp_data_cache
+                    _xp_data_cache = None
+                    print(f"[xp] 📦 xp.json migrado para {self.xp_file}")
+                except Exception as e:
+                    print(f"[xp] ⚠️ Falha ao migrar xp.json: {e}")
+
+            # Registra membros já em voz
+            for guild in self.bot.guilds:
+                for vc in guild.voice_channels:
+                    for member in vc.members:
+                        if not member.bot:
+                            self._voice_join_times.setdefault(member.id, time.time())
+
+            # Inicia task de auto-save
+            if not self._save_task or self._save_task.done():
+                self._save_task = asyncio.create_task(self._auto_save_task())
+
+            # Limpa canal de ranking e envia painel fresco
+            channel = self.bot.get_channel(self.LEADERBOARD_CHANNEL_ID)
+            if channel is None:
+                try:
+                    channel = await self.bot.fetch_channel(self.LEADERBOARD_CHANNEL_ID)
+                except Exception as e:
+                    print(f"[xp] ❌ Canal de ranking {self.LEADERBOARD_CHANNEL_ID} não encontrado: {e}")
+                    channel = None
+            if isinstance(channel, discord.TextChannel):
+                print(f"[xp] 🧹 Limpando canal de ranking: #{channel.name}")
+                try:
+                    await channel.purge(limit=None)
+                except Exception as e:
+                    print(f"[xp] Erro ao limpar canal de ranking: {e}")
+                embed = await self.generate_leaderboard_embed(channel.guild, auto_update=True)
+                try:
+                    self._leaderboard_message = await channel.send(embed=embed)
+                    print("[xp] ✅ Painel de ranking enviado.")
+                except Exception as e:
+                    print(f"[xp] Erro ao enviar painel de ranking: {e}")
+            else:
+                print(f"[xp] ⚠️ Canal de ranking {self.LEADERBOARD_CHANNEL_ID} não encontrado ou inválido.")
+
+            # Inicia tasks
+            if not self.voice_xp_task.is_running():
+                self.voice_xp_task.start()
+            if not self.update_leaderboard_task.is_running():  # type: ignore
+                print("[xp] Tarefa de ranking iniciada.")
+                self.update_leaderboard_task.start()  # type: ignore
+
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            print(f"[xp] ❌ Erro no startup: {e}")
+            import traceback
+            traceback.print_exc()
+
     @commands.Cog.listener()
     async def on_ready(self):
-        """Inicia tasks ao bot ficar pronto."""
-        if not hasattr(self, "update_leaderboard_task") or not self.update_leaderboard_task.is_running():  # type: ignore
-            print("[xp] Tarefa de ranking iniciada.")
-            self.update_leaderboard_task.start()  # type: ignore
-        
-        # Inicia task de auto-save
-        if not self._save_task or self._save_task.done():
-            self._save_task = asyncio.create_task(self._auto_save_task())
+        """Reinicia tasks se o bot reconectar (apenas voz — ranking é gerido pelo _startup)."""
+        if not self.voice_xp_task.is_running():
+            self.voice_xp_task.start()
+
+    # ─────────────────────────────────────────────────────────────
+    # XP POR VOZ — a cada VOICE_XP_INTERVAL_MIN minutos
+    # ─────────────────────────────────────────────────────────────
+
+    @tasks.loop(minutes=VOICE_XP_INTERVAL_MIN)
+    async def voice_xp_task(self) -> None:
+        """Concede XP a todos os membros em canais de voz a cada intervalo."""
+        now = time.time()
+        for guild in self.bot.guilds:
+            for vc in guild.voice_channels:
+                # Filtra: ignora bots e membros sozinhos (opcional: pode remover essa regra)
+                humans = [m for m in vc.members if not m.bot]
+                if not humans:
+                    continue
+                for member in humans:
+                    # Garante que o membro está registrado (pode ter entrado antes do on_ready)
+                    self._voice_join_times.setdefault(member.id, now)
+                    _, leveled_up = await self.add_xp_and_check_level(member, VOICE_XP_GAIN)
+                    if leveled_up:
+                        try:
+                            await member.send(
+                                f"🎙️ Você subiu de nível enquanto estava em voz! "
+                                f"Use `!xp` no servidor para ver seu progresso."
+                            )
+                        except discord.Forbidden:
+                            pass
+
+    @voice_xp_task.before_loop
+    async def before_voice_xp_task(self):
+        await self.bot.wait_until_ready()
+
+    # ─────────────────────────────────────────────────────────────
+    # EVENTOS DE VOZ — rastreia entrada/saída
+    # ─────────────────────────────────────────────────────────────
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        after: discord.VoiceState,
+    ) -> None:
+        if member.bot:
+            return
+        # Entrou em um canal de voz
+        if before.channel is None and after.channel is not None:
+            self._voice_join_times[member.id] = time.time()
+        # Saiu de todos os canais
+        elif before.channel is not None and after.channel is None:
+            self._voice_join_times.pop(member.id, None)
+
+    # ─────────────────────────────────────────────────────────────
+    # LEADERBOARD
+    # ─────────────────────────────────────────────────────────────
 
     @tasks.loop(hours=1)
     async def update_leaderboard_task(self) -> None:
@@ -149,21 +287,28 @@ class XPSystem(commands.Cog):
             channel = self.bot.get_channel(self.LEADERBOARD_CHANNEL_ID)
             if not isinstance(channel, discord.TextChannel):
                 return
-            guild = channel.guild
-            embed = await self.generate_leaderboard_embed(guild, auto_update=True)
-            try:
-                async for message in channel.history(limit=50):
-                    if message.author == self.bot.user:
-                        eb = message.embeds[0] if message.embeds else None
-                        title = eb.title if eb else None
-                        if isinstance(title, str) and title.startswith("🏆 Ranking de XP"):
-                            await message.edit(embed=embed)
-                            return
-                await channel.send(embed=embed)
-            except Exception as e:
-                print(f"❌ ERRO no envio/edição da mensagem de ranking: {e}")
+            embed = await self.generate_leaderboard_embed(channel.guild, auto_update=True)
+            if self._leaderboard_message:
+                try:
+                    await self._leaderboard_message.edit(embed=embed)
+                    return
+                except discord.NotFound:
+                    self._leaderboard_message = None
+
+            # Referência perdida (ex: cog recarregado): busca mensagem existente do bot
+            async for msg in channel.history(limit=20):
+                if msg.author == self.bot.user and msg.embeds:
+                    self._leaderboard_message = msg
+                    await msg.edit(embed=embed)
+                    print("[xp] 🔁 Referência de ranking recuperada e editada.")
+                    return
+
+            # Nenhuma mensagem encontrada: limpa canal e cria do zero
+            await channel.purge(limit=None)
+            self._leaderboard_message = await channel.send(embed=embed)
+            print("[xp] ✅ Painel de ranking recriado.")
         except Exception as e:
-            print(f"[xp] ❌ ERRO CRÍTICO na tarefa de ranking: {e}. O bot continua rodando.")
+            print(f"[xp] ❌ ERRO na tarefa de ranking: {e}")
 
     async def get_user_data(self, user_id: int) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         """Obtém dados do usuário com cache otimizado."""
@@ -210,18 +355,27 @@ class XPSystem(commands.Cog):
     async def generate_leaderboard_embed(self, guild: discord.Guild, auto_update: bool = False) -> discord.Embed:
         """Gera embed do leaderboard com cache otimizado."""
         all_data: Dict[str, Any] = await load_xp_data_async(self.xp_file)
-        leaderboard: List[Tuple[int, int, int, int]] = []
+        regular: List[Tuple[int, int, int, int]] = []
+        admins: List[Tuple[int, int, int, int]] = []
         for user_id_str, data in all_data.items():
+            if not isinstance(data, dict):
+                continue
             uid = int(user_id_str)
             level = int(data.get('level', 0))
             xp = int(data.get('xp', 0))
             weighted_xp = level * 100000 + xp
-            leaderboard.append((uid, level, xp, weighted_xp))
-        leaderboard.sort(key=itemgetter(3), reverse=True)
+            member = guild.get_member(uid)
+            is_admin = member is not None and any(r.id in MOD_ROLE_IDS for r in member.roles)
+            if is_admin:
+                admins.append((uid, level, xp, weighted_xp))
+            else:
+                regular.append((uid, level, xp, weighted_xp))
+        regular.sort(key=itemgetter(3), reverse=True)
+        admins.sort(key=itemgetter(3), reverse=True)
         title_suffix = " — Atualizado Automaticamente" if auto_update else ""
         embed = discord.Embed(title=f"🏆 Ranking de XP (Top 10){title_suffix}", color=discord.Color.dark_orange())
         rank_text = ""
-        for i, (user_id, level, xp, _) in enumerate(leaderboard[:10]):
+        for i, (user_id, level, xp, _) in enumerate(regular[:10]):
             try:
                 member = guild.get_member(user_id)
                 name = member.display_name if member else f"Usuário Desconhecido ({user_id})"
@@ -229,14 +383,51 @@ class XPSystem(commands.Cog):
                 rank_text += f"{symbol} **{name}** - Nível **{level}** ({xp} XP)\n"
             except Exception:
                 continue
-        embed.add_field(name="Os Melhores:", value=rank_text if rank_text else "Nenhum XP registrado ainda.")
+        embed.add_field(name="Os Melhores:", value=rank_text if rank_text else "Nenhum XP registrado ainda.", inline=False)
+        if admins:
+            admin_text = ""
+            for user_id, level, xp, _ in admins:
+                try:
+                    member = guild.get_member(user_id)
+                    name = member.display_name if member else f"Usuário Desconhecido ({user_id})"
+                    admin_text += f"🛡️ **{name}** - Nível **{level}** ({xp} XP)\n"
+                except Exception:
+                    continue
+            if admin_text:
+                embed.add_field(name="Equipe (fora do ranking):", value=admin_text, inline=False)
         embed.set_footer(text=("Próxima atualização em aproximadamente 1 hora." if auto_update else "Use !xp para ver seu progresso detalhado."))
         return embed
 
+    # ─────────────────────────────────────────────────────────────
+    # XP POR MENSAGEM
+    # ─────────────────────────────────────────────────────────────
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
-        # Implementação de XP deve ser adicionada conforme sua lógica original.
-        pass
+        if message.author.bot or not message.guild:
+            return
+        if not isinstance(message.author, discord.Member):
+            return
+
+        user_id = message.author.id
+        now = time.time()
+        last = self.cooldowns.get(user_id, 0.0)
+
+        if now - last < XP_COOLDOWN:
+            return
+
+        self.cooldowns[user_id] = now
+        xp_gain = random.randint(XP_MIN, XP_MAX)
+        new_level, leveled_up = await self.add_xp_and_check_level(message.author, xp_gain)
+
+        if leveled_up:
+            try:
+                await message.channel.send(
+                    f"🎉 Parabéns {message.author.mention}! Você atingiu o **Nível {new_level}**!",
+                    delete_after=15,
+                )
+            except discord.Forbidden:
+                pass
 
     @commands.command(name="xp", aliases=["level", "lvl"])
     async def show_xp(self, ctx: commands.Context[Any], member: Optional[discord.Member] = None):

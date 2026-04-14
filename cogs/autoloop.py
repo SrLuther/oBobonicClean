@@ -111,8 +111,8 @@ class AutoLoopCog(commands.Cog):
             channel = self.bot.get_channel(TARGET_CHANNEL_ID)
             role = discord.utils.get(self.bot.guilds[0].roles, id=TARGET_ROLE_ID)
             
-            if not channel:
-                print(f"[AUTOLOOP] Canal {TARGET_CHANNEL_ID} não encontrado")
+            if not isinstance(channel, discord.TextChannel):
+                print(f"[AUTOLOOP] Canal {TARGET_CHANNEL_ID} não encontrado ou não é TextChannel")
                 return
             
             message_content = self.get_next_message()
@@ -163,7 +163,7 @@ class AutoLoopCog(commands.Cog):
         Apenas administradores podem usar este comando.
         """
         # Verifica se o usuário é administrador
-        if not ctx.author.guild_permissions.administrator:
+        if not isinstance(ctx.author, discord.Member) or not ctx.author.guild_permissions.administrator:
             await ctx.send("❌ Apenas administradores podem usar este comando!")
             return
         
@@ -191,7 +191,7 @@ class AutoLoopCog(commands.Cog):
     async def list_loop_messages(self, ctx: commands.Context[Any]):
         """Lista todas as mensagens que serão enviadas automaticamente."""
         # Verifica permissão
-        if not ctx.author.guild_permissions.administrator:
+        if not isinstance(ctx.author, discord.Member) or not ctx.author.guild_permissions.administrator:
             await ctx.send("❌ Apenas administradores podem usar este comando!")
             return
         
@@ -221,7 +221,7 @@ class AutoLoopCog(commands.Cog):
     async def remove_loop_message(self, ctx: commands.Context[Any]):
         """Remove uma mensagem do loop por índice."""
         # Verifica permissão
-        if not ctx.author.guild_permissions.administrator:
+        if not isinstance(ctx.author, discord.Member) or not ctx.author.guild_permissions.administrator:
             await ctx.send("❌ Apenas administradores podem usar este comando!")
             return
         
@@ -254,7 +254,7 @@ class AutoLoopCog(commands.Cog):
     async def clear_loop_messages(self, ctx: commands.Context[Any]):
         """Remove TODAS as mensagens do loop (requer confirmação)."""
         # Verifica permissão
-        if not ctx.author.guild_permissions.administrator:
+        if not isinstance(ctx.author, discord.Member) or not ctx.author.guild_permissions.administrator:
             await ctx.send("❌ Apenas administradores podem usar este comando!")
             return
         
@@ -297,7 +297,7 @@ class AutoLoopCog(commands.Cog):
     async def force_send_message(self, ctx: commands.Context[Any]):
         """Força o envio imediato de uma mensagem aleatória do loop."""
         # Verifica permissão
-        if not ctx.author.guild_permissions.administrator:
+        if not isinstance(ctx.author, discord.Member) or not ctx.author.guild_permissions.administrator:
             await ctx.send("❌ Apenas administradores podem usar este comando!")
             return
         
@@ -309,8 +309,8 @@ class AutoLoopCog(commands.Cog):
             channel = self.bot.get_channel(TARGET_CHANNEL_ID)
             role = discord.utils.get(self.bot.guilds[0].roles, id=TARGET_ROLE_ID)
             
-            if not channel:
-                await ctx.send(f"❌ Canal {TARGET_CHANNEL_ID} não encontrado!")
+            if not isinstance(channel, discord.TextChannel):
+                await ctx.send(f"❌ Canal {TARGET_CHANNEL_ID} não encontrado ou não é TextChannel!")
                 return
             
             message_content = self.get_next_message()

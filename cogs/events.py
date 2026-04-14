@@ -26,18 +26,20 @@ class EventsCog(commands.Cog):
     
     # Mensagens de broadcast para todos os mapas
     BROADCAST_MESSAGES = [
-        "Loja disponivel! Aperte F2 para acessar e comprar itens exclusivos!",
-        "Dica: Sempre desconecte sem itens imoprtantes em seu personagem.",
-        "Dica: Traga seus amigos e seja recompensado, confira o sistema de indicacos no discord para mais detalhes!",
-        "Dica: Construa uma base fechada, algumas estruturas ficam abertas e outros players podem acessar inventarios. Garanta seguranca.",
+        "Loja disponível! Aperte F2 para acessar e comprar itens exclusivos!",
+        "Dica: Sempre desconecte sem itens importantes em seu personagem.",
+        "Dica: Traga seus amigos e seja recompensado, confira o sistema de indicações no discord para mais detalhes!",
+        "Dica: Construa uma base fechada, algumas estruturas ficam abertas e outros players podem acessar inventários. Garanta segurança.",
         "Entre no nosso Discord para dicas exclusivas, suporte e comunidade! Acesse pela loja (F2)",
-        "Dica: Use estruturas de telha para construir mais rapido e economizar recursos!",
-        "Dica: Desligue ou feche o jogo em um sleeping bag seguro para evitar perder seus itens!",
-        "Aviso: Os servidores reiniciam todos os dias de madrugada para manutencao. Prepare-se!",
-        "Dica: Voce pode se manter conectado farmando pontos! Nao existe kick por tempo de inatividade.",
-        "VIP: Membros VIP recebem multiplos bonus! Compre VIP na loja e desbloqueie vantagens exclusivas.",
-        "O nivel maximo do personagem esta configurado em 215. 115 comum + 100 de ascensao. Planeje seu progresso e evolucao com cuidado!",
-        "VIP ASSINATURA: Temos um sistema de assinatura VIP mensal onde voce define o valor que quer contrinuir, compre na loja e aproveite bonus exclusivos enquanto sua assinatura estiver ativa.",
+        "Dica: Utilize o sistema de upload, /up /dow no chat do game",
+        "Atenção: Utilizar o Creature Finder para localizar criaturas pode causar muito lag. Use com moderação!",
+        "Dica: Para esconder seu chat automaticamente pressione a tecla que fica ao lado do Z no teclado.",
+        "Dica: Vincule seu game ao servidor discord para resgatar pontos diariamente e utilizar autokick",
+        "Aviso: Os servidores reiniciam todos os dias de madrugada para manutenção. Prepare-se!",
+        "Dica: Você pode se manter conectado farmando pontos! Não existe kick por tempo de inatividade.",
+        "VIP: Membros VIP recebem múltiplos bônus! Compre VIP na loja e desbloqueie vantagens exclusivas.",
+        "O nível máximo do personagem está configurado em 215. 115 comum + 100 de ascensão. Planeje seu progresso e evolução com cuidado!",
+        "VIP ASSINATURA: Temos um sistema de assinatura VIP mensal onde você define o valor que quer contribuir, compre na loja e aproveite bônus exclusivos enquanto sua assinatura estiver ativa.",
     ]
     
     # Mapas para enviar broadcasts (apenas os habilitados no .env)

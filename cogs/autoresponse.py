@@ -1,5 +1,6 @@
 # cogs/autoresponse.py
 import discord
+import os
 import random
 import json
 from discord.ext import commands
@@ -7,7 +8,7 @@ from datetime import datetime
 from config import CANAL_STATUS_ID, GUILD_ID, MEMBER_ROLE_ID
 
 TARGET_CHANNEL_ID = CANAL_STATUS_ID
-DATA_FILE = "bot_data.json"
+DATA_FILE = ".bancos/members.json"
 
 def get_datetime_pt_br():
     now = datetime.now()
@@ -34,6 +35,7 @@ def load_data():
 def save_data(data):
     """Salva dados do bot de forma otimizada."""
     try:
+        os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
         with open(DATA_FILE, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
     except (IOError, OSError) as e:

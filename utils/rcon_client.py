@@ -195,8 +195,9 @@ class RconClient:
             
             size = struct.unpack('<I', header[0:4])[0]
             
-            # Recebe corpo (tamanho = size + 4 para os null terminators)
-            body_size = size + 4
+            # SIZE inclui ID(4) + Type(4) + body + null(2), já lemos ID+Type no header
+            # Bytes restantes = size - 8
+            body_size = size - 8
             body = b''
             while len(body) < body_size:
                 remaining = body_size - len(body)

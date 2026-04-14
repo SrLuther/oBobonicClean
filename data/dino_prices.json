@@ -4919,20 +4919,21 @@
     },
     "indominus_rex": {
       "name": "Indominus Rex",
-      "base_value": 10000,
+      "base_value": 120000,
       "stat_multipliers": {
-        "melee": 280,
-        "health": 190,
-        "stamina": 30,
-        "weight": 25,
-        "oxygen": 5,
-        "food": 12
+        "melee": 420,
+        "health": 300,
+        "stamina": 50,
+        "weight": 40,
+        "oxygen": 8,
+        "food": 16
       },
       "optimal_stats": {
         "melee": 300,
         "health": 12000
       },
-      "category": "apex_combat"
+      "category": "apex_combat",
+      "no_castration": true
     },
     "manticore": {
       "name": "Manticore",
@@ -24024,6 +24025,349 @@
         "health": 12000
       },
       "category": "demonic_variant"
+    },
+
+    "indoraptor": {
+      "name": "IndoRaptor",
+      "base_value": 95000,
+      "stat_multipliers": {
+        "melee": 380,
+        "health": 265,
+        "stamina": 45,
+        "weight": 35,
+        "oxygen": 7,
+        "food": 14
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat",
+      "no_castration": true
+    },
+
+    "armaedron": {
+      "name": "Armaedron",
+      "base_value": 70000,
+      "stat_multipliers": {
+        "melee": 350,
+        "health": 240,
+        "stamina": 42,
+        "weight": 38,
+        "oxygen": 7,
+        "food": 15
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+
+    "diru_ya_ku": {
+      "name": "Diru-Ya-Ku",
+      "base_value": 18000,
+      "stat_multipliers": {
+        "melee": 220,
+        "health": 155,
+        "stamina": 32,
+        "weight": 27,
+        "oxygen": 6,
+        "food": 13
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+
+    "lukastiblos": {
+      "name": "Lukastiblos",
+      "base_value": 25000,
+      "stat_multipliers": {
+        "melee": 270,
+        "health": 175,
+        "stamina": 35,
+        "weight": 28,
+        "oxygen": 6,
+        "food": 13
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+
+    "emalroth": {
+      "name": "Emalroth",
+      "base_value": 20000,
+      "stat_multipliers": {
+        "melee": 195,
+        "health": 160,
+        "stamina": 30,
+        "weight": 30,
+        "oxygen": 6,
+        "food": 13
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "criacao"
+    },
+
+    "puretotokage": {
+      "name": "Puretotokage",
+      "base_value": 15000,
+      "stat_multipliers": {
+        "melee": 200,
+        "health": 145,
+        "stamina": 30,
+        "weight": 26,
+        "oxygen": 6,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+
+    "kutsu_ya_ku": {
+      "name": "Kutsu-Ya-Ku",
+      "base_value": 22000,
+      "stat_multipliers": {
+        "melee": 240,
+        "health": 165,
+        "stamina": 33,
+        "weight": 27,
+        "oxygen": 6,
+        "food": 13
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+
+    "brachiosaurus": {
+      "name": "Brachiosaurus",
+      "base_value": 12000,
+      "stat_multipliers": {
+        "melee": 160,
+        "health": 180,
+        "stamina": 30,
+        "weight": 50,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "transporte"
+    },
+
+    "carcharodontosaurus": {
+      "name": "Carcharodontosaurus",
+      "base_value": 18000,
+      "stat_multipliers": {
+        "melee": 270,
+        "health": 175,
+        "stamina": 35,
+        "weight": 28,
+        "oxygen": 5,
+        "food": 13
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+
+    "acrocanthosaurus": {
+      "name": "Acrocanthosaurus",
+      "base_value": 14000,
+      "stat_multipliers": {
+        "melee": 230,
+        "health": 160,
+        "stamina": 32,
+        "weight": 27,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+
+    "deinosuchus": {
+      "name": "Deinosuchus",
+      "base_value": 16000,
+      "stat_multipliers": {
+        "melee": 245,
+        "health": 170,
+        "stamina": 32,
+        "weight": 28,
+        "oxygen": 10,
+        "food": 13
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+
+    "xiphactinus": {
+      "name": "Xiphactinus",
+      "base_value": 12000,
+      "stat_multipliers": {
+        "melee": 200,
+        "health": 145,
+        "stamina": 30,
+        "weight": 26,
+        "oxygen": 12,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+
+    "concavenator": {
+      "name": "Concavenator",
+      "base_value": 11000,
+      "stat_multipliers": {
+        "melee": 190,
+        "health": 140,
+        "stamina": 30,
+        "weight": 26,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+
+    "cryolophosaurus": {
+      "name": "Cryolophosaurus",
+      "base_value": 13000,
+      "stat_multipliers": {
+        "melee": 200,
+        "health": 150,
+        "stamina": 30,
+        "weight": 26,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+
+    "hesperornithoides": {
+      "name": "Hesperornithoides",
+      "base_value": 7000,
+      "stat_multipliers": {
+        "melee": 150,
+        "health": 110,
+        "stamina": 30,
+        "weight": 25,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "utilidade"
+    },
+
+    "gorgonops": {
+      "name": "Gorgonops",
+      "base_value": 13000,
+      "stat_multipliers": {
+        "melee": 220,
+        "health": 155,
+        "stamina": 32,
+        "weight": 26,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+
+    "gigantophis": {
+      "name": "Gigantophis",
+      "base_value": 14000,
+      "stat_multipliers": {
+        "melee": 220,
+        "health": 155,
+        "stamina": 30,
+        "weight": 27,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "pve_combat"
+    },
+
+    "meraxes": {
+      "name": "Meraxes Gigas",
+      "base_value": 20000,
+      "stat_multipliers": {
+        "melee": 260,
+        "health": 175,
+        "stamina": 35,
+        "weight": 28,
+        "oxygen": 5,
+        "food": 13
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "apex_combat"
+    },
+
+    "cotylorhynchus": {
+      "name": "Cotylorhynchus",
+      "base_value": 9000,
+      "stat_multipliers": {
+        "melee": 130,
+        "health": 130,
+        "stamina": 30,
+        "weight": 35,
+        "oxygen": 5,
+        "food": 12
+      },
+      "optimal_stats": {
+        "melee": 300,
+        "health": 12000
+      },
+      "category": "farming"
     }
   }
 }

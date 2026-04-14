@@ -76,9 +76,14 @@ intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
 
-bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
-
 COGS = config.COGS
+
+class OBobonicBot(commands.Bot):
+    async def setup_hook(self):
+        """Executado UMA ÚNICA vez antes do bot conectar ao gateway."""
+        await load_cogs(self)
+
+bot = OBobonicBot(command_prefix="!", intents=intents, help_command=None)
 
 # Debug
 print("-" * 50)
@@ -377,9 +382,6 @@ async def on_ready():
     user = bot.user
     print(f"\n🚀 Bot Logado como {user} (ID: {user.id if user else 'desconhecido'})")
 
-    # start capture já chamado no __main__
-    cogs_loaded_successfully = await load_cogs(bot)
-
     # sincroniza comandos
     try:
         if GUILD_ID:
@@ -427,8 +429,7 @@ async def on_ready():
             log_catcher.start_capture()
             print(f"❌ ERRO CRÍTICO ao enviar log para o Discord: {e}")
 
-    status_message = "✅ Bot pronto e rodando!" if cogs_loaded_successfully else "⚠️ Bot rodando (com falhas)!"
-    print(status_message)
+    print("✅ Bot pronto e rodando!")
 
 # --------------------
 # 7. EXECUÇÃO PRINCIPAL

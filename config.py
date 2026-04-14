@@ -74,7 +74,7 @@ MOD_ROLE_IDS = [1440828410556321882, 1440828412599210135]  # Cargos Moderadores/
 STAFF_ROLE_ID = 1440828412599210135  # Único que pode usar botão STAFF no ticket
 
 # --- Canais de leaderboard ---
-LEADERBOARD_CHANNEL_ID = get_int_env("LEADERBOARD_CHANNEL_ID", 123456789012345678)
+LEADERBOARD_CHANNEL_ID = get_int_env("LEADERBOARD_CHANNEL_ID", 1493443885542674595)
 
 # --- Logs ---
 LOG_SEPARATOR = os.getenv("LOG_SEPARATOR", "--------------------------------------------------------")
@@ -106,11 +106,15 @@ RCON_AUTO_RECOVERY_ENABLED = os.getenv("RCON_AUTO_RECOVERY_ENABLED", "true").low
 #   ARK_MAP2_NAME, ARK_MAP2_PORT, ...
 ARK_MAPS: dict[str, dict] = {}
 _i = 1
-while True:
+_consecutive_misses = 0
+while _consecutive_misses < 3:  # Para após 3 números consecutivos sem entrada
     _name = os.getenv(f"ARK_MAP{_i}_NAME")
     _port = os.getenv(f"ARK_MAP{_i}_PORT")
     if not _name or not _port:
-        break
+        _i += 1
+        _consecutive_misses += 1
+        continue
+    _consecutive_misses = 0
     ARK_MAPS[_name.lower()] = {
         "name": _name,
         "host": os.getenv(f"ARK_MAP{_i}_HOST", ARK_DEFAULT_HOST),
@@ -119,6 +123,7 @@ while True:
         # Nome do serviço systemd que controla este mapa (opcional)
         # Exemplo: "ark-theisland.service" ou "ark@theisland.service"
         "service": os.getenv(f"ARK_MAP{_i}_SERVICE", ""),
+        "max_players": int(os.getenv(f"ARK_MAP{_i}_MAX_PLAYERS", "50")),
     }
     _i += 1
 
@@ -140,6 +145,7 @@ TWITCH_CHANNEL_REQUEST = get_int_env("TWITCH_CHANNEL_REQUEST", 14907650000000000
 TWITCH_CHANNEL_APPROVAL = get_int_env("TWITCH_CHANNEL_APPROVAL", 1490765100000000000)
 TWITCH_CHANNEL_NOTIF = get_int_env("TWITCH_CHANNEL_NOTIF", 1490765200000000000)
 TWITCH_CLIENT_ID = os.getenv("TWITCH_CLIENT_ID", "")
+TWITCH_CLIENT_SECRET = os.getenv("TWITCH_CLIENT_SECRET", "")
 TWITCH_ACCESS_TOKEN = os.getenv("TWITCH_ACCESS_TOKEN", "")
 
 # ======================================================================
@@ -152,7 +158,7 @@ COGS = [
     'tickets',   # Só o pacote tickets
     'lojas',     # Sistema de lojas pessoais
     'twitch_monitor', # Monitor de streamers Twitch
-    # 'dinosaur_valuer',  # ❌ DESABILITADO: módulo dino_calculator removido
+    'dinosaur_valuer',  # ✅ Sistema de avaliação de dinossauros (Vanilla only)
     # 'nickname_updater',  # ❌ DESABILITADO: módulo nicknameUpdater removido
     'vip',       # Painel VIP com link para a loja
     'admin', 
@@ -165,7 +171,6 @@ COGS = [
     'referrals',  # Sistema de indicações e ranking de referências
     'voicemanager',
     'autoloop',  # Sistema de mensagens automáticas a cada 6 horas
-    'music',     # Player de música via YouTube
     'changelog', # Sistema de changelog versionado do servidor
 ]
 

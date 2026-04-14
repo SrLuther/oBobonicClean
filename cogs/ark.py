@@ -14,7 +14,7 @@ from datetime import datetime
 from typing import Optional
 
 import config
-from utils import get_monitor, parse_rcon_listplayers
+from utils import get_monitor, parse_rcon_listplayers, get_ark_state
 
 # ─────────────────────────────────────────────────────────────
 # CONFIGURAÇÕES
@@ -111,52 +111,44 @@ def get_map_list_text() -> str:
     return ", ".join(f"`{v['name']}`" for v in config.ARK_MAPS.values())
 
 async def rcon_run(host: str, port: int, password: str, cmd: str, retry: int = RCON_MAX_RETRIES) -> str:
-    """
-    Executa comando RCON.
-    Problema: Resposta do RCON é MUITO grande ou lenta - precisa de timeout 30-60s.
-    """
-    from rcon import Client
-    
-    # Timeouts progressivos - MUITO maiores
-    timeouts_to_try = [10, 15, 20, 30, 45, 60]
+    """Executa comando RCON via rcon.source.Client."""
+    from rcon.source import Client
+
+    socket_timeout = 15
     last_error: Exception | None = None
-    
-    for socket_timeout in timeouts_to_try:
+
+    for attempt in range(1, retry + 2):
         try:
-            print(f"[RCON] Tentando {host}:{port} com socket_timeout={socket_timeout}s")
-            
-            def _execute_rcon():
+            print(f"[RCON] Tentando {host}:{port} (tentativa {attempt})")
+
+            def _execute_rcon(h=host, p=port, pw=password, c=cmd, t=socket_timeout):
                 try:
-                    client = Client(host=host, port=port, passwd=password, timeout=socket_timeout)
-                    print(f"[RCON]   ✅ Conectado! Enviando: {cmd}")
-                    
-                    response = client.run(cmd)
-                    print(f"[RCON]   ✅ Sucesso! {len(response)} bytes")
-                    
-                    client.close()
-                    return response
+                    with Client(host=h, port=p, passwd=pw, timeout=t) as client:
+                        print(f"[RCON]   ✅ Conectado! Enviando: {c}")
+                        response = client.run(c)
+                        print(f"[RCON]   ✅ Sucesso! {len(response)} bytes")
+                        return response
                 except Exception as e:
                     print(f"[RCON]   ❌ {type(e).__name__}: {str(e)[:100]}")
                     raise
-            
-            # Timeout asyncio: socket_timeout + 5
+
             result = await asyncio.wait_for(
                 asyncio.to_thread(_execute_rcon),
                 timeout=socket_timeout + 5
             )
             return result
-            
+
         except asyncio.TimeoutError:
-            print(f"[RCON] ⏱️ Timeout asyncio (socket={socket_timeout}s)")
-            last_error = TimeoutError(f"Timeout {socket_timeout}s em {host}:{port}")
-            await asyncio.sleep(0.3)
-            
+            print(f"[RCON] ⏱️ Timeout em {host}:{port}")
+            last_error = TimeoutError(f"Timeout em {host}:{port}")
+            await asyncio.sleep(1)
+
         except Exception as e:
             print(f"[RCON] ❌ Erro: {str(e)[:100]}")
             last_error = e
-            await asyncio.sleep(0.3)
-    
-    raise last_error or Exception(f"RCON falhou em {host}:{port} após todos os timeouts")
+            await asyncio.sleep(1)
+
+    raise last_error or Exception(f"RCON falhou em {host}:{port}")
 
 async def systemctl_run(action: str, service: str) -> tuple[int, str, str]:
     """Executa systemctl comando."""
@@ -673,6 +665,7 @@ class ArkCog(commands.Cog, name="ARK RCON"):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.monitor = get_monitor()  # Inicializa monitor
+        self.ark_state = get_ark_state()  # Estado compartilhado com rcon_monitor
         self.monitor_task = None  # Task de monitoramento contínuo
         self._monitoring_active = False
 
@@ -704,6 +697,7 @@ class ArkCog(commands.Cog, name="ARK RCON"):
                         
                         # Parse e atualiza monitor
                         players = parse_rcon_listplayers(response)
+                        player_names = [name for _, name in players]
                         
                         # Marca como online
                         for steam_id, name in players:
@@ -714,12 +708,19 @@ class ArkCog(commands.Cog, name="ARK RCON"):
                         if crashed:
                             print(f"[Monitor] ⚠️ {len(crashed)} crash(es) detectado(s) em {info['name']}")
                         
+                        # Atualiza estado compartilhado com rcon_monitor
+                        self.ark_state.update_server_status(
+                            info["name"], is_online=True,
+                            player_count=len(players), online_players=player_names
+                        )
                         print(f"[Monitor] ✅ {info['name']}: {len(players)} online")
                         
                     except asyncio.TimeoutError:
                         print(f"[Monitor] ⏱️ Timeout em {info['name']} - RCON provavelmente offline")
+                        self.ark_state.update_server_status(info["name"], is_online=False)
                     except Exception as e:
                         print(f"[Monitor] ❌ Erro em {info['name']}: {str(e)[:100]}")
+                        self.ark_state.update_server_status(info["name"], is_online=False)
                 
                 # Aguarda até próximo ciclo
                 await asyncio.sleep(MONITOR_CYCLE_SECONDS)

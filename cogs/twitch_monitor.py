@@ -12,6 +12,7 @@ import re
 import asyncio
 from typing import Dict, Any, Optional, cast
 from datetime import datetime, timezone
+from functools import partial
 
 import config
 # from nicknameUpdater import update_member_nickname  # ❌ DESABILITADO: módulo removido
@@ -124,30 +125,24 @@ class TwitchMonitorCog(commands.Cog):
         self.approved_channels: Dict[str, int] = {}
         self.pending_requests: Dict[str, Dict] = {}
         self.stream_state: Dict[str, Dict[str, Any]] = {}
-        self.panels_created = False  # Flag para evitar recriação múltipla
-        
+        self._access_token: str = config.TWITCH_ACCESS_TOKEN
+        self._startup_task: Optional[asyncio.Task] = None
+
         logger.info("[TWITCH] 🔧 TwitchMonitorCog inicializando...")
         print(f"[TWITCH] 📡 Carregando dados...")
-        
         self.load_data()
-        
-        # Inicia monitor de streams apenas se credenciais estão configuradas
-        if config.TWITCH_CLIENT_ID and config.TWITCH_ACCESS_TOKEN:
-            try:
-                print(f"[TWITCH] ✅ Credenciais encontradas, iniciando monitor...")
-                self.check_streams.start()
-                logger.info(f"[TWITCH] ✅ Monitor iniciado. {len(self.approved_channels)} canal(is)")
-            except Exception as e:
-                print(f"[TWITCH] ❌ Erro ao iniciar monitor: {e}")
-                logger.error(f"[TWITCH] ❌ Erro ao iniciar monitor: {e}")
-        else:
-            print(f"[TWITCH] ⚠️ Credenciais não configuradas - Monitor desativado (painéis funcionam normalmente)")
-            logger.warning("[TWITCH] ⚠️ Credenciais não configuradas - Monitor desativado (painéis funcionam normalmente)")
-        
+
         print(f"[TWITCH] ✅ TwitchMonitorCog pronto!")
         logger.info("[TWITCH] ✅ TwitchMonitorCog pronto!")
-    
+
+    async def cog_load(self) -> None:
+        """Inicia startup ao cog ser carregado."""
+        self._startup_task = asyncio.create_task(self._startup())
+        print("[TWITCH] 🚀 Task de startup criada.")
+
     def cog_unload(self):
+        if self._startup_task and not self._startup_task.done():
+            self._startup_task.cancel()
         if hasattr(self, 'check_streams') and self.check_streams.is_running():
             self.check_streams.cancel()
         logger.info("[TWITCH] Monitor cancelado")
@@ -155,56 +150,64 @@ class TwitchMonitorCog(commands.Cog):
     # ─────────────────────────────────────────────────────────────
     # INICIALIZAÇÃO AUTOMÁTICA
     # ─────────────────────────────────────────────────────────────
-    
-    @commands.Cog.listener()
-    async def on_ready(self):
-        """Cria os painéis automaticamente ao iniciar o bot."""
-        print(f"[TWITCH] 🚨 on_ready() CHAMADO!")
-        logger.warning("[TWITCH] 🚨 on_ready() CHAMADO!")  # DEBUG
-        
-        # Evita recriação múltipla (on_ready pode ser chamado várias vezes)
-        if self.panels_created:
-            print(f"[TWITCH] ⏭️  Painéis já foram criados nesta sessão")
-            logger.info("[TWITCH] Painéis já foram criados nesta sessão")
-            return
-        
-        await self._create_panels_internal()
-    
+
+    async def _startup(self) -> None:
+        """Aguarda bot pronto, renova token se possível e cria painéis."""
+        try:
+            await self.bot.wait_until_ready()
+            print("[TWITCH] ⏳ Bot pronto! Iniciando startup...")
+
+            # Tenta renovar o token se client_secret estiver configurado
+            if config.TWITCH_CLIENT_ID and config.TWITCH_CLIENT_SECRET:
+                await self._refresh_token()
+            elif not config.TWITCH_CLIENT_ID or not self._access_token:
+                print("[TWITCH] ⚠️ Credenciais incompletas - monitor de streams desativado")
+                logger.warning("[TWITCH] ⚠️ Credenciais incompletas - monitor de streams desativado")
+
+            # Inicia monitor de streams se credenciais válidas
+            if config.TWITCH_CLIENT_ID and self._access_token:
+                if not self.check_streams.is_running():
+                    self.check_streams.start()
+                    logger.info(f"[TWITCH] ✅ Monitor iniciado. {len(self.approved_channels)} canal(is)")
+
+            # Cria painéis
+            await self._create_panels_internal()
+
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            print(f"[TWITCH] ❌ Erro no startup: {e}")
+            logger.error(f"[TWITCH] ❌ Erro no startup: {e}")
+            import traceback
+            traceback.print_exc()
+
     async def force_create_panels(self):
-        """Força recriação dos painéis (mesmo se já foram criados)."""
+        """Força recriação dos painéis."""
         print(f"[TWITCH] 💪 force_create_panels() chamado!")
-        logger.info("[TWITCH] 💪 force_create_panels() chamado - ignorando flag")
-        self.panels_created = False  # Reseta flag
+        logger.info("[TWITCH] 💪 force_create_panels() chamado")
         await self._create_panels_internal()
-    
+
     async def _create_panels_internal(self):
-        """Um interno que faz o trabalho de criar painéis."""
+        """Cria os painéis de solicitação e aprovação."""
         print(f"[TWITCH] 🔍 Verificando canais...")
         print(f"[TWITCH]   • REQUEST ({CHANNEL_REQUEST}): {self.bot.get_channel(CHANNEL_REQUEST)}")
         print(f"[TWITCH]   • APPROVAL ({CHANNEL_APPROVAL}): {self.bot.get_channel(CHANNEL_APPROVAL)}")
         print(f"[TWITCH]   • NOTIF ({CHANNEL_NOTIF}): {self.bot.get_channel(CHANNEL_NOTIF)}")
-        
-        self.panels_created = True
-        
-        print(f"[TWITCH] 🔄 Bot ready! Recriando painéis automáticos...")
-        logger.info("[TWITCH] 🔄 Bot ready! Recriando painéis automáticos...")
-        await asyncio.sleep(1)  # Aguarda um pouco para garantir que canais estão prontos
-        
+
+        print(f"[TWITCH] 🔄 Recriando painéis automáticos...")
+        logger.info("[TWITCH] 🔄 Recriando painéis automáticos...")
+
         try:
             print(f"[TWITCH] 📝 Etapa 1: Criando painel de solicitação...")
-            logger.info("[TWITCH] 📝 Etapa 1: Criando painel de solicitação...")
             await self._create_request_panel()
             print(f"[TWITCH] ✅ Painel de solicitação criado!")
-            logger.info("[TWITCH] ✅ Painel de solicitação criado!")
-            
+
             await asyncio.sleep(1)
-            
+
             print(f"[TWITCH] 📋 Etapa 2: Atualizando painel de aprovação...")
-            logger.info("[TWITCH] 📋 Etapa 2: Atualizando painel de aprovação...")
             await self._update_approval_panel()
             print(f"[TWITCH] ✅ Painel de aprovação atualizado!")
-            logger.info("[TWITCH] ✅ Painel de aprovação atualizado!")
-            
+
             print(f"[TWITCH] 🎉 PAINÉIS CRIADOS COM SUCESSO!")
             logger.info("[TWITCH] 🎉 PAINÉIS CRIADOS COM SUCESSO!")
         except Exception as e:
@@ -259,38 +262,85 @@ class TwitchMonitorCog(commands.Cog):
         return url_or_username.lower()
     
     def _get_headers(self) -> Dict[str, str]:
-        """Headers para API Twitch (agora opcional - pode estar vazio)."""
+        """Headers para API Twitch."""
         return {
-            "Client-ID": config.TWITCH_CLIENT_ID or "unknown",
-            "Authorization": f"Bearer {config.TWITCH_ACCESS_TOKEN}" if config.TWITCH_ACCESS_TOKEN else "Bearer unknown"
+            "Client-ID": config.TWITCH_CLIENT_ID or "",
+            "Authorization": f"Bearer {self._access_token}" if self._access_token else ""
         }
+
+    async def _refresh_token(self) -> None:
+        """Renova o access token via Client Credentials."""
+        try:
+            loop = asyncio.get_event_loop()
+            def _do_request():
+                return requests.post(
+                    "https://id.twitch.tv/oauth2/token",
+                    params={
+                        "client_id": config.TWITCH_CLIENT_ID,
+                        "client_secret": config.TWITCH_CLIENT_SECRET,
+                        "grant_type": "client_credentials",
+                    },
+                    timeout=TIMEOUT_REQUEST,
+                )
+            response = await loop.run_in_executor(None, _do_request)
+            response.raise_for_status()
+            data = response.json()
+            self._access_token = data["access_token"]
+            expires_in = data.get("expires_in", 0)
+            print(f"[TWITCH] ✅ Token renovado! Expira em {expires_in // 3600}h")
+            logger.info(f"[TWITCH] ✅ Token renovado. Expira em {expires_in // 3600}h")
+        except Exception as e:
+            print(f"[TWITCH] ⚠️ Falha ao renovar token: {e} — usando token atual")
+            logger.warning(f"[TWITCH] Falha ao renovar token: {e}")
     
-    def _validate_channel_exists(self, username: str) -> bool:
+    async def _validate_channel_exists(self, username: str) -> bool:
         """
-        Valida se o canal Twitch existe (versão simplificada).
-        Tenta acessar o URL do canal e verifica se é válido.
+        Valida se o canal Twitch existe via API Helix (users endpoint).
+        Requer credenciais válidas; se não houver, valida apenas o formato.
         """
         if not username or len(username) < 3:
             return False
-        
-        # Valida characters válidos em username Twitch (alfanumérico + underscore)
+
+        # Valida formato do username Twitch
         if not re.match(r"^[a-zA-Z0-9_]{3,25}$", username):
             logger.warning(f"[TWITCH] Username inválido (formato): {username}")
             return False
-        
+
+        if not config.TWITCH_CLIENT_ID or not self._access_token:
+            # Sem credenciais: aceita se formato for válido
+            logger.warning(f"[TWITCH] Sem credenciais para validar {username} — aceito por formato")
+            return True
+
         try:
-            # Tenta acessar a página do canal no site da Twitch
-            url = f"https://www.twitch.tv/{username}"
-            response = requests.head(url, timeout=TIMEOUT_REQUEST, allow_redirects=True)
-            
-            # Se conseguiu acessar e não foi redirecionado para 404, o canal existe
-            if response.status_code in [200, 302]:
-                logger.info(f"[TWITCH] ✅ Canal {username} validado (URL acessível)")
+            loop = asyncio.get_event_loop()
+            headers = self._get_headers()
+            def _do_request():
+                return requests.get(
+                    f"{TWITCH_API_BASE}/users",
+                    headers=headers,
+                    params={"login": username},
+                    timeout=TIMEOUT_REQUEST,
+                )
+            response = await loop.run_in_executor(None, _do_request)
+            if response.status_code == 401:
+                # Token expirado — tenta renovar e repete uma vez
+                await self._refresh_token()
+                headers = self._get_headers()
+                def _do_retry():
+                    return requests.get(
+                        f"{TWITCH_API_BASE}/users",
+                        headers=headers,
+                        params={"login": username},
+                        timeout=TIMEOUT_REQUEST,
+                    )
+                response = await loop.run_in_executor(None, _do_retry)
+            response.raise_for_status()
+            data = response.json()
+            if data.get("data"):
+                logger.info(f"[TWITCH] ✅ Canal {username} validado via API")
                 return True
-            else:
-                logger.warning(f"[TWITCH] ❌ Canal {username} não encontrado (Status: {response.status_code})")
-                return False
-                
+            logger.warning(f"[TWITCH] ❌ Canal {username} não encontrado na API")
+            return False
         except requests.exceptions.Timeout:
             logger.error(f"[TWITCH] ⏱️ Timeout ao validar {username}")
             return False
@@ -298,24 +348,36 @@ class TwitchMonitorCog(commands.Cog):
             logger.error(f"[TWITCH] Erro ao validar canal {username}: {e}")
             return False
     
-    def _get_user_id(self, username: str) -> Optional[str]:
-        """DESCONTINUADO - mantido para compatibilidade."""
-        # Agora só valida via URL, não precisa de token
-        if self._validate_channel_exists(username):
-            return username  # Retorna o username como ID (simplificado)
-        return None
-    
-    def _get_stream_info(self, user_id: str) -> Optional[Dict[str, Any]]:
+    async def _get_stream_info(self, username: str) -> Optional[Dict[str, Any]]:
+        """Retorna informações da stream ao vivo do canal, ou None se offline."""
         try:
-            url = f"{TWITCH_API_BASE}/streams"
-            params = {"user_id": user_id}
-            response = requests.get(url, headers=self._get_headers(), params=params, timeout=TIMEOUT_REQUEST)
+            loop = asyncio.get_event_loop()
+            headers = self._get_headers()
+            def _do_request():
+                return requests.get(
+                    f"{TWITCH_API_BASE}/streams",
+                    headers=headers,
+                    params={"user_login": username},
+                    timeout=TIMEOUT_REQUEST,
+                )
+            response = await loop.run_in_executor(None, _do_request)
+            if response.status_code == 401:
+                await self._refresh_token()
+                headers = self._get_headers()
+                def _do_retry():
+                    return requests.get(
+                        f"{TWITCH_API_BASE}/streams",
+                        headers=headers,
+                        params={"user_login": username},
+                        timeout=TIMEOUT_REQUEST,
+                    )
+                response = await loop.run_in_executor(None, _do_retry)
             response.raise_for_status()
             data = response.json()
             if data.get("data"):
                 return data["data"][0]
         except Exception as e:
-            logger.error(f"[TWITCH] Erro ao obter stream: {e}")
+            logger.error(f"[TWITCH] Erro ao obter stream de {username}: {e}")
         return None
     
     # ─────────────────────────────────────────────────────────────
@@ -354,8 +416,8 @@ class TwitchMonitorCog(commands.Cog):
                     return
             
             # Valida existência na Twitch
-            twitch_id = self._get_user_id(username)
-            if not twitch_id:
+            channel_exists = await self._validate_channel_exists(username)
+            if not channel_exists:
                 await interaction.followup.send(
                     f"❌ Canal `{username}` não encontrado na Twitch!\n"
                     "Verifique o nome e tente novamente.",
@@ -676,13 +738,9 @@ class TwitchMonitorCog(commands.Cog):
         try:
             if not self.approved_channels:
                 return
-            
+
             for username, user_id_discord in self.approved_channels.items():
-                twitch_id = self._get_user_id(username)
-                if not twitch_id:
-                    continue
-                
-                stream_info = self._get_stream_info(twitch_id)
+                stream_info = await self._get_stream_info(username)
                 is_live = stream_info is not None
                 was_live = self.stream_state.get(username, {}).get("is_live", False)
                 

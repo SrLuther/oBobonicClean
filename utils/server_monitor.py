@@ -310,31 +310,26 @@ class PlayerMonitor:
 def parse_rcon_listplayers(response: str) -> List[tuple[str, str]]:
     """
     Parse da resposta RCON 'listplayers'.
-    
+
     Retorna: [(steam_id, player_name), ...]
-    
-    Exemplo de output:
-        1. Ciano, SteamID: 76561198123456789
-        2. OtherPlayer, SteamID: 76561198987654321
+
+    Formato real do ARK:
+        0. sergeismitt, 76561198858224963
+        1. PROPL@YER013, 76561198133059796
     """
     players = []
-    
-    # Pattern: "SteamID: <17 digits>"
-    matches = re.finditer(r"SteamID:\s*(\d{17})", response)
-    
-    for match in matches:
-        steam_id = match.group(1)
-        
-        # Tenta extrair nome (vem antes do SteamID)
-        start = max(0, match.start() - 100)
-        context = response[start:match.start()]
-        
-        # Padrão: número. Nome,
-        name_match = re.search(r"\d+\.\s+([^,]+),", context)
-        name = name_match.group(1).strip() if name_match else "Unknown"
-        
-        players.append((steam_id, name))
-    
+
+    for line in response.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        # Padrão: "N. Nome, 76561XXXXXXXXXXXXXXXXX"
+        m = re.match(r"\d+\.\s+(.+?),\s*(\d{17})", line)
+        if m:
+            name = m.group(1).strip()
+            steam_id = m.group(2)
+            players.append((steam_id, name))
+
     return players
 
 

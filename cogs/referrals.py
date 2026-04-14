@@ -1545,6 +1545,11 @@ class PendingReferralsView(discord.ui.View):
                                 # Atualiza o ranking após aprovar
                                 try:
                                     ranking_channel = self.select_int.client.get_channel(REFERRALS_RANKING_CHANNEL_ID)
+                                    if not ranking_channel:
+                                        try:
+                                            ranking_channel = await self.select_int.client.fetch_channel(REFERRALS_RANKING_CHANNEL_ID)
+                                        except Exception:
+                                            ranking_channel = None
                                     if ranking_channel and isinstance(ranking_channel, discord.TextChannel):
                                         embed = create_ranking_embed(self.select_int.client)
                                         view = create_ranking_view(self.select_int.client)
@@ -1900,6 +1905,11 @@ class Referrals(commands.Cog):
         """Atualiza o ranking no canal designado."""
         try:
             channel = self.bot.get_channel(REFERRALS_RANKING_CHANNEL_ID)
+            if not channel:
+                try:
+                    channel = await self.bot.fetch_channel(REFERRALS_RANKING_CHANNEL_ID)
+                except Exception:
+                    channel = None
             if not channel or not isinstance(channel, discord.TextChannel):
                 print(f"[Referrals] ⚠️ Canal de ranking {REFERRALS_RANKING_CHANNEL_ID} não encontrado!")
                 return

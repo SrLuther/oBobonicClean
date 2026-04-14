@@ -6,6 +6,7 @@ Permite que jogadores criem suas próprias lojas usando tópicos de fórum
 import discord
 from discord.ext import commands
 from discord import app_commands
+import io
 import json
 import os
 from datetime import datetime
@@ -21,6 +22,8 @@ COMMAND_CHANNEL_ID = 1440828497772679168  # Sala de comandos
 TIPS_CHANNEL_ID = 1473771157160460359  # Canal para dicas de formatação
 LOJAS_FILE = "data/lojas.json"          # Arquivo para armazenar dados das lojas
 TIPS_SENT_FILE = "data/tips_sent.json"  # Arquivo de controle para dicas
+PRODUTOS_FILE = ".bancos/produtos.json"  # Arquivo para armazenar produtos das lojas
+LOGS_DIR = ".bancos/logs"               # Diretório de logs por loja
 
 # ============================================
 # FUNÇÕES AUXILIARES
@@ -79,6 +82,91 @@ def marcar_dicas_como_enviadas() -> None:
     
     with open(TIPS_SENT_FILE, "w") as f:
         json.dump({"enviado": True, "timestamp": datetime.now().isoformat()}, f, indent=2)
+
+
+def carregar_produtos() -> dict:
+    """Carrega produtos do arquivo JSON"""
+    if not os.path.exists(".bancos"):
+        os.makedirs(".bancos")
+    if not os.path.exists(PRODUTOS_FILE):
+        with open(PRODUTOS_FILE, "w", encoding="utf-8") as f:
+            json.dump({}, f, indent=2)
+        return {}
+    try:
+        with open(PRODUTOS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        return {}
+
+
+def salvar_produtos(produtos: dict) -> None:
+    """Salva produtos no arquivo JSON"""
+    if not os.path.exists(".bancos"):
+        os.makedirs(".bancos")
+    with open(PRODUTOS_FILE, "w", encoding="utf-8") as f:
+        json.dump(produtos, f, indent=2, ensure_ascii=False)
+
+
+def registrar_log(channel_id: int, tipo: str, usuario: str, usuario_id: int, detalhes: str) -> None:
+    """Registra um evento no arquivo de log da loja"""
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    log_file = f"{LOGS_DIR}/loja_{channel_id}.json"
+    try:
+        logs: list = []
+        if os.path.exists(log_file):
+            with open(log_file, "r", encoding="utf-8") as f:
+                logs = json.load(f)
+        logs.append({
+            "timestamp": datetime.now().isoformat(),
+            "tipo": tipo,
+            "usuario": usuario,
+            "usuario_id": usuario_id,
+            "detalhes": detalhes
+        })
+        with open(log_file, "w", encoding="utf-8") as f:
+            json.dump(logs, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"⚠️ [LOJAS] Erro ao registrar log: {e}")
+
+
+def obter_loja_por_canal(channel_id: int) -> Optional[dict]:
+    """Obtém a loja ativa associada a um canal"""
+    lojas = carregar_lojas()
+    for _uid, loja in lojas.items():
+        if loja.get("channel_id") == channel_id and loja.get("ativa", False):
+            return loja
+    return None
+
+
+def obter_produto(product_id: str) -> Optional[dict]:
+    """Obtém um produto pelo seu ID"""
+    return carregar_produtos().get(product_id)
+
+
+def gerar_embed_produto(produto: dict) -> discord.Embed:
+    """Gera o embed de exibição de um produto"""
+    disponivel = produto.get("disponibilidade", "Não informado")
+    baixo = disponivel.lower()
+    if "indispon" in baixo or "sem estoque" in baixo or "esgotado" in baixo:
+        color = discord.Color.red()
+        status_emoji = "🔴"
+    elif "limitad" in baixo or "pouco" in baixo or "último" in baixo:
+        color = discord.Color.orange()
+        status_emoji = "🟡"
+    else:
+        color = discord.Color.green()
+        status_emoji = "🟢"
+    embed = discord.Embed(title=f"🛍️ {produto['nome']}", color=color)
+    embed.add_field(name="📋 Descrição", value=produto.get("descricao", "—"), inline=False)
+    embed.add_field(name="💰 Valor", value=produto.get("valor", "—"), inline=True)
+    embed.add_field(name=f"{status_emoji} Disponibilidade", value=disponivel, inline=True)
+    embed.set_footer(text=f"ID: {produto['product_id']}")
+    try:
+        embed.timestamp = datetime.fromisoformat(produto["criado_em"])
+    except Exception:
+        pass
+    return embed
+
 
 # ============================================
 # VIEWS (BOTÕES E MODAIS)
@@ -203,7 +291,27 @@ class ModalCriarLoja(discord.ui.Modal):
             )
             
             await canal_loja.send(mensagem_inicial)
-            
+
+            # Painel de gerenciamento da loja (botão Adicionar Produto)
+            embed_gerenciar = discord.Embed(
+                title="⚙️ Gerenciamento da Loja",
+                description=(
+                    "Use o botão abaixo para publicar produtos nesta loja.\n\n"
+                    "Cada produto terá um painel próprio com os botões "
+                    "**Encomendar**, **Editar**, **Barganha** e **Excluir**."
+                ),
+                color=discord.Color.blurple()
+            )
+            embed_gerenciar.add_field(
+                name="📋 Regras de Acesso",
+                value=(
+                    "• ➕ **Adicionar / ✏️ Editar / 🗑️ Excluir** — somente você\n"
+                    "• 📦 **Encomendar / 🤝 Barganha** — toda a comunidade"
+                ),
+                inline=False
+            )
+            await canal_loja.send(embed=embed_gerenciar, view=ViewGerenciarLoja())
+
             # Armazenar dados da loja
             lojas = carregar_lojas()
             user_id_str = str(interaction.user.id)
@@ -333,6 +441,538 @@ class ViewCriarLoja(discord.ui.View):
             except:
                 pass
 
+
+# ============================================
+# SISTEMA DE PRODUTOS — Modais
+# ============================================
+
+class ModalEncomenda(discord.ui.Modal, title="📦 Encomendar Produto"):
+    """Modal de encomenda — aberto pela comunidade"""
+
+    quantidade = discord.ui.TextInput(
+        label="Quantidade",
+        placeholder="Ex: 1 unidade, 5 stacks...",
+        required=True,
+        max_length=100
+    )
+    mensagem = discord.ui.TextInput(
+        label="Mensagem ao Vendedor",
+        placeholder="Informações adicionais, forma de contato...",
+        required=False,
+        max_length=400,
+        style=discord.TextStyle.paragraph
+    )
+
+    def __init__(self, produto: dict) -> None:
+        super().__init__()
+        self._product_id = produto["product_id"]
+        self._owner_id = produto["owner_id"]
+        self._product_name = produto["nome"]
+        self._channel_id = produto.get("channel_id", 0)
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer(ephemeral=True)
+        embed = discord.Embed(
+            title="📦 Nova Encomenda!",
+            description=f"**{interaction.user.mention}** quer comprar **{self._product_name}**",
+            color=discord.Color.green()
+        )
+        embed.add_field(name="🔢 Quantidade", value=self.quantidade.value, inline=True)
+        if self.mensagem.value:
+            embed.add_field(name="💬 Mensagem", value=self.mensagem.value, inline=False)
+        if isinstance(interaction.channel, discord.TextChannel):
+            embed.add_field(name="📍 Canal", value=interaction.channel.mention, inline=False)
+        embed.set_thumbnail(url=interaction.user.display_avatar.url)
+        embed.timestamp = datetime.now()
+
+        notificado = False
+        try:
+            owner = await interaction.client.fetch_user(self._owner_id)
+            await owner.send(embed=embed)
+            notificado = True
+        except Exception:
+            pass
+
+        try:
+            if isinstance(interaction.channel, discord.TextChannel):
+                await interaction.channel.send(
+                    f"📦 <@{self._owner_id}>, você recebeu uma encomenda de {interaction.user.mention}!",
+                    embed=embed
+                )
+        except Exception as e:
+            print(f"⚠️ [LOJAS] Erro ao notificar encomenda no canal: {e}")
+
+        aviso = "✅ Encomenda enviada ao vendedor! Aguarde o contato."
+        if not notificado:
+            aviso += "\n⚠️ Não foi possível notificar via DM, mas a encomenda foi enviada no canal."
+        registrar_log(
+            self._channel_id, "ENCOMENDA_RECEBIDA",
+            str(interaction.user), interaction.user.id,
+            f"Produto: {self._product_name} | Qtd: {self.quantidade.value}"
+            + (f" | Msg: {self.mensagem.value}" if self.mensagem.value else "")
+        )
+        await interaction.followup.send(aviso, ephemeral=True)
+
+
+class ModalEditarProduto(discord.ui.Modal, title="✏️ Editar Produto"):
+    """Modal de edição com campos pré-preenchidos — exclusivo do dono"""
+
+    def __init__(self, produto: dict) -> None:
+        super().__init__()
+        self._product_id = produto["product_id"]
+
+        self.nome = discord.ui.TextInput(
+            label="Nome do Produto",
+            default=produto["nome"],
+            required=True,
+            max_length=100
+        )
+        self.descricao = discord.ui.TextInput(
+            label="Descrição",
+            default=produto["descricao"],
+            required=True,
+            max_length=500,
+            style=discord.TextStyle.paragraph
+        )
+        self.valor = discord.ui.TextInput(
+            label="Valor",
+            default=produto["valor"],
+            required=True,
+            max_length=200
+        )
+        self.disponibilidade = discord.ui.TextInput(
+            label="Disponibilidade",
+            default=produto["disponibilidade"],
+            required=True,
+            max_length=100
+        )
+        self.add_item(self.nome)
+        self.add_item(self.descricao)
+        self.add_item(self.valor)
+        self.add_item(self.disponibilidade)
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        produtos = carregar_produtos()
+        if self._product_id not in produtos:
+            await interaction.response.send_message("❌ Produto não encontrado.", ephemeral=True)
+            return
+
+        produto = produtos[self._product_id]
+        produto["nome"] = self.nome.value
+        produto["descricao"] = self.descricao.value
+        produto["valor"] = self.valor.value
+        produto["disponibilidade"] = self.disponibilidade.value
+        salvar_produtos(produtos)
+
+        try:
+            if interaction.guild and produto.get("message_id"):
+                canal = interaction.guild.get_channel(produto["channel_id"])
+                if canal and isinstance(canal, discord.TextChannel):
+                    msg = await canal.fetch_message(produto["message_id"])
+                    await msg.edit(embed=gerar_embed_produto(produto))
+        except Exception as e:
+            print(f"⚠️ [LOJAS] Erro ao atualizar embed do produto: {e}")
+
+        await interaction.response.send_message(
+            f"✅ Produto **{self.nome.value}** atualizado com sucesso!",
+            ephemeral=True
+        )
+        registrar_log(
+            produto.get("channel_id", 0), "PRODUTO_EDITADO",
+            str(interaction.user), interaction.user.id,
+            f"Produto: {self.nome.value} | Valor: {self.valor.value} | Disponibilidade: {self.disponibilidade.value}"
+        )
+
+
+class ModalBarganha(discord.ui.Modal, title="🤝 Proposta de Barganha"):
+    """Modal para troca por pontos + recursos — aberto pela comunidade"""
+
+    def __init__(self, produto: dict) -> None:
+        super().__init__()
+        self._product_id = produto["product_id"]
+        self._owner_id = produto["owner_id"]
+        self._product_name = produto["nome"]
+        self._channel_id = produto.get("channel_id", 0)
+
+        self.pontos = discord.ui.TextInput(
+            label="Pontos Oferecidos",
+            placeholder="Ex: 300 pontos",
+            required=True,
+            max_length=100
+        )
+        self.recursos = discord.ui.TextInput(
+            label="Recursos para Troca",
+            placeholder="Ex: 500 metal, 200 cemento, 100 cristal...",
+            required=True,
+            max_length=300,
+            style=discord.TextStyle.paragraph
+        )
+        self.mensagem = discord.ui.TextInput(
+            label="Mensagem ao Vendedor (opcional)",
+            placeholder="Explique sua proposta...",
+            required=False,
+            max_length=300,
+            style=discord.TextStyle.paragraph
+        )
+        self.add_item(self.pontos)
+        self.add_item(self.recursos)
+        self.add_item(self.mensagem)
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer(ephemeral=True)
+        embed = discord.Embed(
+            title="🤝 Nova Proposta de Barganha!",
+            description=f"**{interaction.user.mention}** propõe barganha por **{self._product_name}**",
+            color=discord.Color.orange()
+        )
+        embed.add_field(name="💰 Pontos Oferecidos", value=self.pontos.value, inline=True)
+        embed.add_field(name="📦 Recursos para Troca", value=self.recursos.value, inline=False)
+        if self.mensagem.value:
+            embed.add_field(name="💬 Mensagem", value=self.mensagem.value, inline=False)
+        if isinstance(interaction.channel, discord.TextChannel):
+            embed.add_field(name="📍 Canal", value=interaction.channel.mention, inline=False)
+        embed.set_thumbnail(url=interaction.user.display_avatar.url)
+        embed.timestamp = datetime.now()
+
+        notificado = False
+        try:
+            owner = await interaction.client.fetch_user(self._owner_id)
+            await owner.send(embed=embed)
+            notificado = True
+        except Exception:
+            pass
+
+        try:
+            if isinstance(interaction.channel, discord.TextChannel):
+                await interaction.channel.send(
+                    f"🤝 <@{self._owner_id}>, você recebeu uma proposta de barganha de {interaction.user.mention}!",
+                    embed=embed
+                )
+        except Exception as e:
+            print(f"⚠️ [LOJAS] Erro ao notificar barganha no canal: {e}")
+
+        aviso = "✅ Proposta de barganha enviada ao vendedor!"
+        if not notificado:
+            aviso += "\n⚠️ Não foi possível notificar via DM, mas a proposta foi enviada no canal."
+        registrar_log(
+            self._channel_id, "BARGANHA_RECEBIDA",
+            str(interaction.user), interaction.user.id,
+            f"Produto: {self._product_name} | Pontos: {self.pontos.value} | Recursos: {self.recursos.value}"
+            + (f" | Msg: {self.mensagem.value}" if self.mensagem.value else "")
+        )
+        await interaction.followup.send(aviso, ephemeral=True)
+
+
+class ModalAdicionarProduto(discord.ui.Modal, title="➕ Adicionar Produto"):
+    """Modal para o dono da loja publicar um novo produto"""
+
+    nome = discord.ui.TextInput(
+        label="Nome do Produto",
+        placeholder="Ex: Rex 50k melee, Cemento (200 uni)...",
+        required=True,
+        max_length=100
+    )
+    descricao = discord.ui.TextInput(
+        label="Descrição",
+        placeholder="Descreva o produto com detalhes...",
+        required=True,
+        max_length=500,
+        style=discord.TextStyle.paragraph
+    )
+    valor = discord.ui.TextInput(
+        label="Valor",
+        placeholder="Ex: 500 pontos, 1000 metal + 200 pontos...",
+        required=True,
+        max_length=200
+    )
+    disponibilidade = discord.ui.TextInput(
+        label="Disponibilidade",
+        placeholder="Ex: Em estoque, Limitado (5 uni), Sob encomenda...",
+        required=True,
+        max_length=100
+    )
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        channel_id = interaction.channel_id or 0
+        loja = obter_loja_por_canal(channel_id)
+        if not loja:
+            await interaction.response.send_message(
+                "❌ Este canal não pertence a uma loja ativa.", ephemeral=True
+            )
+            return
+
+        if interaction.user.id != loja["owner_id"]:
+            await interaction.response.send_message(
+                "❌ Apenas o proprietário da loja pode adicionar produtos.", ephemeral=True
+            )
+            return
+
+        product_id = f"prod_{interaction.user.id}_{int(datetime.now().timestamp() * 1000)}"
+        produto = {
+            "product_id": product_id,
+            "owner_id": interaction.user.id,
+            "channel_id": channel_id,
+            "message_id": None,
+            "nome": self.nome.value,
+            "descricao": self.descricao.value,
+            "valor": self.valor.value,
+            "disponibilidade": self.disponibilidade.value,
+            "criado_em": datetime.now().isoformat()
+        }
+
+        embed = gerar_embed_produto(produto)
+        view = ViewProduto(product_id)
+        interaction.client.add_view(view)
+
+        await interaction.response.defer(ephemeral=True)
+
+        canal = interaction.channel or interaction.client.get_channel(channel_id or 0)
+        if not canal or not isinstance(canal, discord.TextChannel):
+            await interaction.followup.send("❌ Não foi possível publicar o produto.", ephemeral=True)
+            return
+
+        msg = await canal.send(embed=embed, view=view)
+        produto["message_id"] = msg.id
+
+        produtos = carregar_produtos()
+        produtos[product_id] = produto
+        salvar_produtos(produtos)
+
+        registrar_log(
+            channel_id, "PRODUTO_ADICIONADO",
+            str(interaction.user), interaction.user.id,
+            f"Produto: {self.nome.value} | Valor: {self.valor.value} | Disponibilidade: {self.disponibilidade.value}"
+        )
+
+        await interaction.followup.send(
+            f"✅ Produto **{self.nome.value}** publicado com sucesso!", ephemeral=True
+        )
+        print(f"✅ [LOJAS] Produto {product_id} adicionado por {interaction.user.name}")
+
+
+# ── Botões do painel de produto ──────────────────────────────────────────────
+
+class BotaoEncomendar(discord.ui.Button):
+    def __init__(self, product_id: str) -> None:
+        super().__init__(
+            label="Encomendar",
+            style=discord.ButtonStyle.green,
+            emoji="📦",
+            custom_id=f"prod_enc_{product_id}"
+        )
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        produto = obter_produto(self.view.product_id)
+        if not produto:
+            await interaction.response.send_message("❌ Produto não encontrado.", ephemeral=True)
+            return
+        if interaction.user.id == produto["owner_id"]:
+            await interaction.response.send_message(
+                "❌ Você não pode encomendar seus próprios produtos.", ephemeral=True
+            )
+            return
+        await interaction.response.send_modal(ModalEncomenda(produto))
+
+
+class BotaoEditar(discord.ui.Button):
+    def __init__(self, product_id: str) -> None:
+        super().__init__(
+            label="Editar",
+            style=discord.ButtonStyle.blurple,
+            emoji="✏️",
+            custom_id=f"prod_edi_{product_id}"
+        )
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        produto = obter_produto(self.view.product_id)
+        if not produto:
+            await interaction.response.send_message("❌ Produto não encontrado.", ephemeral=True)
+            return
+        if interaction.user.id != produto["owner_id"]:
+            await interaction.response.send_message(
+                "❌ Apenas o dono da loja pode editar produtos.", ephemeral=True
+            )
+            return
+        await interaction.response.send_modal(ModalEditarProduto(produto))
+
+
+class BotaoBarganha(discord.ui.Button):
+    def __init__(self, product_id: str) -> None:
+        super().__init__(
+            label="Barganha",
+            style=discord.ButtonStyle.secondary,
+            emoji="🤝",
+            custom_id=f"prod_bar_{product_id}"
+        )
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        produto = obter_produto(self.view.product_id)
+        if not produto:
+            await interaction.response.send_message("❌ Produto não encontrado.", ephemeral=True)
+            return
+        if interaction.user.id == produto["owner_id"]:
+            await interaction.response.send_message(
+                "❌ Você não pode barganhar em seus próprios produtos.", ephemeral=True
+            )
+            return
+        await interaction.response.send_modal(ModalBarganha(produto))
+
+
+class BotaoExcluir(discord.ui.Button):
+    def __init__(self, product_id: str) -> None:
+        super().__init__(
+            label="Excluir",
+            style=discord.ButtonStyle.danger,
+            emoji="🗑️",
+            custom_id=f"prod_del_{product_id}"
+        )
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        produto = obter_produto(self.view.product_id)
+        if not produto:
+            await interaction.response.send_message("❌ Produto não encontrado.", ephemeral=True)
+            return
+        if interaction.user.id != produto["owner_id"]:
+            await interaction.response.send_message(
+                "❌ Apenas o dono da loja pode excluir produtos.", ephemeral=True
+            )
+            return
+
+        produtos = carregar_produtos()
+        if self.view.product_id in produtos:
+            del produtos[self.view.product_id]
+            salvar_produtos(produtos)
+
+        await interaction.response.send_message("✅ Produto excluído com sucesso.", ephemeral=True)
+        registrar_log(
+            produto.get("channel_id", 0), "PRODUTO_EXCLUIDO",
+            str(interaction.user), interaction.user.id,
+            f"Produto: {produto.get('nome', self.view.product_id)}"
+        )
+        try:
+            await interaction.message.delete()
+        except Exception:
+            pass
+        print(f"✅ [LOJAS] Produto {self.view.product_id} excluído por {interaction.user.name}")
+
+
+class ViewProduto(discord.ui.View):
+    """View persistente anexada ao painel de cada produto"""
+
+    def __init__(self, product_id: str) -> None:
+        super().__init__(timeout=None)
+        self.product_id = product_id
+        self.add_item(BotaoEncomendar(product_id))
+        self.add_item(BotaoEditar(product_id))
+        self.add_item(BotaoBarganha(product_id))
+        self.add_item(BotaoExcluir(product_id))
+
+
+class BotaoLog(discord.ui.Button):
+    def __init__(self) -> None:
+        super().__init__(
+            label="Log",
+            style=discord.ButtonStyle.secondary,
+            emoji="📋",
+            custom_id="loja_ver_log_btn"
+        )
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        loja = obter_loja_por_canal(interaction.channel_id or 0)
+        if not loja:
+            await interaction.response.send_message(
+                "❌ Este canal não pertence a uma loja ativa.", ephemeral=True
+            )
+            return
+
+        eh_dono = interaction.user.id == loja["owner_id"]
+        eh_admin = (
+            isinstance(interaction.user, discord.Member)
+            and interaction.user.guild_permissions.administrator
+        )
+        if not (eh_dono or eh_admin):
+            await interaction.response.send_message(
+                "❌ Apenas o proprietário da loja ou administradores podem acessar o log.",
+                ephemeral=True
+            )
+            return
+
+        channel_id = interaction.channel_id or 0
+        log_file = f"{LOGS_DIR}/loja_{channel_id}.json"
+
+        if not os.path.exists(log_file):
+            await interaction.response.send_message(
+                "📋 Ainda não há registros no log desta loja.", ephemeral=True
+            )
+            return
+
+        try:
+            with open(log_file, "r", encoding="utf-8") as f:
+                logs = json.load(f)
+        except Exception:
+            await interaction.response.send_message(
+                "❌ Erro ao ler o log da loja.", ephemeral=True
+            )
+            return
+
+        linhas = [
+            f"LOG DA LOJA: {loja['nome']}",
+            f"Dono      : {loja['owner_name']} (ID: {loja['owner_id']})",
+            f"Exportado : {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}",
+            f"Eventos   : {len(logs)}",
+            "=" * 60,
+            ""
+        ]
+        for entrada in logs:
+            ts = datetime.fromisoformat(entrada["timestamp"]).strftime("%d/%m/%Y %H:%M:%S")
+            linhas.append(f"[{ts}] {entrada['tipo'].upper()}")
+            linhas.append(f"  Usuário : {entrada['usuario']} (ID: {entrada['usuario_id']})")
+            linhas.append(f"  Detalhe : {entrada['detalhes']}")
+            linhas.append("")
+
+        conteudo = "\n".join(linhas)
+        arquivo = io.BytesIO(conteudo.encode("utf-8"))
+        nome_arquivo = (
+            f"log_loja_{channel_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        )
+
+        await interaction.response.send_message(
+            f"📋 Log da loja **{loja['nome']}** — **{len(logs)}** evento(s):",
+            file=discord.File(arquivo, filename=nome_arquivo),
+            ephemeral=True
+        )
+
+
+class ViewGerenciarLoja(discord.ui.View):
+    """View com botão Adicionar Produto — enviada ao criar a loja"""
+
+    def __init__(self) -> None:
+        super().__init__(timeout=None)
+        self.add_item(BotaoLog())
+
+    @discord.ui.button(
+        label="➕ Adicionar Produto",
+        style=discord.ButtonStyle.green,
+        emoji="🛍️",
+        custom_id="loja_add_produto_btn"
+    )
+    async def adicionar_produto(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ) -> None:
+        loja = obter_loja_por_canal(interaction.channel_id or 0)
+        if not loja:
+            await interaction.response.send_message(
+                "❌ Este canal não pertence a uma loja ativa.", ephemeral=True
+            )
+            return
+        if interaction.user.id != loja["owner_id"]:
+            await interaction.response.send_message(
+                "❌ Apenas o proprietário da loja pode adicionar produtos.", ephemeral=True
+            )
+            return
+        await interaction.response.send_modal(ModalAdicionarProduto())
+
+
 # ============================================
 # COG PRINCIPAL
 # ============================================
@@ -348,9 +988,15 @@ class Lojas(commands.Cog):
         """Executa quando o bot está pronto"""
         import asyncio
         try:
-            # Registrar a view persistente
+            # Registrar views persistentes
             self.bot.add_view(ViewCriarLoja(self.bot))
-            print("✅ [LOJAS] View persistente registrada")
+            self.bot.add_view(ViewGerenciarLoja())
+
+            # Registrar view de cada produto existente
+            produtos_existentes = carregar_produtos()
+            for pid in produtos_existentes:
+                self.bot.add_view(ViewProduto(pid))
+            print(f"✅ [LOJAS] Views registradas ({len(produtos_existentes)} produtos ativos)")
             
             # Aguardar um pouco para o bot ficar totalmente pronto
             await asyncio.sleep(2)
@@ -397,9 +1043,9 @@ class Lojas(commands.Cog):
             
             # Criar NOVO painel com View recém-registrada
             painel_msg = await canal.send(
-                "🏪 **SISTEMA DE LOJAS PESSOAIS**\n\n"
+                "🏪 **SISTEMA DE COMÉRCIO**\n\n"
                 "═══════════════════════════════════════\n\n"
-                "**Bem-vindo ao sistema de lojas!**\n\n"
+                "**Bem-vindo ao sistema de comércio!**\n\n"
                 "Clique no botão abaixo para criar sua própria loja "
                 "e começar a vender seus recursos, dinossauros e serviços.\n\n"
                 "**✨ Como Funciona:**\n"
