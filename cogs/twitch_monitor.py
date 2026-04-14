@@ -857,9 +857,26 @@ class TwitchMonitorCog(commands.Cog):
                 icon_url=plat["icon"]
             )
 
-            embed.add_field(name="🎮 Jogando",      value=f"`{game}`",                       inline=True)
-            embed.add_field(name="👥 Espectadores", value=f"`{viewers:,}`",                  inline=True)
-            embed.add_field(name="🔗 Canal",        value=f"[{stream_url}]({stream_url})",  inline=True)
+            # Calcula tempo ao vivo a partir de started_at (formato ISO 8601 da Twitch)
+            started_at_raw = stream_info.get("started_at", "")
+            if started_at_raw:
+                try:
+                    started_dt = datetime.fromisoformat(started_at_raw.replace("Z", "+00:00"))
+                    elapsed = datetime.now(timezone.utc) - started_dt
+                    mins = int(elapsed.total_seconds() // 60)
+                    if mins < 60:
+                        tempo_live = f"`{mins} min`"
+                    else:
+                        h, m = divmod(mins, 60)
+                        tempo_live = f"`{h}h {m}min`"
+                except Exception:
+                    tempo_live = "`—`"
+            else:
+                tempo_live = "`—`"
+
+            embed.add_field(name="🎮 Jogando",      value=f"`{game}`",    inline=True)
+            embed.add_field(name="👥 Espectadores", value=f"`{viewers:,}`", inline=True)
+            embed.add_field(name="⏱️ Ao vivo há",   value=tempo_live,     inline=True)
 
             if thumbnail:
                 thumb = thumbnail.replace("{width}", "1280").replace("{height}", "720")
