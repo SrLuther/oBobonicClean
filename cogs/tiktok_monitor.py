@@ -214,11 +214,14 @@ class TikTokMonitorCog(commands.Cog):
             from TikTokLive import TikTokLiveClient
             client = TikTokLiveClient(unique_id=username)
             result = await asyncio.wait_for(client.is_live(), timeout=15)
+            print(f"[TIKTOK]   is_live(@{username}) → {result}")
             return bool(result)
         except asyncio.TimeoutError:
+            print(f"[TIKTOK]   ⏱️ Timeout ao checar @{username}")
             logger.warning(f"[TIKTOK] Timeout ao checar live de {username}")
             return False
         except Exception as e:
+            print(f"[TIKTOK]   ❌ Erro ao checar @{username}: {e}")
             logger.warning(f"[TIKTOK] Erro ao checar live de {username}: {e}")
             return False
 
@@ -484,14 +487,18 @@ class TikTokMonitorCog(commands.Cog):
     async def check_streams(self):
         """Verifica lives TikTok a cada 5 minutos."""
         if not self.approved_channels:
+            print("[TIKTOK] ⏭️ check_streams: nenhum canal aprovado, pulando...")
             return
 
+        print(f"[TIKTOK] 🔍 check_streams: verificando {len(self.approved_channels)} canal(is)...")
         changed = False
         for username, user_id_discord in list(self.approved_channels.items()):
             is_live  = await self._is_live(username)
             was_live = self.stream_state.get(username, False)
+            print(f"[TIKTOK]   @{username}: live={is_live}, was_live={was_live}")
 
             if is_live and not was_live:
+                print(f"[TIKTOK] 🔴 NOVA LIVE DETECTADA: @{username} — enviando notificação...")
                 await self._send_live_notification(username, user_id_discord)
 
             self.stream_state[username] = is_live
@@ -499,6 +506,7 @@ class TikTokMonitorCog(commands.Cog):
 
         if changed:
             self.save_data()
+        print("[TIKTOK] ✅ check_streams concluído.")
 
     @check_streams.before_loop
     async def before_check_streams(self):
