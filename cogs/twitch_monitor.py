@@ -160,15 +160,19 @@ class TwitchMonitorCog(commands.Cog):
             # Tenta renovar o token se client_secret estiver configurado
             if config.TWITCH_CLIENT_ID and config.TWITCH_CLIENT_SECRET:
                 await self._refresh_token()
-            elif not config.TWITCH_CLIENT_ID or not self._access_token:
-                print("[TWITCH] ⚠️ Credenciais incompletas - monitor de streams desativado")
-                logger.warning("[TWITCH] ⚠️ Credenciais incompletas - monitor de streams desativado")
+            else:
+                print("[TWITCH] ⚠️ Credenciais incompletas (CLIENT_ID ou CLIENT_SECRET vazios)")
+                logger.warning("[TWITCH] ⚠️ Credenciais incompletas")
 
-            # Inicia monitor de streams se credenciais válidas
-            if config.TWITCH_CLIENT_ID and self._access_token:
-                if not self.check_streams.is_running():
-                    self.check_streams.start()
-                    logger.info(f"[TWITCH] ✅ Monitor iniciado. {len(self.approved_channels)} canal(is)")
+            # Inicia monitor SEMPRE que houver canais aprovados (independente do token)
+            # _get_stream_info trata token inválido internamente
+            if not self.check_streams.is_running():
+                self.check_streams.start()
+                logger.info(f"[TWITCH] ✅ Monitor iniciado. {len(self.approved_channels)} canal(is) aprovado(s)")
+
+            # Sincroniza estado na inicialização (sem enviar notificações)
+            # Evita que estado "preso" como ao-vivo bloqueie futuras notificações
+            await self._sync_state_on_startup()
 
             # Cria painéis
             await self._create_panels_internal()
@@ -180,6 +184,43 @@ class TwitchMonitorCog(commands.Cog):
             logger.error(f"[TWITCH] ❌ Erro no startup: {e}")
             import traceback
             traceback.print_exc()
+
+    async def _sync_state_on_startup(self) -> None:
+        """Sincroniza o estado de todos os canais aprovados sem enviar notificações.
+        Resolve o caso onde o estado ficou 'preso' como ao-vivo após restart."""
+        if not self.approved_channels:
+            return
+        if not config.TWITCH_CLIENT_ID or not self._access_token:
+            return
+
+        print(f"[TWITCH] 🔄 Sincronizando estado de {len(self.approved_channels)} canal(is)...")
+        changed = False
+        for username in list(self.approved_channels.keys()):
+            try:
+                stream_info = await self._get_stream_info(username)
+                is_live = stream_info is not None
+                old_state = self.stream_state.get(username, {}).get("is_live", False)
+                if is_live != old_state:
+                    print(f"[TWITCH] 🔄 Estado corrigido: {username} {'online' if is_live else 'offline'} (era {'online' if old_state else 'offline'})")
+                if is_live and stream_info:
+                    self.stream_state[username] = {
+                        "is_live": True,
+                        "title": stream_info.get("title", ""),
+                        "game": stream_info.get("game_name", ""),
+                        "viewers": stream_info.get("viewer_count", 0),
+                        "last_checked": datetime.now(timezone.utc).isoformat()
+                    }
+                else:
+                    self.stream_state[username] = {
+                        "is_live": False,
+                        "last_checked": datetime.now(timezone.utc).isoformat()
+                    }
+                changed = True
+            except Exception as e:
+                logger.warning(f"[TWITCH] Erro ao sincronizar estado de {username}: {e}")
+        if changed:
+            self.save_data()
+            print("[TWITCH] ✅ Estado sincronizado!")
 
     async def force_create_panels(self):
         """Força recriação dos painéis."""
@@ -222,7 +263,7 @@ class TwitchMonitorCog(commands.Cog):
     
     def load_data(self):
         try:
-            os.makedirs("data", exist_ok=True)
+            os.makedirs(".bancos", exist_ok=True)
             
             if os.path.exists(APPROVED_FILE):
                 with open(APPROVED_FILE, 'r', encoding='utf-8') as f:
@@ -240,7 +281,7 @@ class TwitchMonitorCog(commands.Cog):
     
     def save_data(self):
         try:
-            os.makedirs("data", exist_ok=True)
+            os.makedirs(".bancos", exist_ok=True)
             with open(APPROVED_FILE, 'w', encoding='utf-8') as f:
                 json.dump(self.approved_channels, f, indent=4, ensure_ascii=False)
             with open(PENDING_FILE, 'w', encoding='utf-8') as f:
@@ -845,39 +886,106 @@ class TwitchMonitorCog(commands.Cog):
     
     @commands.command(name="twitch_status")
     async def twitch_status(self, ctx: commands.Context):
-        """[TODOS] Ver status dos canais."""
+        """[TODOS] Ver status dos canais e diagnóstico do monitor."""
         try:
+            loop_running = self.check_streams.is_running()
+            loop_status = "🟢 Rodando" if loop_running else "🔴 PARADO"
+            token_ok = bool(self._access_token)
+            creds_ok = bool(config.TWITCH_CLIENT_ID and config.TWITCH_CLIENT_SECRET)
+
             if not self.approved_channels:
                 embed = discord.Embed(
                     title="📺 Status dos Canais",
                     description="Nenhum canal monitorado ainda!",
                     color=discord.Color.red()
                 )
+                embed.add_field(name="⚙️ Monitor", value=loop_status, inline=True)
+                embed.add_field(name="🔑 Credenciais", value="✅" if creds_ok else "❌", inline=True)
                 await ctx.send(embed=embed)
                 return
-            
+
             embed = discord.Embed(
                 title="📺 Status dos Canais Twitch",
                 description=f"Total: {len(self.approved_channels)} canal(is)",
                 color=discord.Color.from_rgb(145, 70, 255)
             )
-            
+
             for username in self.approved_channels.keys():
                 state = self.stream_state.get(username, {})
                 is_live = state.get("is_live", False)
-                
+                last_checked = state.get("last_checked", "Nunca verificado")
+                if last_checked != "Nunca verificado":
+                    last_checked = last_checked[:19].replace("T", " ") + " UTC"
+
                 if is_live:
                     title = state.get("title", "Sem título")
                     game = state.get("game", "?")
                     viewers = state.get("viewers", 0)
-                    value = f"🔴 **AO VIVO**\n{title}\nJogo: {game}\nEspectadores: {viewers:,}"
+                    value = f"🔴 **AO VIVO**\n{title}\nJogo: {game}\nEspectadores: {viewers:,}\n🕐 {last_checked}"
                 else:
-                    value = "⚫ Offline"
-                
+                    value = f"⚫ Offline\n🕐 {last_checked}"
+
                 embed.add_field(name=f"{username.upper()}", value=value, inline=False)
-            
+
+            embed.add_field(name="⚙️ Loop monitor", value=loop_status, inline=True)
+            embed.add_field(name="🔑 Credenciais", value="✅" if creds_ok else "❌ Faltando", inline=True)
+            embed.add_field(name="🪙 Token", value="✅" if token_ok else "❌ Vazio", inline=True)
+            embed.set_footer(text="Use !twitch_force_check para verificar agora")
+
             await ctx.send(embed=embed)
         except Exception as e:
+            await ctx.send(f"❌ Erro: {e}")
+
+    @commands.command(name="twitch_force_check")
+    @commands.has_any_role(*config.MOD_ROLE_IDS)
+    async def twitch_force_check(self, ctx: commands.Context):
+        """[ADMIN] Força verificação imediata de todas as streams."""
+        await ctx.send("🔍 Verificando streams agora...")
+        try:
+            if not self.approved_channels:
+                await ctx.send("⚠️ Nenhum canal aprovado para verificar.")
+                return
+
+            # Renova token antes de verificar
+            if config.TWITCH_CLIENT_ID and config.TWITCH_CLIENT_SECRET:
+                await self._refresh_token()
+
+            resultados = []
+            for username, user_id_discord in self.approved_channels.items():
+                stream_info = await self._get_stream_info(username)
+                is_live = stream_info is not None
+                was_live = self.stream_state.get(username, {}).get("is_live", False)
+
+                if is_live and not was_live:
+                    await self._send_live_notification(stream_info, user_id_discord)
+                    resultados.append(f"🔴 **{username}** — AO VIVO (notificação enviada!)")
+                elif is_live:
+                    resultados.append(f"🔴 **{username}** — ao vivo (já notificado antes)")
+                else:
+                    resultados.append(f"⚫ **{username}** — offline")
+
+                self.stream_state[username] = {
+                    "is_live": is_live,
+                    "title": stream_info.get("title", "") if stream_info else "",
+                    "game": stream_info.get("game_name", "") if stream_info else "",
+                    "viewers": stream_info.get("viewer_count", 0) if stream_info else 0,
+                    "last_checked": datetime.now(timezone.utc).isoformat()
+                }
+
+            self.save_data()
+
+            if not self.check_streams.is_running():
+                self.check_streams.start()
+                resultados.append("\n✅ Loop do monitor reiniciado!")
+
+            embed = discord.Embed(
+                title="✅ Verificação Manual Concluída",
+                description="\n".join(resultados),
+                color=discord.Color.green()
+            )
+            await ctx.send(embed=embed)
+        except Exception as e:
+            logger.error(f"[TWITCH] Erro no force_check: {e}")
             await ctx.send(f"❌ Erro: {e}")
 
 
