@@ -777,7 +777,50 @@ class TwitchMonitorCog(commands.Cog):
         await self.bot.wait_until_ready()
         logger.info("[TWITCH] Monitor de streams ativo!")
     
-    async def _send_live_notification(self, stream_info: Dict[str, Any], user_id_discord: int):
+    # Plataformas suportadas — descomente e expanda ao adicionar YouTube/Kick
+    PLATFORM_CONFIG = {
+        "twitch": {
+            "label":  "Twitch",
+            "color":  (145, 70, 255),
+            "url":    "https://www.twitch.tv/{username}",
+            "icon":   "https://static.twitchcdn.net/assets/favicon-32-e29e246c157142c1.png",
+            "footer": "Twitch • Monitor de Lives",
+        },
+        # "youtube": {
+        #     "label":  "YouTube",
+        #     "color":  (255, 0, 0),
+        #     "url":    "https://www.youtube.com/@{username}/live",
+        #     "icon":   "https://www.youtube.com/favicon.ico",
+        #     "footer": "YouTube • Monitor de Lives",
+        # },
+        # "kick": {
+        #     "label":  "Kick",
+        #     "color":  (83, 252, 31),
+        #     "url":    "https://kick.com/{username}",
+        #     "icon":   "https://kick.com/favicon.ico",
+        #     "footer": "Kick • Monitor de Lives",
+        # },
+    }
+
+    FRASES_LIVE = [
+        "largou tudo e foi transmitir. Cola lá antes que acabe!",
+        "está ao vivo. Não adianta fingir que não viu.",
+        "ligou a câmera agora mesmo. Bora assistir?",
+        "entrou ao vivo — precisa de audiência, e você sabe disso.",
+        "abriu a transmissão. O chat tá esperando reforço.",
+        "está transmitindo neste exato momento. Vai perder?",
+        "colocou o 'ao vivo' pra funcionar. Passa lá depois desse missão.",
+        "acabou de iniciar uma live. Dá uma chance, pode ser épico.",
+        "tá ao vivo e o servidor inteiro foi avisado. Agora é com você.",
+        "iniciou a transmissão — o botão tá logo ali embaixo.",
+    ]
+
+    async def _send_live_notification(
+        self,
+        stream_info: Dict[str, Any],
+        user_id_discord: int,
+        platform: str = "twitch"
+    ):
         """Envia notificação quando alguém entra ao vivo."""
         try:
             channel = cast(discord.TextChannel, self.bot.get_channel(CHANNEL_NOTIF))
@@ -792,55 +835,47 @@ class TwitchMonitorCog(commands.Cog):
 
             import random
 
-            frases_chamada = [
-                f"**{username}** abriu a transmissão — bora assistir!",
-                f"**{username}** está ao vivo agora. Não perde!",
-                f"A live de **{username}** acabou de começar. Cola lá!",
-                f"**{username}** ligou a câmera. Tá esperando o quê?",
-                f"Sinal de fumaça detectado — **{username}** está transmitindo!",
-            ]
-            frase = random.choice(frases_chamada)
+            plat = self.PLATFORM_CONFIG.get(platform, self.PLATFORM_CONFIG["twitch"])
+            stream_url = plat["url"].format(username=username)
+            frase = random.choice(self.FRASES_LIVE)
 
+            r, g, b = plat["color"]
             embed = discord.Embed(
                 description=(
-                    f"### 🔴 Ao Vivo agora na Twitch\n"
-                    f"{frase}\n\n"
-                    f"**{title}**"
+                    f"### 🔴 Ao Vivo na {plat['label']}\n"
+                    f"**{username}** {frase}\n\n"
+                    f"*{title}*"
                 ),
-                color=discord.Color.from_rgb(145, 70, 255),
-                url=f"https://www.twitch.tv/{username}",
+                color=discord.Color.from_rgb(r, g, b),
+                url=stream_url,
                 timestamp=datetime.now(timezone.utc)
             )
 
             embed.set_author(
-                name=username,
-                url=f"https://www.twitch.tv/{username}",
-                icon_url="https://static.twitchcdn.net/assets/favicon-32-e29e246c157142c1.png"
+                name=f"{username}  •  {plat['label']}",
+                url=stream_url,
+                icon_url=plat["icon"]
             )
 
-            embed.add_field(name="🎮 Jogando", value=f"`{game}`", inline=True)
-            embed.add_field(name="👥 Espectadores", value=f"`{viewers:,}`", inline=True)
-            embed.add_field(
-                name="📺 Canal",
-                value=f"[twitch.tv/{username}](https://www.twitch.tv/{username})",
-                inline=True
-            )
+            embed.add_field(name="🎮 Jogando",      value=f"`{game}`",                       inline=True)
+            embed.add_field(name="👥 Espectadores", value=f"`{viewers:,}`",                  inline=True)
+            embed.add_field(name="🔗 Canal",        value=f"[{stream_url}]({stream_url})",  inline=True)
 
             if thumbnail:
                 thumb = thumbnail.replace("{width}", "1280").replace("{height}", "720")
                 embed.set_image(url=f"{thumb}?t={int(datetime.now().timestamp())}")
 
-            embed.set_footer(text="Twitch • Monitor de Lives")
+            embed.set_footer(text=plat["footer"])
 
             mention = f"<@{user_id_discord}>" if user_id_discord else f"**{username}**"
 
             await channel.send(
-                content=f"{mention} está **ao vivo**! 🔴",
+                content=f"{mention} está **ao vivo** agora! 🔴",
                 embed=embed,
                 view=LiveButtonView(username)
             )
 
-            logger.info(f"[TWITCH] 🔴 Notificação ao vivo: {username}")
+            logger.info(f"[TWITCH] 🔴 Notificação ao vivo: {username} ({plat['label']})")
         except Exception as e:
             logger.error(f"[TWITCH] Erro ao notificar: {e}")
     
