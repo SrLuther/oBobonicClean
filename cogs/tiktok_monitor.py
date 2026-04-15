@@ -469,9 +469,15 @@ class TikTokMonitorCog(commands.Cog):
             username = data.get("username", "?")
             user_name = data.get("user_name", "?")
             req_time = data.get("requested_at", "?")[:10]
+            profile_url = f"https://www.tiktok.com/@{username}"
             embed.add_field(
                 name=f"#{idx} — @{username}",
-                value=f"👤 De: {user_name}\n⏰ Em: {req_time}\n🔑 ID: `{req_id}`",
+                value=(
+                    f"👤 De: {user_name}\n"
+                    f"⏰ Em: {req_time}\n"
+                    f"🔗 Perfil: [tiktok.com/@{username}]({profile_url})\n\n"
+                    f"🔑 ID: `{req_id}`"
+                ),
                 inline=False
             )
 

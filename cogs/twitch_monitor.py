@@ -713,10 +713,16 @@ class TwitchMonitorCog(commands.Cog):
                 username = data.get("username", "?")
                 user_name = data.get("user_name", "?")
                 req_time = data.get("requested_at", "?")
-                
+                channel_url = f"https://www.twitch.tv/{username}"
+
                 embed.add_field(
                     name=f"#{idx} - {username.upper()}",
-                    value=f"👤 De: {user_name}\n⏰ Solicitado em: {req_time[:10]}\n\n🔑 ID: `{req_id}`",
+                    value=(
+                        f"👤 De: {user_name}\n"
+                        f"⏰ Solicitado em: {req_time[:10]}\n"
+                        f"🔗 Canal: [twitch.tv/{username}]({channel_url})\n\n"
+                        f"🔑 ID: `{req_id}`"
+                    ),
                     inline=False
                 )
             
