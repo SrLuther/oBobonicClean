@@ -456,7 +456,7 @@ class TikTokMonitorCog(commands.Cog):
                 color=discord.Color.green()
             )
             embed.set_footer(text="Monitor TikTok 🎵")
-            await channel.send(embed=embed)
+            await channel.send(embed=embed, view=TikTokManagePanelView(self))
             return
 
         embed = discord.Embed(
@@ -486,6 +486,8 @@ class TikTokMonitorCog(commands.Cog):
         for req_id in self.pending_requests:
             await channel.send(embed=embed, view=TikTokApprovalButtonView(self, req_id))
             break
+        # Botão de gerenciamento separado
+        await channel.send(view=TikTokManagePanelView(self))
 
     # ─── loop de monitoramento ────────────────────────────────
 
@@ -665,6 +667,41 @@ class TikTokMonitorCog(commands.Cog):
 # VIEWS DE GERENCIAMENTO
 # ─────────────────────────────────────────────────────────────
 
+class TikTokManagePanelView(discord.ui.View):
+    """Botão persistente no painel de aprovação que abre a interface de gerenciamento."""
+    def __init__(self, cog):
+        super().__init__(timeout=None)
+        self.cog = cog
+
+    @discord.ui.button(
+        label="⚙️ Gerenciar Canais",
+        style=discord.ButtonStyle.secondary,
+        custom_id="tiktok_manage_panel_btn"
+    )
+    async def manage_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not isinstance(interaction.user, discord.Member) or \
+                not any(r.id in config.MOD_ROLE_IDS for r in interaction.user.roles):
+            await interaction.response.send_message("❌ Sem permissão!", ephemeral=True)
+            return
+        if not self.cog.approved_channels:
+            await interaction.response.send_message("⚠️ Nenhum canal aprovado para gerenciar.", ephemeral=True)
+            return
+        embed = discord.Embed(
+            title="⚙️ Gerenciar Canais TikTok",
+            description=f"**{len(self.cog.approved_channels)}** canal(is) aprovado(s). Selecione um canal:",
+            color=discord.Color.from_rgb(238, 29, 82)
+        )
+        for username, user_id in self.cog.approved_channels.items():
+            is_live = self.cog.stream_state.get(username, False)
+            status = "🔴 Ao vivo" if is_live else "⚫ Offline"
+            embed.add_field(
+                name=f"@{username}",
+                value=f"{status}\n[tiktok.com/@{username}](https://www.tiktok.com/@{username})\n👤 <@{user_id}>",
+                inline=True
+            )
+        await interaction.response.send_message(embed=embed, view=TikTokManageView(self.cog), ephemeral=True)
+
+
 class TikTokManageView(discord.ui.View):
     def __init__(self, cog):
         super().__init__(timeout=120)
@@ -689,6 +726,10 @@ class TikTokManageView(discord.ui.View):
         self.add_item(self.btn_edit)
 
     async def on_select(self, interaction: discord.Interaction):
+        if not isinstance(interaction.user, discord.Member) or \
+                not any(r.id in config.MOD_ROLE_IDS for r in interaction.user.roles):
+            await interaction.response.send_message("❌ Você não tem permissão!", ephemeral=True)
+            return
         self.selected = self.select.values[0]
         self.btn_remove.disabled = False
         self.btn_edit.disabled = False
@@ -698,6 +739,10 @@ class TikTokManageView(discord.ui.View):
         )
 
     async def on_remove(self, interaction: discord.Interaction):
+        if not isinstance(interaction.user, discord.Member) or \
+                not any(r.id in config.MOD_ROLE_IDS for r in interaction.user.roles):
+            await interaction.response.send_message("❌ Você não tem permissão!", ephemeral=True)
+            return
         if not self.selected or self.selected not in self.cog.approved_channels:
             await interaction.response.send_message("Canal não encontrado!", ephemeral=True)
             return
@@ -711,6 +756,10 @@ class TikTokManageView(discord.ui.View):
         self.stop()
 
     async def on_edit(self, interaction: discord.Interaction):
+        if not isinstance(interaction.user, discord.Member) or \
+                not any(r.id in config.MOD_ROLE_IDS for r in interaction.user.roles):
+            await interaction.response.send_message("❌ Você não tem permissão!", ephemeral=True)
+            return
         if not self.selected:
             await interaction.response.send_message("Selecione um canal primeiro!", ephemeral=True)
             return

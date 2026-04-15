@@ -694,7 +694,7 @@ class TwitchMonitorCog(commands.Cog):
                     color=discord.Color.green()
                 )
                 embed.set_footer(text="Monitor Twitch 📺 • Criado automaticamente ao iniciar o bot")
-                msg = await channel.send(embed=embed)
+                msg = await channel.send(embed=embed, view=TwitchManagePanelView(self))
                 print(f"[TWITCH]     ✅ Painel enviado! ID: {msg.id}")
                 logger.info(f"[TWITCH] 📤 Painel de aprovação (vazio) enviado! Mensagem ID: {msg.id}")
                 return
@@ -733,6 +733,8 @@ class TwitchMonitorCog(commands.Cog):
                 msg = await channel.send(embed=embed, view=ApprovalButtonView(self, req_id, data.get("username", "?")))
                 logger.info(f"[TWITCH] 📤 Painel de aprovação enviado! Mensagem ID: {msg.id}")
                 break
+            # Botão de gerenciamento separado (sem interferir nos botões de aprovação)
+            await channel.send(view=TwitchManagePanelView(self))
             
         except Exception as e:
             logger.error(f"[TWITCH] ❌ ERRO AO ATUALIZAR PAINEL: {e}")
@@ -1053,6 +1055,42 @@ class TwitchMonitorCog(commands.Cog):
 # VIEWS DE GERENCIAMENTO
 # ─────────────────────────────────────────────────────────────
 
+class TwitchManagePanelView(discord.ui.View):
+    """Botão persistente no painel de aprovação que abre a interface de gerenciamento."""
+    def __init__(self, cog):
+        super().__init__(timeout=None)
+        self.cog = cog
+
+    @discord.ui.button(
+        label="⚙️ Gerenciar Canais",
+        style=discord.ButtonStyle.secondary,
+        custom_id="twitch_manage_panel_btn"
+    )
+    async def manage_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not isinstance(interaction.user, discord.Member) or \
+                not any(r.id in config.MOD_ROLE_IDS for r in interaction.user.roles):
+            await interaction.response.send_message("❌ Sem permissão!", ephemeral=True)
+            return
+        if not self.cog.approved_channels:
+            await interaction.response.send_message("⚠️ Nenhum canal aprovado para gerenciar.", ephemeral=True)
+            return
+        embed = discord.Embed(
+            title="⚙️ Gerenciar Canais Twitch",
+            description=f"**{len(self.cog.approved_channels)}** canal(is) aprovado(s). Selecione um canal:",
+            color=discord.Color.from_rgb(145, 70, 255)
+        )
+        for username, user_id in self.cog.approved_channels.items():
+            state = self.cog.stream_state.get(username, {})
+            is_live = state.get("is_live", False)
+            status = "🔴 Ao vivo" if is_live else "⚫ Offline"
+            embed.add_field(
+                name=username,
+                value=f"{status}\n[twitch.tv/{username}](https://www.twitch.tv/{username})\n👤 <@{user_id}>",
+                inline=True
+            )
+        await interaction.response.send_message(embed=embed, view=TwitchManageView(self.cog), ephemeral=True)
+
+
 class TwitchManageView(discord.ui.View):
     def __init__(self, cog):
         super().__init__(timeout=120)
@@ -1077,6 +1115,10 @@ class TwitchManageView(discord.ui.View):
         self.add_item(self.btn_edit)
 
     async def on_select(self, interaction: discord.Interaction):
+        if not isinstance(interaction.user, discord.Member) or \
+                not any(r.id in config.MOD_ROLE_IDS for r in interaction.user.roles):
+            await interaction.response.send_message("❌ Você não tem permissão!", ephemeral=True)
+            return
         self.selected = self.select.values[0]
         self.btn_remove.disabled = False
         self.btn_edit.disabled = False
@@ -1086,6 +1128,10 @@ class TwitchManageView(discord.ui.View):
         )
 
     async def on_remove(self, interaction: discord.Interaction):
+        if not isinstance(interaction.user, discord.Member) or \
+                not any(r.id in config.MOD_ROLE_IDS for r in interaction.user.roles):
+            await interaction.response.send_message("❌ Você não tem permissão!", ephemeral=True)
+            return
         if not self.selected or self.selected not in self.cog.approved_channels:
             await interaction.response.send_message("Canal não encontrado!", ephemeral=True)
             return
@@ -1099,6 +1145,10 @@ class TwitchManageView(discord.ui.View):
         self.stop()
 
     async def on_edit(self, interaction: discord.Interaction):
+        if not isinstance(interaction.user, discord.Member) or \
+                not any(r.id in config.MOD_ROLE_IDS for r in interaction.user.roles):
+            await interaction.response.send_message("❌ Você não tem permissão!", ephemeral=True)
+            return
         if not self.selected:
             await interaction.response.send_message("Selecione um canal primeiro!", ephemeral=True)
             return
