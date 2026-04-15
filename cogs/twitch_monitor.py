@@ -971,6 +971,31 @@ class TwitchMonitorCog(commands.Cog):
         except Exception as e:
             await ctx.send(f"❌ Erro: {e}")
 
+    @commands.command(name="twitch_gerenciar")
+    @commands.has_any_role(*config.MOD_ROLE_IDS)
+    async def twitch_gerenciar(self, ctx: commands.Context):
+        """[ADMIN] Gerenciar canais Twitch aprovados (remover, editar)."""
+        if not self.approved_channels:
+            await ctx.send("⚠️ Nenhum canal aprovado para gerenciar.")
+            return
+
+        embed = discord.Embed(
+            title="⚙️ Gerenciar Canais Twitch",
+            description=f"**{len(self.approved_channels)}** canal(is) aprovado(s).\nSelecione um canal no menu abaixo:",
+            color=discord.Color.from_rgb(145, 70, 255)
+        )
+        for username, user_id in self.approved_channels.items():
+            state = self.stream_state.get(username, {})
+            is_live = state.get("is_live", False)
+            status = "🔴 Ao vivo" if is_live else "⚫ Offline"
+            embed.add_field(
+                name=username,
+                value=f"{status}\n[twitch.tv/{username}](https://www.twitch.tv/{username})\n👤 <@{user_id}>",
+                inline=True
+            )
+        embed.set_footer(text="Selecione um canal e escolha Remover ou Editar Username")
+        await ctx.send(embed=embed, view=TwitchManageView(self))
+
     @commands.command(name="twitch_force_check")
     @commands.has_any_role(*config.MOD_ROLE_IDS)
     async def twitch_force_check(self, ctx: commands.Context):
@@ -1022,6 +1047,100 @@ class TwitchMonitorCog(commands.Cog):
         except Exception as e:
             logger.error(f"[TWITCH] Erro no force_check: {e}")
             await ctx.send(f"❌ Erro: {e}")
+
+
+# ─────────────────────────────────────────────────────────────
+# VIEWS DE GERENCIAMENTO
+# ─────────────────────────────────────────────────────────────
+
+class TwitchManageView(discord.ui.View):
+    def __init__(self, cog):
+        super().__init__(timeout=120)
+        self.cog = cog
+        self.selected: str | None = None
+
+        options = [
+            discord.SelectOption(label=username, value=username,
+                                 description=f"ID Discord: {user_id}")
+            for username, user_id in list(cog.approved_channels.items())[:25]
+        ]
+        self.select = discord.ui.Select(placeholder="Selecione um canal...", options=options)
+        self.select.callback = self.on_select
+        self.add_item(self.select)
+
+        self.btn_remove = discord.ui.Button(label="🗑️ Remover", style=discord.ButtonStyle.red, disabled=True)
+        self.btn_remove.callback = self.on_remove
+        self.add_item(self.btn_remove)
+
+        self.btn_edit = discord.ui.Button(label="✏️ Editar Username", style=discord.ButtonStyle.secondary, disabled=True)
+        self.btn_edit.callback = self.on_edit
+        self.add_item(self.btn_edit)
+
+    async def on_select(self, interaction: discord.Interaction):
+        self.selected = self.select.values[0]
+        self.btn_remove.disabled = False
+        self.btn_edit.disabled = False
+        await interaction.response.edit_message(
+            content=f"Canal **`{self.selected}`** selecionado. Escolha uma ação:",
+            view=self
+        )
+
+    async def on_remove(self, interaction: discord.Interaction):
+        if not self.selected or self.selected not in self.cog.approved_channels:
+            await interaction.response.send_message("Canal não encontrado!", ephemeral=True)
+            return
+        del self.cog.approved_channels[self.selected]
+        self.cog.stream_state.pop(self.selected, None)
+        self.cog.save_data()
+        await interaction.response.edit_message(
+            content=f"✅ Canal `{self.selected}` **removido** do monitoramento Twitch!",
+            view=None
+        )
+        self.stop()
+
+    async def on_edit(self, interaction: discord.Interaction):
+        if not self.selected:
+            await interaction.response.send_message("Selecione um canal primeiro!", ephemeral=True)
+            return
+        await interaction.response.send_modal(TwitchEditModal(self.cog, self.selected))
+
+
+class TwitchEditModal(discord.ui.Modal, title="Editar Canal Twitch"):
+    novo_username = discord.ui.TextInput(
+        label="Novo username da Twitch",
+        placeholder="novo_usuario (sem @ e sem URL)",
+        min_length=2,
+        max_length=50
+    )
+
+    def __init__(self, cog, old_username: str):
+        super().__init__()
+        self.cog = cog
+        self.old_username = old_username
+
+    async def on_submit(self, interaction: discord.Interaction):
+        novo = self.novo_username.value.strip().lower()
+        if "twitch.tv/" in novo:
+            m = re.search(r'twitch\.tv/([a-zA-Z0-9_]+)', novo)
+            if m:
+                novo = m.group(1).lower()
+        novo = novo.lstrip("@")
+
+        if novo == self.old_username:
+            await interaction.response.send_message("Nenhuma alteração feita.", ephemeral=True)
+            return
+        if novo in self.cog.approved_channels:
+            await interaction.response.send_message(f"Canal `{novo}` já existe!", ephemeral=True)
+            return
+
+        user_id = self.cog.approved_channels.pop(self.old_username)
+        self.cog.approved_channels[novo] = user_id
+        state = self.cog.stream_state.pop(self.old_username, {})
+        self.cog.stream_state[novo] = state
+        self.cog.save_data()
+        await interaction.response.send_message(
+            f"✅ Canal atualizado: `{self.old_username}` → `{novo}` | [twitch.tv/{novo}](https://www.twitch.tv/{novo})"
+        )
 
 
 async def setup(bot):
