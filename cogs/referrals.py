@@ -1541,25 +1541,6 @@ class PendingReferralsView(discord.ui.View):
                                     await log_channel.send(embed=log_embed)
                                 
                                 await button_interaction.followup.send("✅ Indicação aprovada!", ephemeral=True)
-                                
-                                # Atualiza o ranking após aprovar
-                                try:
-                                    ranking_channel = self.select_int.client.get_channel(REFERRALS_RANKING_CHANNEL_ID)
-                                    if not ranking_channel:
-                                        try:
-                                            ranking_channel = await self.select_int.client.fetch_channel(REFERRALS_RANKING_CHANNEL_ID)
-                                        except Exception:
-                                            ranking_channel = None
-                                    if ranking_channel and isinstance(ranking_channel, discord.TextChannel):
-                                        embed = create_ranking_embed(self.select_int.client)
-                                        view = create_ranking_view(self.select_int.client)
-                                        try:
-                                            await ranking_channel.purge(limit=10)
-                                        except:
-                                            pass
-                                        await ranking_channel.send(embed=embed, view=view)
-                                except Exception as e:
-                                    print(f"[Referrals] ⚠️ Erro ao atualizar ranking após aprovação: {e}")
                             except Exception as e:
                                 print(f"[Referrals] Erro ao aprovar: {e}")
                                 try:
@@ -1902,36 +1883,8 @@ class Referrals(commands.Cog):
                 traceback.print_exc()
     
     async def _update_ranking(self):
-        """Atualiza o ranking no canal designado."""
-        try:
-            channel = self.bot.get_channel(REFERRALS_RANKING_CHANNEL_ID)
-            if not channel:
-                try:
-                    channel = await self.bot.fetch_channel(REFERRALS_RANKING_CHANNEL_ID)
-                except Exception:
-                    channel = None
-            if not channel or not isinstance(channel, discord.TextChannel):
-                print(f"[Referrals] ⚠️ Canal de ranking {REFERRALS_RANKING_CHANNEL_ID} não encontrado!")
-                return
-            
-            # Cria o embed do ranking
-            embed = create_ranking_embed(self.bot)
-            
-            # Cria a view com botões
-            view = create_ranking_view(self.bot)
-            
-            # Limpa as mensagens antigas e envia a nova
-            try:
-                await channel.purge(limit=10)
-            except:
-                pass
-            
-            await channel.send(embed=embed, view=view)
-            print(f"[Referrals] ✅ Ranking atualizado com sucesso!")
-            
-        except Exception as e:
-            print(f"[Referrals] ❌ Erro ao atualizar ranking: {e}")
-            traceback.print_exc()
+        """Ranking unificado gerenciado pelo xp.py — sem-op aqui."""
+        pass
     
     # ====================
     # COMANDOS

@@ -32,7 +32,6 @@ class EventsCog(commands.Cog):
         "Dica: Construa uma base fechada, algumas estruturas ficam abertas e outros players podem acessar inventários. Garanta segurança.",
         "Entre no nosso Discord para dicas exclusivas, suporte e comunidade! Acesse pela loja (F2)",
         "Dica: Utilize o sistema de upload, /up /dow no chat do game",
-        "Atenção: Utilizar o Creature Finder para localizar criaturas pode causar muito lag. Use com moderação!",
         "Dica: Para esconder seu chat automaticamente pressione a tecla que fica ao lado do Z no teclado.",
         "Dica: Vincule seu game ao servidor discord para resgatar pontos diariamente e utilizar autokick",
         "Aviso: Os servidores reiniciam todos os dias de madrugada para manutenção. Prepare-se!",
@@ -49,14 +48,14 @@ class EventsCog(commands.Cog):
         self.bot = bot
         self.last_message_index = -1  # Rastreia qual foi a última mensagem enviada
         try:
-            self.broadcast_loop.start()
+            self.broadcast_loop.start()  # type: ignore
             logger.info("[EVENTS] Sistema de broadcasts iniciado com sucesso")
         except Exception as e:
             logger.error(f"[EVENTS] Erro ao iniciar broadcast_loop: {e}")
     
     def cog_unload(self):
         """Cancela as tasks quando o cog é descarregado."""
-        self.broadcast_loop.cancel()
+        self.broadcast_loop.cancel()  # type: ignore
         logger.info("[EVENTS] Loop de broadcasts cancelado")
     
     # ─────────────────────────────────────────────────────────────

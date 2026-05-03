@@ -1188,7 +1188,7 @@
         "melee": 300,
         "health": 12000
       },
-      "category": "pve_combat"
+      "category": "utilidade"
     },
     "karkinos": {
       "name": "Karkinos",
@@ -1341,7 +1341,7 @@
         "melee": 300,
         "health": 12000
       },
-      "category": "pve_combat"
+      "category": "utilidade"
     },
     "manta": {
       "name": "Manta",
@@ -1460,7 +1460,7 @@
         "melee": 300,
         "health": 12000
       },
-      "category": "pve_combat"
+      "category": "boss"
     },
     "megatherium": {
       "name": "Megatherium",
@@ -1511,7 +1511,7 @@
         "melee": 300,
         "health": 12000
       },
-      "category": "pve_combat"
+      "category": "utilidade"
     },
     "morellatops": {
       "name": "Morellatops",
@@ -1936,7 +1936,7 @@
         "melee": 300,
         "health": 12000
       },
-      "category": "pve_combat"
+      "category": "boss"
     },
     "sarcosuchus": {
       "name": "Sarcosuchus",
@@ -1953,7 +1953,7 @@
         "melee": 300,
         "health": 12000
       },
-      "category": "pve_combat"
+      "category": "utilidade"
     },
     "shinehorn": {
       "name": "Shinehorn",
@@ -2004,7 +2004,7 @@
         "melee": 300,
         "health": 12000
       },
-      "category": "pve_combat"
+      "category": "boss"
     },
     "spinosaurus": {
       "name": "Spinosaurus",
@@ -2021,7 +2021,7 @@
         "melee": 300,
         "health": 12000
       },
-      "category": "pve_combat"
+      "category": "utilidade"
     },
     "stegosaurus": {
       "name": "Stegosaurus",
@@ -2072,7 +2072,7 @@
         "melee": 300,
         "health": 12000
       },
-      "category": "pve_combat"
+      "category": "boss"
     },
     "therizinosaurus": {
       "name": "Therizinosaurus",
@@ -2089,7 +2089,7 @@
         "melee": 300,
         "health": 12000
       },
-      "category": "pve_combat"
+      "category": "boss"
     },
     "thylacoleo": {
       "name": "Thylacoleo",
@@ -2208,7 +2208,7 @@
         "melee": 300,
         "health": 12000
       },
-      "category": "pve_combat"
+      "category": "utilidade"
     },
     "vulture": {
       "name": "Vulture",
@@ -2242,7 +2242,7 @@
         "melee": 300,
         "health": 12000
       },
-      "category": "pve_combat"
+      "category": "utilidade"
     },
     "xiphactinus": {
       "name": "Xiphactinus",
@@ -2276,7 +2276,7 @@
         "melee": 300,
         "health": 12000
       },
-      "category": "pve_combat"
+      "category": "boss"
     },
     "diru_ya_ku": {
       "name": "Diru-Ya-Ku",
@@ -2310,7 +2310,7 @@
         "melee": 300,
         "health": 12000
       },
-      "category": "pve_combat"
+      "category": "utilidade"
     },
     "kutsu_ya_ku": {
       "name": "Kutsu-Ya-Ku",
@@ -2327,7 +2327,7 @@
         "melee": 300,
         "health": 12000
       },
-      "category": "pve_combat"
+      "category": "utilidade"
     },
     "moro_raptor": {
       "name": "Moro Raptor",
@@ -2344,24 +2344,7 @@
         "melee": 300,
         "health": 12000
       },
-      "category": "pve_combat"
-    },
-    "moro_rex": {
-      "name": "Moro Rex",
-      "base_value": 8500,
-      "stat_multipliers": {
-        "melee": 210,
-        "health": 135,
-        "stamina": 30,
-        "weight": 25,
-        "oxygen": 5,
-        "food": 12
-      },
-      "optimal_stats": {
-        "melee": 300,
-        "health": 12000
-      },
-      "category": "pve_combat"
+      "category": "utilidade"
     }
   }
 }

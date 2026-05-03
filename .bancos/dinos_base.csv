@@ -1,0 +1,43 @@
+# Lista de dinossauros vanilla domesticáveis e seus valores base
+# Formato: nome;valor_base
+rex;10000
+spino;9500
+argentavis;7000
+pteranodon;4000
+therizinosaurus;9000
+allosaurus;6000
+ankylosaurus;5000
+quetzal;12000
+doedicurus;4500
+stegosaurus;5500
+triceratops;5000
+raptor;2500
+paraceratherium;8000
+woolly_rhino;8500
+mammoth;7000
+castoroides;6000
+baryonyx;6500
+carnotaurus;4000
+iguanodon;2000
+kentro;3500
+spinosaurus;9500
+bronto;11000
+mosasaurus;15000
+plesiosaur;14000
+basilosaurus;13000
+megalodon;9000
+sarco;4000
+kaprosuchus;3000
+ichthyosaurus;3500
+otter;1500
+beelzebufo;2000
+carbonemys;2000
+phiomia;1000
+parasaur;1000
+pachy;1200
+pachyrhinosaurus;2500
+procoptodon;3500
+direbear;5000
+sabertooth;3000
+argent;7000
+# ...adicione todos os outros domesticáveis vanilla

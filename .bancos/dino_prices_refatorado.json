@@ -1,0 +1,18 @@
+{
+  "dinosaurs": {
+    "name": "Tyrannosaurus",
+    "type": "Tyrannosauridae",
+    "size": "large",
+    "diet": "carnivore",
+    "habitat": "land",
+    "period": "Late Cretaceous"
+  },
+  "mammals": {
+    "name": "Mammal",
+    "type": "Mammalia",
+    "size": "medium",
+    "diet": "omnivore",
+    "habitat": "land",
+    "period": "Cenozoic"
+  }
+}

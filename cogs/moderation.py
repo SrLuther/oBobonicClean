@@ -21,7 +21,7 @@ class Moderation(commands.Cog):
     def _compile_badwords(self) -> None:
         """Carrega e compila lista de palavrões em regex otimizada."""
         try:
-            with open("palavroes.txt", "r", encoding="utf8") as f:
+            with open(".bancos/palavroes.txt", "r", encoding="utf8") as f:
                 words = [w.strip().lower() for w in f.readlines() if w.strip()]
             
             if words:

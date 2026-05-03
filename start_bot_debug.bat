@@ -33,20 +33,6 @@ if exist .venv\Scripts\activate.bat (
     echo ⚠️  Ambiente virtual nao encontrado, usando Python do sistema...
 )
 
-REM Verificar e instalar dependências
-echo.
-echo ================================================================
-echo  📦 VERIFICANDO DEPENDÊNCIAS
-echo ================================================================
-echo.
-python check_and_install_dependencies.py
-if errorlevel 1 (
-    color 0C
-    echo.
-    echo ⚠️  Aviso: Erro ao instalar dependencias, tentando iniciar mesmo assim...
-    echo.
-)
-
 REM Iniciar bot
 echo.
 echo ================================================================

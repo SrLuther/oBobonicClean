@@ -105,7 +105,7 @@ def _build_vip_embed() -> discord.Embed:
         inline=False
     )
 
-    embed.set_footer(text="ARK Land BR • Clique no botão abaixo para apoiar o servidor 💜")
+    embed.set_footer(text="ARKLAND BR • Clique no botão abaixo para apoiar o servidor 💜")
     return embed
 
 

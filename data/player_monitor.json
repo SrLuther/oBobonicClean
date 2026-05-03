@@ -1,0 +1,41 @@
+{
+  "76561199248376427": {
+    "steam_id": "76561199248376427",
+    "servers": {
+      "Ragnarok Omega": {
+        "last_online": "2026-04-16T23:33:31.196549",
+        "last_offline": null,
+        "crash_suspected": false
+      }
+    },
+    "last_seen": "2026-04-16T23:33:31.196549",
+    "status": "online",
+    "first_seen": "2026-04-16T23:33:31.196549"
+  },
+  "76561198171864983": {
+    "steam_id": "76561198171864983",
+    "servers": {
+      "Rotativo": {
+        "last_online": "2026-04-16T23:33:31.475086",
+        "last_offline": null,
+        "crash_suspected": false
+      }
+    },
+    "last_seen": "2026-04-16T23:33:31.475086",
+    "status": "online",
+    "first_seen": "2026-04-16T23:33:31.475086"
+  },
+  "76561198440215035": {
+    "steam_id": "76561198440215035",
+    "servers": {
+      "Alps": {
+        "last_online": "2026-04-16T23:33:31.939354",
+        "last_offline": null,
+        "crash_suspected": false
+      }
+    },
+    "last_seen": "2026-04-16T23:33:31.939354",
+    "status": "online",
+    "first_seen": "2026-04-16T23:33:31.939354"
+  }
+}

@@ -1022,20 +1022,19 @@ class Lojas(commands.Cog):
                 print(f"⚠️ [LOJAS] Canal {PANEL_CHANNEL_ID} não é um canal de texto")
                 return
             
-            # Verificar e deletar mensagem antiga fixada
+            # Deletar TODAS as mensagens antigas do bot no canal (fixadas ou não)
             try:
-                mensagens_fixadas = [msg async for msg in canal.history(limit=50) if msg.pinned and msg.author.id == self.bot.user.id]
-                if mensagens_fixadas:
-                    for msg_antiga in mensagens_fixadas:
-                        try:
+                msgs_antigas = [msg async for msg in canal.history(limit=50) if msg.author.id == self.bot.user.id]
+                for msg_antiga in msgs_antigas:
+                    try:
+                        if msg_antiga.pinned:
                             await msg_antiga.unpin()
-                            await msg_antiga.delete()
-                            print(f"✅ [LOJAS] Painel anterior deletado e despinado")
-                        except Exception as e:
-                            print(f"⚠️ [LOJAS] Erro ao deletar painel anterior: {e}")
-                            pass
+                        await msg_antiga.delete()
+                        print(f"✅ [LOJAS] Mensagem anterior removida")
+                    except Exception as e:
+                        print(f"⚠️ [LOJAS] Erro ao deletar mensagem anterior: {e}")
             except Exception as e:
-                print(f"⚠️ [LOJAS] Erro ao verificar mensagens fixadas: {e}")
+                print(f"⚠️ [LOJAS] Erro ao limpar canal: {e}")
             
             # Aguardar um pouco para evitar rate limit
             import asyncio

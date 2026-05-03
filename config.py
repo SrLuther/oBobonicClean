@@ -38,6 +38,10 @@ CANAL_ARQUIVO_ID = get_int_env("CANAL_ARQUIVO_ID", 1441236730517655634)
 CANAL_STATUS_ID = get_int_env("CANAL_STATUS_ID", 1440828427761487934)
 CANAL_LOGS_ID = get_int_env("CANAL_LOGS_ID", 1440828555201216582)
 AI_CHANNEL_ID = get_int_env("AI_CHANNEL_ID", 1440828507931410543)
+
+# --- Canais de votação ---
+VOTACAO_CANAL_ID = get_int_env("VOTACAO_CANAL_ID", 1496322473321304096)
+VOTACAO_CONFIG_CANAL_ID = get_int_env("VOTACAO_CONFIG_CANAL_ID", 1496322712162013296)
 CANAL_PROMO_ID = get_int_env("CANAL_PROMO_ID", 1442151789188350113) 
 LOBBY_CHANNEL_ID = get_int_env("LOBBY_CHANNEL_ID", 1440828526478491648)
 CANAL_CHANGELOG_ID = get_int_env("CANAL_CHANGELOG_ID", 1477571362636955681)
@@ -73,8 +77,13 @@ QUARANTINE_ROLE_ID = get_int_env("QUARANTINE_ROLE_ID", 1441973275008831669)
 MOD_ROLE_IDS = [1440828410556321882, 1440828412599210135]  # Cargos Moderadores/Admin
 STAFF_ROLE_ID = 1440828412599210135  # Único que pode usar botão STAFF no ticket
 
-# --- Canais de leaderboard ---
-LEADERBOARD_CHANNEL_ID = get_int_env("LEADERBOARD_CHANNEL_ID", 1493443885542674595)
+# --- Canal de ranking unificado ---
+RANKING_CHANNEL_ID = get_int_env("RANKING_CHANNEL_ID", 1495521254235443290)
+LEADERBOARD_CHANNEL_ID = RANKING_CHANNEL_ID  # alias
+# IDs excluídos do Top 10 (aparecem em seção separada)
+RANKING_EXCLUDED_IDS: list[int] = [
+    int(x.strip()) for x in os.getenv("RANKING_EXCLUDED_IDS", "").split(",") if x.strip()
+]
 
 # --- Logs ---
 LOG_SEPARATOR = os.getenv("LOG_SEPARATOR", "--------------------------------------------------------")
@@ -135,7 +144,7 @@ REFERRALS_FORM_CHANNEL_ID = get_int_env("REFERRALS_FORM_CHANNEL_ID", 14907644754
 REFERRALS_PENDING_CHANNEL_ID = get_int_env("REFERRALS_PENDING_CHANNEL_ID", 1490764547936489564)
 REFERRALS_APPROVED_CHANNEL_ID = get_int_env("REFERRALS_APPROVED_CHANNEL_ID", 1490764608342851594)
 REFERRALS_LOGS_CHANNEL_ID = get_int_env("REFERRALS_LOGS_CHANNEL_ID", 1490764665167548457)
-REFERRALS_RANKING_CHANNEL_ID = get_int_env("REFERRALS_RANKING_CHANNEL_ID", 1490764720518594611)
+REFERRALS_RANKING_CHANNEL_ID = RANKING_CHANNEL_ID  # alias
 REFERRALS_ADMIN_ROLE_IDS = [1440828412599210135]  # Cargos que podem gerenciar referências
 
 # ======================================================================
@@ -172,14 +181,17 @@ COGS = [
     'admin', 
     'autoresponse', 
     'moderation', 
-    'xp', 
+    'xp',
     'comandos',
     'rules',     # Sistema de gerenciamento de regras
     'sales',
     'referrals',  # Sistema de indicações e ranking de referências
+    'ranking',   # Ranking global unificado (XP + Indicações + Treasure Hunt)
     'voicemanager',
     'autoloop',  # Sistema de mensagens automáticas a cada 6 horas
     'changelog', # Sistema de changelog versionado do servidor
+    'treasure_hunt', # Treasure Hunt - deve ser sempre o último
+    'voting',        # Sistema de votações
 ]
 
 # ============================================================
